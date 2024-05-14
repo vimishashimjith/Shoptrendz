@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="/admin/custom-css/admin-users.css"> -->
+    <link rel="stylesheet" href="/admin/custom-css/navbar.css">
+    <link rel="stylesheet" href="/admin/custom-css/sidebar.css">
+    <link rel="stylesheet" href="/admin/custom-css/admin-users.css">
+
+    <script src="/admin/custom-js/admin-users.js"></script>
+    
+</head>
+<body>
+
+    <div class="page-wrapper">
+
+        <!-- Navbar starts here -->
+        <%- include('./layouts/navbar.ejs') %>
+        <!-- Navbar ends here -->
+
+        <div class="page-body">
+
+            <%- include('./layouts/sidebar.ejs') %> 
+
+            <main>
+                <div class="user-list">
+                    <br>
+                    <h1>Users list</h1>
+                    <br>
+                    <hr>
+                    <br>
+                    <div class="table-div">
+                    <table class="content-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Buttons</th>
+                               
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Users prinst as a loop -->
+                            <% users.forEach((item, index ) => {  %>
+                            <tr>
+                                <td><%= index + 1 %></td>
+                                <td><%= item.username %></td>
+                                <td><%= item.email %></td>
+                                <td class="user-status <% if(item.status){ %> user-active <% }else { %> user-block <% } %>" >
+                                    <span>
+                                        <% if(item.status){ %> Active
+                                        <%} else { %> Blocked <% } %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="activate" data-user-id="<%= item._id %>" >Activate</button>
+                                    <button class="block" data-user-id="<%= item._id %>">block</button>
+                                </td>                               
+                            </tr>
+                            <% }) %>
+                            <!-- Users loop ends -->
+                           
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+    <link rel="stylesheet" href="/css/signup.css">
+    <link rel="stylesheet" href="/css/msg-boxes.css">
+</head>
+<body>
+
+    <div class="page-wrapper">
+        <div class="signup-div">
+            <h2 class="heading">Signup</h2>
+            <form action="" method="post" id="signup" >
+                <div class="input-field msg-box">
+                    <p class="msg-para"></p>
+                </div>
+                <div class="input-field form-child">
+                    <label for="username">UserName : </label>
+                    <input type="text" placeholder="your name" name="username" username >
+                </div>
+                <div class="input-field form-child">
+                    <label for="username">Email : </label>
+                    <input type="text" placeholder="abc@gmail.com" name="email" email >
+                </div>
+                <div class="input-field form-child">
+                    <label for="username">Password : </label>
+                    <input type="password" placeholder="password" name="password" password >
+                </div>
+                <div class="input-field form-child">
+                    <label for="username">Confirm Password : </label>
+                    <input type="password" placeholder="password again" name="passwordRe" passwordRe >
+                </div>
+                <div class="login-link form-child">
+                    <p><a href="/login">Already have an Account? Login</a></p>
+                </div>
+                <div class="button-div form-child">
+                    <button id="submit-button">Submit</button>
+                </div>
+            </form>
+            <% if(typeof message!=='undefined') { %>
+                <p style="color: green;"><%= message %> </p> 
+                <% }
+                %>
+        </div>
+    </div>
+
+
+    <script src="/signup.js" defer ></script>
+    
+</body>
+</html>

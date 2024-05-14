@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/msg-boxes.css">
+</head>
+<body>
+
+    <div class="page-wrapper">
+        <div class="login-div">
+            <h2 class="heading">Login</h2>
+            <form action="/login" method="post" id="login-form" >
+                <div class="input-field msg-box">
+                    <p class="msg-para"></p>
+                </div>
+                <div class="input-field form-child">
+                    <label for="username">Email : </label>
+                    <input type="text" placeholder="xyz@gmail.com" name="username" email >
+                </div>
+                <div class="input-field form-child">
+                    <label for="psssword">Password : </label>
+                    <input type="password" placeholder="password" name="password" password >
+                </div>
+                <div class="link form-child">
+                    <a href="/signup">Don't have an account? Signup</a>
+                </div>
+                <div class="link form-child">
+                    <a href="/login/forgot-password">Forgot password?</a>
+                </div>
+                <div class="input-field form-child button-div">
+                    <button id="submit-button">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    
+    
+</body>
+</html>
