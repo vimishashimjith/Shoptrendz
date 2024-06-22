@@ -1,0 +1,5 @@
+<form action="/user/verify-otp" method="post">
+    <input type="hidden" name="user_id" value="<%= user_id %>">
+    <input type="text" name="otp" placeholder="Enter OTP" required>
+    <button type="submit">Verify OTP</button>
+</form>

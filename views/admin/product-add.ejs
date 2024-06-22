@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs') %>
+      <br>
+      <br>
+      <div class="page-wrapper">
+        <div class="container-fluid">
+          <div class="card">
+            <div class="card-body">
+              <h1 class="card-title">Add New Product</h1>
+
+              <% if (message) { %>
+                <div class="alert alert-info"><%= message %></div>
+            <% } %>
+
+              <form action="/admin/product-add" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="name" class="form-label">Product Name</label>
+                  <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="brand" class="form-label">Brand</label>
+                  <input type="text" class="form-control" id="brand" name="brand" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="description" class="form-label">Description</label>
+                  <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label for="category" class="form-label">Category</label>
+                  <select class="form-control" id="category" name="category" required>
+                    <% categories.forEach(cat => { %>
+                      <option value="<%= cat._id %>"><%= cat.name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="size" class="form-label">Size</label>
+                  <select class="form-control" id="size" name="size" required>
+                    <% validSizes.forEach(size => { %>
+                      <option value="<%= size %>"><%= size %></option>
+                    <% }) %>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="price" class="form-label">Price</label>
+                  <input type="number" class="form-control" id="price" name="price" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="stock" class="form-label">Stock</label>
+                  <input type="number" class="form-control" id="stock" name="stock" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="images" class="form-label">Images</label>
+                  <input type="file" class="form-control" id="images" name="images" multiple="multiple" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Product</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Admin/assets/js/sidebarmenu.js"></script>
+  <script src="../Admin/assets/js/app.min.js"></script>
+  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <%- include('../partials/admin/sidebar.ejs')%>
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs')%>
+      <div class="page-wrapper">
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+      
+        <h4>Product List</h4>
+        <table class="table table-bordered text-center">
+            <thead class="text-black">
+        
+                <tr>
+                    <th>Name</th>
+                    <th>Brand</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Size</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Images</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% products.forEach(prod => { %>
+                <tr>
+                    <td><%= prod.name %></td>
+                    <td><%= prod.brand %></td>
+                    <td><%= prod.description %></td>
+                    <td><%= prod.category.name %></td>
+                    <td><%= prod.size %></td>
+                    <td><%= prod.price %></td>
+                    <td><%= prod.stock %></td>
+                    <td>
+                        <% prod.image.forEach(img => { %>
+                        <img src="/uploads/<%= img %>" alt="Product Image" width="50">
+                        <% }) %>
+                    </td>
+                    <td>
+                        <td>
+                          
+                            <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
+                            <a href="/admin/product-delete/<%= prod._id %>" onclick="return confirm('Are you sure?')">Delete</a>
+                        </td>
+                        
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <a href="/admin/product-add">Add New Product</a>
+      </div>
+    </div>
+  </div>
+  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Admin/assets/js/sidebarmenu.js"></script>
+  <script src="../Admin/assets/js/app.min.js"></script>
+  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+</body>
+</html>

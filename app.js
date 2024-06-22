@@ -6,11 +6,19 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const expressLayouts = require('express-ejs-layouts');
 const nodemailer = require('nodemailer')
+const flash=require('connect-flash')
+const nocache=require('nocache')
+const session=require('express-session')
+
 
 const connectDB = require('./config/db');
 
 const usersRouter = require('./routes/users');
-const adminRouter = require('./routes/admins');
+
+const adminsRouter = require('./routes/admins');
+
+
+
 
 
 const app = express();
@@ -29,9 +37,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(nocache())
+app.use(
+  session({
+    secret:process.env.SECRET,
+    resave:false,
+    saveUninitialized:false
+  })
+)
+
+
+app.use(flash())
+app.use((req,res,next)=>{
+  res.locals.success=req.flash('success')
+  res.locals.error=req.flash('error')
+  next()
+})
 
 app.use('/', usersRouter);
-app.use('/admin', adminRouter)
+app.use('/admin', adminsRouter);
+
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

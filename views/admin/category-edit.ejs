@@ -1,0 +1,48 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+ 
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <%- include('../partials/admin/sidebar.ejs')%>
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs')%>
+      <br>
+      <br>
+      <br>
+      <div class="page-wrapper">
+        <div class="container-fluid">
+            <div class="form-container">
+                <h1>Update Category</h1>
+                <form action="/admin/category-edit/<%= category._id %>" method="POST">
+                    <input type="hidden" name="_method" value="PUT">
+                    <label for="name">Category Name:</label>
+                    <input type="text" id="name" name="name" value="<%= category.name %>" required>
+                    <br>
+                    <br>
+                    <label for="description">Description:</label>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="description" name="description" value="<%= category.description %>">
+                    <br>
+                    <br>
+                    <button type="submit">Update Category</button>
+                </form>
+            </div> 
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Admin/assets/js/sidebarmenu.js"></script>
+  <script src="../Admin/assets/js/app.min.js"></script>
+  <script src="..Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+</body>
+</html>
