@@ -1,6 +1,4 @@
 <header id="header">
-  
-
 <div class="container-fluid bg-dark mb-30">
   <div class="row px-xl-5">
       <div class="col-lg-3 d-none d-lg-block">
@@ -37,21 +35,37 @@
                       <a href="detail.html" class="nav-item nav-link">Shop Detail</a>
                   </div>
                   <div class="navbar-nav ml-auto py-0 d-none d-lg-block">
-                    <button class="btn px-0 dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-user text-primary"></i>
-                      <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">User</span>
-                  </button>
-                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                      <a class="dropdown-item" href="signup">
-                          <i class="fas fa-sign-in-alt text-primary"></i>
-                          Sign In
-                      </a>
-                      <a class="dropdown-item" href="login">
-                          <i class="fas fa-sign-in-alt text-primary"></i>
-                          Log In
-                      </a>
-                  </div>
-              </div>
+                    <% if (isAuthenticated) { %>
+                        <button class="btn px-0 dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            <i class="fas fa-user text-primary"></i>
+                            <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;"></span>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt text-primary"></i>
+                                Log Out
+                            </a>
+                        </div>
+                    <% } else { %>
+                        <button class="btn px-0 dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user text-primary"></i>
+                            <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">User</span>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/signup">
+                                <i class="fas fa-sign-in-alt text-primary"></i>
+                                Sign Up
+                            </a>
+                            <a class="dropdown-item" href="/login">
+                                <i class="fas fa-sign-in-alt text-primary"></i>
+                                Log In
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+                
+                
+                
                       </div>
         
                     </a>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,35 +6,36 @@
     <title>Signup</title>
     <link rel="stylesheet" href="User/assets/css/signup.css">
     <link rel="stylesheet" href="User/assets/css/msg-boxes.css">
+    <!-- Include necessary scripts -->
+    
 </head>
 <body>
-
     <div class="page-wrapper">
         <div class="signup-div">
             <h2 class="heading">Signup</h2>
-            <form action="" method="post" id="signup" >
+            <form action="" method="post" id="signup">
                 <div class="input-field msg-box">
                     <p class="msg-para"></p>
                 </div>
                 <div class="input-field form-child">
                     <label for="username">UserName : </label>
-                    <input type="text" placeholder="your name" name="username" username >
+                    <input type="text" placeholder="your name" name="username">
                 </div>
                 <div class="input-field form-child">
-                    <label for="username">Email : </label>
-                    <input type="text" placeholder="abc@gmail.com" name="email" email >
+                    <label for="email">Email : </label>
+                    <input type="email" placeholder="abc@gmail.com" name="email">
                 </div>
                 <div class="input-field form-child">
-                    <label for="mobileno">Mobile No : </label>
-                    <input type="text" placeholder="98787687" name="mobileno" mobileno >
+                    <label for="mobile">Mobile No : </label>
+                    <input type="text" placeholder="98787687" name="mobile">
                 </div>
                 <div class="input-field form-child">
-                    <label for="username">Password : </label>
-                    <input type="password" placeholder="password" name="password" password >
+                    <label for="password">Password : </label>
+                    <input type="password" placeholder="password" name="password" id="password">
                 </div>
                 <div class="input-field form-child">
-                    <label for="username">Confirm Password : </label>
-                    <input type="password" placeholder="password again" name="passwordRe" passwordRe >
+                    <label for="passwordRe">Confirm Password : </label>
+                    <input type="password" placeholder="password again" name="passwordRe">
                 </div>
                 <div class="login-link form-child">
                     <p><a href="/login">Already have an Account? Login</a></p>
@@ -44,15 +44,10 @@
                     <button id="submit-button">Submit</button>
                 </div>
             </form>
-            <% if(typeof message!=='undefined') { %>
+            <% if (typeof message !== 'undefined') { %>
                 <p style="color: green;"><%= message %> </p> 
-                <% }
-                %>
+            <% } %>
         </div>
     </div>
-
-
-    <script src="/signup.js" defer ></script>
-    
 </body>
 </html>

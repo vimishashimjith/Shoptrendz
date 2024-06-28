@@ -289,11 +289,12 @@ module.exports = {
     blockUser: async (req, res) => {
         try {
             const userId = req.params.id;
+            console.log(userId,"userid")
             const updateUser = await User.findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
             if (!updateUser) {
                 return res.status(404).send("User not found");
             }
-            res.json({ status: 'success', user: updateUser });
+            res.redirect('/admin/admin-users')
         } catch (error) {
             console.error(error);
             res.status(500).json({ status: 'error', error: 'Internal server error' });
@@ -309,7 +310,7 @@ module.exports = {
                 return res.status(404).send("User not found");
             }
 
-            res.json({ status: 'success', user: updateUser });
+            res.redirect('/admin/admin-users')
         } catch (error) {
             console.error(error);
             res.status(500).json({ status: 'error', error: 'Internal server error' });

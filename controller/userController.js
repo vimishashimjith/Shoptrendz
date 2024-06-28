@@ -5,6 +5,9 @@ const nodemailer = require('nodemailer');
 const session = require('express-session');
 const otpGenerator = require('otp-generator');
 const bodyParser = require('body-parser');
+const Product=require('../model/productSchema')
+
+
 
 const securePassword = async (password) => {
     try {
@@ -88,6 +91,7 @@ const loadRegister = async (req, res) => {
         console.log(error.message);
     }
 };
+
 const loadProduct = async (req, res) => {
     try {
         res.render('user/product');
@@ -95,7 +99,6 @@ const loadProduct = async (req, res) => {
         console.log(error.message);
     }
 };
-
 const insertUser = async (req, res) => {
     try {
         const spassword = await securePassword(req.body.password);
@@ -104,7 +107,7 @@ const insertUser = async (req, res) => {
             email: req.body.email,
             mobileno: req.body.mobileno,
             password: spassword,
-            is_admin: false,
+            isAdmin: false,
             isVerified: false
         });
 
@@ -112,18 +115,21 @@ const insertUser = async (req, res) => {
         console.log(userDatacheck);
         if (!userDatacheck) {
             const userData = await user.save();
-            const userId=userData._id
-             
+            const userId = userData._id;
+
             if (userData) {
-                const otp=generateOtp()
-                console.log(otp)
-                const otpData=await new OtpData({
-                    userId:userData._id,
-                    otp:otp
-                })
-                otpData.save();
-                sendOtpMail( userData.email, otp);
-                res.render('user/verify-otp',{user_id:userId})
+                const otp = generateOtp();
+                console.log(otp);
+
+                const otpData = new OtpData({
+                    userId: userId,
+                    otp: otp
+                });
+
+                await otpData.save(); // Ensure OTP is saved before sending the email
+                sendOtpMail(userData.email, otp);
+                
+                res.redirect(`/verify-otp?user_id=${userId}`); // Pass user ID to the template
             } else {
                 res.render('user/signup', { message: "Your registration has failed" });
             }
@@ -132,98 +138,116 @@ const insertUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error.message);
+        res.render('user/signup', { message: "An error occurred during registration. Please try again." });
     }
 };
 
-const verifyOtp = async (req, res) => {
-    const { id, otp } = req.query;
-
+const verifyOtp = async(req,res)=>{
     try {
-        // Find the user by ID
-        const user = await User.findById(id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Check if the provided OTP matches the stored OTP
-        if (user.otp === otp) {
-            // Update the user's verification status
-            const updateInfo = await User.updateOne(
-                { _id: id },
-                { $set: { isVerified: true }, $unset: { otp: '' } } // Optionally remove OTP after verification
-            );
-            console.log(updateInfo);
-            return res.render('user/login');
-        } else {
-            return res.status(400).json({ message: 'Invalid OTP' });
-        }
+        const {user_id,otp}= req.body
+         const otpdata= await OtpData.findOne({userId:user_id})
+         console.log(otpdata) 
+         if(otp===otpdata.otp){
+             await User.findByIdAndUpdate(user_id,{$set:{isVerified:true}})
+            res.redirect('/login')
+            console.log("sucess")
+         }else{
+            res.render('user/verify-otp')
+            console.log("error")
+         }
+        
     } catch (error) {
-        console.log(error.message);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.log(error.message)
     }
-};
-
-
+}
 
 
 // OTP generation and verification
 
 const generateOtp = () => {
-    return otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
-
+    return otpGenerator.generate(6, {
+        digits: true,
+        upperCaseAlphabets: false,
+        specialChars: false,
+        lowerCaseAlphabets: false 
+    });
 };
+
+const otp = generateOtp();
+console.log(otp);
 
 const loginLoad = async (req, res) => {
     try {
-        res.render('user/login');
+        res.render('user/login',{user:req.session.user});
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+const verifyOtpLoad = async (req, res) => {
+    try {
+        const user=req.query.user_id;
+        res.render('user/verify-otp',{message:"Enter the otp send to your email",user_id:user});
     } catch (error) {
         console.log(error.message);
     }
 };
 
-const verifyLogin = async (req, res) => {
+const verifyLogin = async(req,res)=>{
     try {
         const email = req.body.email;
         const password = req.body.password;
-        const userData = await User.findOne({ email: email });
-
-        if (userData) {
-            const passwordMatch = await bcrypt.compare(password, userData.password);
-            if (passwordMatch) {
-                if (!userData.isVerified) {
-                    const otp = generateOtp();
-                    const otpData = new OtpData({
-                        userId: userData._id,
-                        otp: otp
-                    });
-                    await otpData.save();
-                    sendOtpMail(email, otp);
-                    res.render('user/verify-otp', { message: "Please enter the OTP sent to your email" });
-                } else {
-                    req.session.user_id = userData._id;
-                    res.redirect('/');
-                }
-            } else {
-                res.render('user/login', { message: "Email and password is incorrect" });
+        console.log(email,password)
+        const userData = await User.findOne({email:email})
+        
+        if(userData){
+         
+            const passwordMatch = await bcrypt.compare(password,userData.password)
+            if(passwordMatch){
+                req.session.user_id = userData._id;
+                res.redirect('/')
+            }else{
+                res.render('user/login',{message:"email and password is incorrect",user:null})
+            }}else{
+                res.render('user/login',{message:"email and password is incorrect",user:null})
             }
-        } else {
-            res.render('user/login', { message: "Email and password is incorrect" });
         }
-    } catch (error) {
-        console.log(error.message);
+
+    catch (error) {
+     console.log(error.message);   
     }
-};
+}
+
+
 
 
 
 const loadHome = async (req, res) => {
     try {
-        res.render('user/index');
+        
+        const product= await Product.find()
+        res.render('user/index',{product,user:req.session.user});
     } catch (error) {
         console.log(error.message);
     }
 };
+
+
+
+const userLogout= async(req,res)=>{
+    try {
+        const userId=req.session.user_id;
+        await User.findByIdAndUpdate(userId,{$set:{loggedIn:false}});
+
+        req.session.destroy((err)=>{
+            if(err)throw err;
+              res.redirect("/")
+         })
+        
+    } catch (error) {
+   console.log(error.message)        
+    }
+}
+
 
 module.exports = {
     loadRegister,
@@ -232,5 +256,9 @@ module.exports = {
     verifyLogin,
     loadHome,
     verifyOtp,
-    loadProduct
+    loadProduct,
+    verifyOtpLoad,
+    userLogout,
+    
+
 };

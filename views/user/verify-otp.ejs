@@ -1,5 +1,8 @@
-<form action="/user/verify-otp" method="post">
+<form action="" method="post">
     <input type="hidden" name="user_id" value="<%= user_id %>">
     <input type="text" name="otp" placeholder="Enter OTP" required>
     <button type="submit">Verify OTP</button>
+    <% if (typeof message !== 'undefined') { %>
+        <p style="color: white; font-weight:bold;"><%= message %> </p>
+        <% } %>
 </form>

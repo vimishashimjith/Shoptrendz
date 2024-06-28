@@ -11,11 +11,14 @@ const nocache=require('nocache')
 const session=require('express-session')
 
 
+
+
 const connectDB = require('./config/db');
 
 const usersRouter = require('./routes/users');
 
 const adminsRouter = require('./routes/admins');
+const { isAuthenticated } = require('./middleware/auth');
 
 
 
@@ -43,8 +46,10 @@ app.use(
     secret:process.env.SECRET,
     resave:false,
     saveUninitialized:false
-  })
-)
+  }));
+  app.use(isAuthenticated);
+ 
+  
 
 
 app.use(flash())

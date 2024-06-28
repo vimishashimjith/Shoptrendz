@@ -22,8 +22,24 @@ const isLogout=async(req,res,next)=>{
         
     }
 }
+const isAuthenticated=(req,res,next)=>{
+    if(req.session.user_id){
+        res.locals.isAuthenticated=true;
+    }else{
+        res.locals.isAuthenticated=false
+    }
+    next();
+}
+
+
+
+
+
 
 module.exports={
     isLogin,
-    isLogout
+    isLogout,
+    isAuthenticated,
+  
+    
 }

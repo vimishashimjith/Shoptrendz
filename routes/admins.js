@@ -37,8 +37,8 @@ router.get('/product-edit/:id', adminController.editProduct);
 router.post('/product-edit/:id', adminController.updateProduct);
 router.get('/product-delete/:id', adminController.deleteProduct);
 
-router.post('/block', adminController.blockUser);
-router.post('/unblock', adminController.unBlockUser);
+router.get('/block/:id', adminController.blockUser);
+router.get('/unblock/:id', adminController.unBlockUser);
 
 
 module.exports = router;

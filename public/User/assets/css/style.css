@@ -4173,7 +4173,7 @@ input[type="button"].btn-block {
     flex-direction: row;
   }
   .navbar-expand-lg .navbar-nav .dropdown-menu {
-    position: absolute;
+    position: relative;
   }
   .navbar-expand-lg .navbar-nav .nav-link {
     padding-right: 0.5rem;

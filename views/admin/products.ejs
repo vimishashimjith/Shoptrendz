@@ -9,9 +9,9 @@
 </head>
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
-    <%- include('../partials/admin/sidebar.ejs')%>
+    <%- include('../partials/admin/sidebar.ejs') %>
     <div class="body-wrapper">
-      <%- include('../partials/admin/header.ejs')%>
+      <%- include('../partials/admin/header.ejs') %>
       <div class="page-wrapper">
         <br>
         <br>
@@ -22,7 +22,6 @@
         <h4>Product List</h4>
         <table class="table table-bordered text-center">
             <thead class="text-black">
-        
                 <tr>
                     <th>Name</th>
                     <th>Brand</th>
@@ -51,12 +50,8 @@
                         <% }) %>
                     </td>
                     <td>
-                        <td>
-                          
-                            <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
-                            <a href="/admin/product-delete/<%= prod._id %>" onclick="return confirm('Are you sure?')">Delete</a>
-                        </td>
-                        
+                        <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
+                        <a href="/admin/product-delete/<%= prod._id %>" onclick="return confirm('Are you sure?')">Delete</a>
                     </td>
                 </tr>
                 <% }) %>
