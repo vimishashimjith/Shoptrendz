@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {loginLoad, insertUser, verifyLogin, loadHome, loadRegister,verifyOtpLoad, verifyMail, userLogout,verifyOtp, loadProduct, validateSignupBody}=require('../controller/userController')
+const {loginLoad, insertUser, verifyLogin, loadHome, loadRegister,verifyOtpLoad, verifyMail, userLogout,verifyOtp, loadProduct, validateSignupBody, resendOTP,loadCart, addToCart}=require('../controller/userController')
 const bodyparser=require('body-parser')
 const auth = require('../middleware/auth')
 
@@ -20,10 +20,14 @@ router.get('/login', auth.isLogout, loginLoad);
 router.get('/logout', auth.isAuthenticated, userLogout);
 router.post('/login', auth.isLogout, verifyLogin);
 router.get('/verify-otp', verifyOtpLoad);
+router.get('/resend-otp', verifyOtpLoad);
 router.post('/verify-otp', verifyOtp);
+
 
 router.get('/', loadHome);
 router.get('/product', loadProduct);
+router.get('/cart', loadCart);
+router.post('/add-to-cart', addToCart);
 
 
 

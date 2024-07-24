@@ -13,12 +13,7 @@
     <div class="body-wrapper">
       <%- include('../partials/admin/header.ejs') %>
       <div class="page-wrapper">
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-      
+        <br><br><br><br><br>
         <h4>Product List</h4>
         <table class="table table-bordered text-center">
             <thead class="text-black">
@@ -27,9 +22,8 @@
                     <th>Brand</th>
                     <th>Description</th>
                     <th>Category</th>
-                    <th>Size</th>
+                    <th>Sizes & Stocks</th>
                     <th>Price</th>
-                    <th>Stock</th>
                     <th>Images</th>
                     <th>Actions</th>
                 </tr>
@@ -41,13 +35,18 @@
                     <td><%= prod.brand %></td>
                     <td><%= prod.description %></td>
                     <td><%= prod.category.name %></td>
-                    <td><%= prod.size %></td>
-                    <td><%= prod.price %></td>
-                    <td><%= prod.stock %></td>
                     <td>
-                        <% prod.image.forEach(img => { %>
-                        <img src="/uploads/<%= img %>" alt="Product Image" width="50">
-                        <% }) %>
+                      <% prod.sizes.forEach(sizeStock => { %>
+                        <div><%= sizeStock.size %>: <%= sizeStock.stock %></div>
+                      <% }) %>
+                      <% console.log(prod.sizes); %>
+                    </td>
+                    <td><%= prod.price %></td>
+                    <td>
+                      <% prod.images.forEach(img => { %>
+                      <img src="/uploads/<%= img.url %>" alt="Product Image" width="50">
+                      <% }) %>
+                  </td>
                     </td>
                     <td>
                         <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
@@ -57,7 +56,7 @@
                 <% }) %>
             </tbody>
         </table>
-        <a href="/admin/product-add">Add New Product</a>
+        <a href="/admin/product-add" class="btn btn-primary">Add New Product</a>
       </div>
     </div>
   </div>

@@ -6,6 +6,7 @@ const session = require('express-session');
 const otpGenerator = require('otp-generator');
 const bodyParser = require('body-parser');
 const Product=require('../model/productSchema')
+const Cart=require('../model/cartSchema')
 
 
 
@@ -70,7 +71,7 @@ const sendOtpMail = async (email, otp) => {
             from: process.env.BREVO_MAIL,
             to: email,
             subject: 'Your OTP code',
-            text:` Your OTP code is ${otp}. It is valid for 10 minutes.`
+            text:` Your OTP code is ${otp}. It is valid for 1 minutes.`
         };
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
@@ -94,53 +95,127 @@ const loadRegister = async (req, res) => {
 
 const loadProduct = async (req, res) => {
     try {
-        res.render('user/product');
+        const product= await Product.find();
+        res.render('user/product',{product});
     } catch (error) {
         console.log(error.message);
     }
 };
 const insertUser = async (req, res) => {
     try {
-        const spassword = await securePassword(req.body.password);
+        const { username, email, mobileno, password, passwordRe } = req.body;
+        const errors = {};
+        if (!username) {
+            errors.username = "Username is required";
+        } else {
+            const usernameRegex = /^[A-Za-z]+$/;
+            if (!usernameRegex.test(username)) {
+                errors.username = "Username must contain only alphabets";
+            }
+        }
+        if (!email) {
+            errors.email = "Email is required";
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errors.email = "Invalid email format";
+            }
+        }
+
+        if (!mobileno) {
+            errors.mobileno = "Mobile number is required";
+        } else {
+            const mobileRegex = /^[0-9]{10}$/;
+            if (!mobileRegex.test(mobileno)) {
+                errors.mobileno = "Mobile number must contain number & be 10 digits";
+            }
+        }
+        if (!password) {
+            errors.password = "Password is required";
+        } else if (password.length < 5 || password.length > 8) {
+            errors.password = "Password must be between 5 to 8 characters";
+        }
+
+        if (!passwordRe) {
+            errors.passwordRe = "Please confirm your password";
+        }
+
+        if (password && passwordRe && password !== passwordRe) {
+            errors.passwordRe = "Passwords do not match";
+        }
+        if (Object.keys(errors).length > 0) {
+            return res.render('user/signup', { errors, username, email, mobileno }); 
+        }
+
+       
+        const spassword = await securePassword(password);
+
+        const userDatacheck = await User.findOne({ email });
+        if (userDatacheck) {
+            return res.render('user/signup', { message: "That user already exists!!...Try Again" });
+        }
+
+        
         const user = new User({
-            username: req.body.username,
-            email: req.body.email,
-            mobileno: req.body.mobileno,
+            username,
+            email,
+            mobileno,
             password: spassword,
             isAdmin: false,
             isVerified: false
         });
 
-        const userDatacheck = await User.findOne({ email: req.body.email });
-        console.log(userDatacheck);
-        if (!userDatacheck) {
-            const userData = await user.save();
-            const userId = userData._id;
+        const userData = await user.save();
+        const userId = userData._id;
 
-            if (userData) {
-                const otp = generateOtp();
-                console.log(otp);
+        if (userData) {
+            const otp = generateOtp();
+            console.log(otp);
 
-                const otpData = new OtpData({
-                    userId: userId,
-                    otp: otp
-                });
+            const otpData = new OtpData({
+                userId: userId,
+                otp: otp
+            });
 
-                await otpData.save(); // Ensure OTP is saved before sending the email
-                sendOtpMail(userData.email, otp);
-                
-                res.redirect(`/verify-otp?user_id=${userId}`); // Pass user ID to the template
-            } else {
-                res.render('user/signup', { message: "Your registration has failed" });
-            }
+            await otpData.save(); 
+            sendOtpMail(userData.email, otp);
+
+            res.redirect(`/verify-otp?user_id=${userId}`); 
         } else {
-            res.render('user/signup', { message: "That user already exists!!...Try Again" });
+            res.render('user/signup', { message: "Your registration has failed" });
         }
     } catch (error) {
         console.log(error.message);
         res.render('user/signup', { message: "An error occurred during registration. Please try again." });
     }
 };
+
+
+
+
+const resendOTP= async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        const userData = await User.findById(user_id);
+        if (!userData) {
+            return res.render('user/verify-otp', { message: "User not found" });
+        }
+
+        const newOtp = generateOtp();
+        await OtpData.findOneAndUpdate({ userId: user_id }, { otp: newOtp });
+
+        sendOtpMail(userData.email, newOtp);
+
+        res.render('user/verify-otp', { user_id, message: "OTP resent successfully. Please check your email." });
+    } catch (error) {
+        console.log(error);
+        res.render('error', { message: "An error occurred while resending OTP. Please try again." });
+    }
+};
+
+
+
 
 const verifyOtp = async(req,res)=>{
     try {
@@ -152,7 +227,7 @@ const verifyOtp = async(req,res)=>{
             res.redirect('/login')
             console.log("sucess")
          }else{
-            res.render('user/verify-otp')
+            res.render('user/verify-otp',{message:"Incorrect OTP entered. Please try again",user_id})
             console.log("error")
          }
         
@@ -162,7 +237,6 @@ const verifyOtp = async(req,res)=>{
 }
 
 
-// OTP generation and verification
 
 const generateOtp = () => {
     return otpGenerator.generate(6, {
@@ -185,6 +259,7 @@ const loginLoad = async (req, res) => {
 };
 const verifyOtpLoad = async (req, res) => {
     try {
+        
         const user=req.query.user_id;
         res.render('user/verify-otp',{message:"Enter the otp send to your email",user_id:user});
     } catch (error) {
@@ -226,12 +301,55 @@ const loadHome = async (req, res) => {
         
         const product= await Product.find()
         res.render('user/index',{product,user:req.session.user});
+        console.log(product)
     } catch (error) {
         console.log(error.message);
     }
 };
 
+const loadCart = async (req, res) => {
+    try {
+        const userId = req.session.user_id;
+        const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
 
+        res.render('user/cart', { cart });
+    } catch (error) {
+        console.log(error.message);
+        res.render('error', { message: "An error occurred while loading the cart. Please try again." });
+    }
+};
+const addToCart = async (req, res) => {
+    try {
+        const userId = req.session.user_id;
+        const { productId, quantity } = req.body;
+
+        let cart = await Cart.findOne({ userId, active: true });
+
+        if (!cart) {
+            cart = new Cart({ userId, products: [] });
+        }
+
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+        if (productIndex !== -1) {
+            cart.products[productIndex].quantity += quantity;
+        } else {
+            const product = await Product.findById(productId);
+            cart.products.push({
+                productId,
+                quantity,
+                name: product.name,
+                price: product.price,
+                size: product.sizes
+            });
+        }
+
+        await cart.save();
+        res.status(200).json({ message: 'Product added to cart' });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: 'An error occurred while adding to cart' });
+    }
+};
 
 const userLogout= async(req,res)=>{
     try {
@@ -259,6 +377,8 @@ module.exports = {
     loadProduct,
     verifyOtpLoad,
     userLogout,
-    
+    resendOTP,
+    loadCart,
+    addToCart
 
 };

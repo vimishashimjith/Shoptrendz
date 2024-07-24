@@ -1,45 +1,53 @@
-const mongoose=require('mongoose')
-const productSchema= new mongoose.Schema({
-     name: {
-        type:String,
-        required:true
-     },
-     
-        brand:{
-            type:String,
-            required:true
-        }
-     ,
-     description:{
-        type:String,
-        required:true
-     },
-     category:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Category',
-        required:true
-     },
-     size:{
-        type:String,
-        default:'M'
-     },
-     price:{
-        type:Number,
-        default:0
-     },
-     stock:[{
-        type:Number,
-        required:true,
-        min:0,
-        max:200
-     }],
-     image:{
-        type:Array,
-        required:true
-     },
-     softDelete:{
-        type:Boolean,
-        default:false
-     }
-});
-module.exports=mongoose.model('Product',productSchema)
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  brand: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
+  },
+  sizes: [{
+    size: {
+      type: String,
+      required: true
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 200
+    }
+  }],
+  price: {
+    type: Number,
+    default: 0
+  },
+  images: [{
+    url: {
+      type: String,
+      required: true
+    },
+    
+  }],
+  softDelete: {
+    type: Boolean,
+    default: false
+  }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Product', productSchema);

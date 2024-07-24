@@ -364,7 +364,7 @@ h1, h2, h3, h4, h5, h6,
   margin-bottom: 0.5rem;
   font-weight: 500;
   line-height: 1.2;
-  color: #fff;
+  color: #bd2130;
 }
 
 h1, .h1 {
@@ -9678,7 +9678,18 @@ a.text-dark:hover, a.text-dark:focus {
 .product-item:hover .product-img img {
   transform: scale(1.2);
 }
+.product-img {
+  width: 284px;
+  height: 385px; 
+  position: relative;
+  overflow: hidden;
+}
 
+.product-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* This ensures the image covers the entire div */
+}
 .product-item .btn:hover {
   color: #FFD333 !important;
 }

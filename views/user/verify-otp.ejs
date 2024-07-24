@@ -1,8 +1,81 @@
-<form action="" method="post">
+<form action="/verify-otp" method="post">
     <input type="hidden" name="user_id" value="<%= user_id %>">
     <input type="text" name="otp" placeholder="Enter OTP" required>
     <button type="submit">Verify OTP</button>
     <% if (typeof message !== 'undefined') { %>
-        <p style="color: white; font-weight:bold;"><%= message %> </p>
-        <% } %>
+        <p style="color: red;"><%= message %></p>
+    <% } %>
 </form>
+
+<!-- Resend OTP button -->
+<form action="/resend-otp" method="get" id="resendForm">
+    <input type="hidden" name="user_id" value="<%= user_id %>">
+    <button type="submit" id="resendBtn" onclick="disableResendButton()">Resend OTP</button>
+</form>
+
+<script>
+    // Function to disable resend button and refresh page after 60 seconds
+    function disableResendButton() {
+        document.getElementById('resendBtn').disabled = true;
+        setTimeout(() => {
+            window.location.reload(); // Reload the page after 60 seconds
+        }, 60000); // 60 seconds (60000 milliseconds)
+    }
+</script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+    }
+
+    form {
+        max-width: 400px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"], button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    p.message {
+        color: #10c03c;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    #resendBtn {
+        background-color: #008CBA;
+        color: white;
+        border: none;
+        cursor: pointer;
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
+
+    #resendBtn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+</style>

@@ -5,14 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin</title>
   <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
-  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+  <style>
+    .image-preview {
+        width: 679px; /* Adjust as needed */
+        height: 679px; /* Adjust as needed */
+        margin-top: 10px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .img-thumbnail {
+        max-width: 50%;
+        max-height: 50%;
+    }
+
+    .remove-icon {
+        display: none;
+        font-size: 24px;
+        color: red;
+        cursor: pointer;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 20;
+    }
+  </style>
 </head>
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
-    <%- include('../partials/admin/sidebar.ejs') %>
+    <% include('../partials/admin/sidebar.ejs') %>
     <div class="body-wrapper">
-      <%- include('../partials/admin/header.ejs') %>
+      <% include('../partials/admin/header.ejs') %>
       <br>
       <br>
       <div class="page-wrapper">
@@ -25,7 +53,7 @@
                 <div class="alert alert-info"><%= message %></div>
               <% } %>
 
-              <form action="/admin/product-edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
+              <form id="image-form" action="/admin/product-edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label for="name" class="form-label">Product Name</label>
                   <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
@@ -51,12 +79,23 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="size" class="form-label">Size</label>
-                  <select class="form-control" id="size" name="size" required>
-                    <% validSizes.forEach(size => { %>
-                      <option value="<%= size %>" <%= size === product.size ? 'selected' : '' %>><%= size %></option>
+                  <label class="form-label">Sizes and Stocks</label>
+                  <div id="size-stock-container">
+                    <% product.sizes.forEach(size => { %>
+                      <div class="input-group mb-3 size-stock-item">
+                        <select class="form-control size-select" name="sizes[][size]" required>
+                          <% validSizes.forEach(validSize => { %>
+                            <option value="<%= validSize %>" <%= size.size === validSize ? 'selected' : '' %>><%= validSize %></option>
+                          <% }) %>
+                        </select>
+                        <input type="number" class="form-control stock-input" name="sizes[][stock]" value="<%= size.stock %>" placeholder="Stock" required>
+                        <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+                        </div>
+                      </div>
                     <% }) %>
-                  </select>
+                  </div>
+                  <button type="button" id="add-size-stock" class="btn btn-secondary">Add Size/Stock</button>
                 </div>
 
                 <div class="mb-3">
@@ -64,25 +103,55 @@
                   <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
                 </div>
 
-                <div class="mb-3">
-                  <label for="stock" class="form-label">Stock</label>
-                  <input type="number" class="form-control" id="stock" name="stock" value="<%= product.stock %>" required>
+                <div class="mb-4">
+                  <label class="form-label">Image-1</label>
+                  <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)">
+                  <span id="image1-error" style="font-size: 14px; margin-top: -20px"></span>
+                  <button class="btn btn-link" id="dropdown-trigger1" type="button" onclick="togglePreview(1)">Click Here to Preview</button>
+                  <div id="image-preview-container1" class="image-preview mb-2" style="display:none;">
+                    <div id="image-preview1" class="image-preview mb-2"></div>
+                    <button class="btn btn-secondary mt-2" id="crop-button1" style="display: none;" type="button" onclick="cropImage(1)">Crop</button>
+                    <i class="fas fa-sync-alt remove-icon" id="remove-icon1" onclick="removeImage(1)"></i>
+                  </div>
+                  
+                    <% product.images.forEach(function(pic) { %>
+                      <img src="/uploads/<%= pic.url %>" alt="Product Image" style="width: 100px; height: auto; margin-right: 10px;">
+                    <% }); %>
+                  
+                   
                 </div>
 
-                <div class="mb-3">
-                    <label for="images" class="form-label">Images</label>
-                    <input type="file" class="form-control" id="images" name="images" multiple="multiple">
-                    
-                    <% if (product.images && product.images.length > 0) { %>
-                        <% product.images.forEach(image => { %>
-                            <img src="/public/uploads/<%= image %>" alt="Product Image" style="width: 100px; height: auto;">
-                        <% }) %>
-                    <% } else { %>
-                        <p>No images uploaded yet.</p>
-                    <% } %>
+                <div class="mb-4">
+                  <label class="form-label">Image-2</label>
+                  <input class="form-control" id="product_image2" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 2)">
+                  <span id="image2-error" style="font-size: 14px; margin-top: -20px"></span>
+                  <button class="btn btn-link" id="dropdown-trigger2" type="button" onclick="togglePreview(2)">Click Here to Preview</button>
+                  <div id="image-preview-container2" class="image-preview mb-2" style="display:none;">
+                    <div id="image-preview2" class="image-preview mb-2"></div>
+                    <button class="btn btn-secondary mt-2" id="crop-button2" style="display: none;" type="button" onclick="cropImage(2)">Crop</button>
+                    <i class="fas fa-sync-alt remove-icon" id="remove-icon2" onclick="removeImage(2)"></i>
+                  </div>
+                  <% product.images.forEach(function(pic) { %>
+                    <img src="/uploads/<%= pic.url %>" alt="Product Image" style="width: 100px; height: auto; margin-right: 10px;">
+                  <% }); %>
+                
                 </div>
+
+                <div class="mb-4">
+                  <label class="form-label">Image-3</label>
+                  <input class="form-control" id="product_image3" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 3)">
+                  <span id="image3-error" style="font-size: 14px; margin-top: -20px"></span>
+                  <button class="btn btn-link" id="dropdown-trigger3" type="button" onclick="togglePreview(3)">Click Here to Preview</button>
+                  <div id="image-preview-container3" class="image-preview mb-2" style="display:none;">
+                    <div id="image-preview3" class="image-preview mb-2"></div>
+                    <button class="btn btn-secondary mt-2" id="crop-button3" style="display: none;" type="button" onclick="cropImage(3)">Crop</button>
+                    <i class="fas fa-sync-alt remove-icon" id="remove-icon3" onclick="removeImage(3)"></i>
+                  </div>
+                  <% product.images.forEach(function(pic) { %>
+                    <img src="/uploads/<%= pic.url %>" alt="Product Image" style="width: 100px; height: auto; margin-right: 10px;">
+                  <% }); %>
                 
-                
+                </div>
 
                 <button type="submit" class="btn btn-primary">Update Product</button>
               </form>
@@ -92,12 +161,115 @@
       </div>
     </div>
   </div>
-  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
-  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Admin/assets/js/sidebarmenu.js"></script>
-  <script src="../Admin/assets/js/app.min.js"></script>
-  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  <script>
+    const croppers = {};
+
+    function previewAndCropImage(event, id) {
+        const input = event.target;
+        const file = input.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewContainer = document.getElementById(`image-preview${id}`);
+                previewContainer.innerHTML = `<img id="image-to-crop${id}" src="${e.target.result}" class="img-fluid"/>`;
+
+                const cropButton = document.getElementById(`crop-button${id}`);
+                cropButton.style.display = 'inline-block';
+
+                const removeIcon = document.getElementById(`remove-icon${id}`);
+                removeIcon.style.display = 'inline-block';
+
+                const image = document.getElementById(`image-to-crop${id}`);
+
+                if (croppers[id]) {
+                    croppers[id].destroy();
+                }
+
+                croppers[id] = new Cropper(image, {
+                    aspectRatio: 1,
+                    viewMode: 3,
+                    autoCropArea: 1,
+                    responsive: true,
+                    scalable: true,
+                    zoomable: true,
+                    background: false,
+                    minContainerWidth: 679,
+                    minContainerHeight: 679
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function cropImage(id) {
+        const previewContainer = document.getElementById(`image-preview${id}`);
+        const croppedCanvas = croppers[id].getCroppedCanvas({
+            width: 679,
+            height: 679
+        });
+        const croppedImage = document.createElement('img');
+        croppedImage.src = croppedCanvas.toDataURL('image/png');
+        previewContainer.innerHTML = '';
+        previewContainer.appendChild(croppedImage);
+
+        croppedCanvas.toBlob(blob => {
+            const fileInput = document.getElementById(`product_image${id}`);
+            const dataTransfer = new DataTransfer();
+            const file = new File([blob], fileInput.files[0].name, { type: 'image/png' });
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        }, 'image/png');
+    }
+
+    function removeImage(id) {
+        const input = document.getElementById(`product_image${id}`);
+        const previewContainer = document.getElementById(`image-preview${id}`);
+        const cropButton = document.getElementById(`crop-button${id}`);
+        const removeIcon = document.getElementById(`remove-icon${id}`);
+       
+        input.value = '';
+        previewContainer.innerHTML = '';
+        cropButton.style.display = "none";
+        removeIcon.style.display = "none";
+
+        if (croppers[id]) {
+            croppers[id].destroy();
+            delete croppers[id];
+        }
+    }
+
+    function togglePreview(id) {
+      const previewContainer = document.getElementById(`image-preview-container${id}`);
+      previewContainer.style.display = previewContainer.style.display === 'none' ? 'block' : 'none';
+    }
+
+    $(document).ready(function() {
+      $('#add-size-stock').click(function() {
+        const sizeStockHtml = `
+          <div class="input-group mb-3 size-stock-item">
+            <select class="form-control size-select" name="sizes[][size]" required>
+              <% validSizes.forEach(size => { %>
+                <option value="<%= size %>"><%= size %></option>
+              <% }) %>
+            </select>
+            <input type="number" class="form-control stock-input" name="sizes[][stock]" placeholder="Stock" required>
+            <div class="input-group-append">
+              <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+            </div>
+          </div>
+        `;
+        $('#size-stock-container').append(sizeStockHtml);
+      });
+
+      $(document).on('click', '.remove-size-stock', function() {
+        $(this).closest('.size-stock-item').remove();
+      });
+    });
+  </script>
 </body>
 </html>

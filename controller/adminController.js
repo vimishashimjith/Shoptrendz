@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../model/userSchema'); 
 const Category = require('../model/categorySchema');
-const Product = require('../model/productSchema'); // Assuming you have a Product model
+const Product = require('../model/productSchema'); 
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
 
 module.exports = {
@@ -192,37 +192,52 @@ module.exports = {
                 layout: adminLayout,
                 products
             });
+            console.log(products)
         } catch (error) {
             console.error(error.message);
             res.status(500).send("Internal Server Error");
         }
     },
    
-    addProduct: async (req, res) => {
+    addProduct : async (req, res) => {
         const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
         try {
             if (req.method === 'GET') {
                 const categories = await Category.find();
                 res.render('admin/product-add', {
                     title: 'Add Product',
-                    layout: adminLayout,
+                    layout:adminLayout,
                     categories,
                     validSizes,
                     message: null
                 });
             } else if (req.method === 'POST') {
-                const { name, brand, description, price, category, size, stock } = req.body;
-                const images = req.files.map(file => file.filename);
-                const newProduct = new Product({ name, brand, description, price, category, size, stock, images });
+                const { name, brand, description, price, category, sizes } = req.body;
+                const images = req.files ? req.files.map(file => ({ url: file.filename, cropped: false })) : [];
+                const sizeStockArray = sizes ? sizes.map(sizeStock => ({
+                    size: sizeStock.size,
+                    stock: sizeStock.stock
+                })) : [];
+    
+                const newProduct = new Product({
+                    name,
+                    brand,
+                    description,
+                    price,
+                    category,
+                    sizes: sizeStockArray,
+                    images
+                });
+    
                 await newProduct.save();
-                res.redirect('/admin/products'); // Redirect to the products page
+                console.log(newProduct);
+                res.redirect('/admin/products'); 
             }
         } catch (error) {
             console.error(error.message);
             res.status(500).send("Internal Server Error");
         }
     },
-
 
     editProduct: async (req, res) => {
         const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -235,17 +250,28 @@ module.exports = {
                 }
                 res.render('admin/product-edit', {
                     title: 'Edit Product',
-                    layout: adminLayout,
+                    layout:adminLayout,
                     categories,
                     validSizes,
                     product,
-                    message: null // Ensure message is defined
+                    message: null 
                 });
             } else if (req.method === 'POST') {
-                const { name, brand, description, price, category, size, stock } = req.body;
-                const images = req.files ? req.files.map(file => file.filename) : product.images;
-                await Product.findByIdAndUpdate(req.params.id, { name, brand, description, price, category, size, stock, images });
-                res.redirect('/admin/products'); // Redirect to the products page
+                const { name, brand, description, price, category, sizes } = req.body;
+                const images = req.files ? req.files.map(file => file.filename) : [];
+    
+                
+                await Product.findByIdAndUpdate(req.params.id, {
+                    name,
+                    brand,
+                    description,
+                    price,
+                    category,
+                    sizes,
+                    images
+                });
+    
+                res.redirect('/admin/products'); 
             }
         } catch (error) {
             console.error(error.message);
@@ -255,23 +281,39 @@ module.exports = {
     
     updateProduct: async (req, res) => {
         try {
-            const productId = req.params.id;
-            const { name, description, price, category } = req.body;
-            let images = req.body.existingImages || [];
-            if (req.files.length > 0) {
-                images = images.concat(req.files.map(file => file.filename));
-            }
-            const updatedProduct = await Product.findByIdAndUpdate(productId, { name, description, price, category, images }, { new: true });
-            if (!updatedProduct) {
-                return res.status(404).send("Product not found");
-            }
-            res.redirect('/admin/products');
+          const productId = req.params.id;
+          const { name, description, price, category } = req.body;
+          let images = req.body.existingImages || [];
+      
+          
+          if (req.files.length > 0) {
+            const newImages = req.files.map(file => file.filename);
+            images = images.concat(newImages);
+          }
+      
+          
+          const updatedProduct = await Product.findByIdAndUpdate(productId, {
+            name,
+            description,
+            price,
+            category,
+            images 
+          }, { new: true });
+      
+          
+          if (!updatedProduct) {
+            return res.status(404).send("Product not found");
+          }
+      
+          res.redirect('/admin/products'); 
         } catch (error) {
-            console.error(error.message);
-            res.status(500).send("Internal Server Error");
+          console.error(error.message);
+          res.status(500).send("Internal Server Error");
         }
-    },
-
+      },
+      
+    
+    
     deleteProduct: async (req, res) => {
         try {
             const productId = req.params.id;
