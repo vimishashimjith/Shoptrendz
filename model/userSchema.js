@@ -14,12 +14,18 @@ const userSchema = new Schema({
     },
     mobileno:{
         type: Number,
-        required:true,
-        unique:true
+        required:false,
+        unique:true,
+        sparse:true,
+        default:null,
+    },
+    googleId:{
+       type:String,
+       unique:true
     },
     password: {
         type: String,
-        required: true
+        required: false
     },
     isAdmin: {
         type: Boolean,
@@ -32,6 +38,10 @@ const userSchema = new Schema({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    token:{
+        type:String,
+        default:''
     }
 },{
     timestamps:true

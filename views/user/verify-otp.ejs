@@ -1,81 +1,153 @@
-<form action="/verify-otp" method="post">
-    <input type="hidden" name="user_id" value="<%= user_id %>">
-    <input type="text" name="otp" placeholder="Enter OTP" required>
-    <button type="submit">Verify OTP</button>
-    <% if (typeof message !== 'undefined') { %>
-        <p style="color: red;"><%= message %></p>
-    <% } %>
-</form>
+<!DOCTYPE html>
+<html lang="zxx">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Male_Fashion Template" />
+    <meta name="keywords" content="Male_Fashion, unica, creative, html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>OTP Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
 
-<!-- Resend OTP button -->
-<form action="/resend-otp" method="get" id="resendForm">
-    <input type="hidden" name="user_id" value="<%= user_id %>">
-    <button type="submit" id="resendBtn" onclick="disableResendButton()">Resend OTP</button>
-</form>
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
 
-<script>
-    // Function to disable resend button and refresh page after 60 seconds
-    function disableResendButton() {
-        document.getElementById('resendBtn').disabled = true;
-        setTimeout(() => {
-            window.location.reload(); // Reload the page after 60 seconds
-        }, 60000); // 60 seconds (60000 milliseconds)
-    }
-</script>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-        padding: 20px;
-    }
+        input[type="text"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
 
-    form {
-        max-width: 400px;
-        margin: 0 auto;
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
 
-    input[type="text"], button {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        font-size: 16px;
-    }
+        button:hover {
+            background-color: #45a049;
+        }
 
-    button {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
+        p.message {
+            color: #10c03c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
 
-    button:hover {
-        background-color: #45a049;
-    }
+        #resendBtn {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
 
-    p.message {
-        color: #10c03c;
-        font-weight: bold;
-        margin-top: 10px;
-    }
+        #resendBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
 
-    #resendBtn {
-        background-color: #008CBA;
-        color: white;
-        border: none;
-        cursor: pointer;
-        padding: 10px 15px;
-        border-radius: 4px;
-    }
+        .otp-timer {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 14px;
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            line-height: 60px;
+            text-align: center;
+            background: #f2f2f2;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-    #resendBtn:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-    }
-</style>
+        #timerValue {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #timerValue.expired {
+            font-size: 14px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <form action="/verify-otp" method="post">
+        <input type="hidden" name="user_id" value="<%= user_id %>">
+        <input type="text" name="otp" placeholder="Enter OTP" required>
+        <button type="submit">Verify OTP</button>
+        <% if (typeof message !== 'undefined') { %>
+            <p style="color: rgb(207, 6, 6);"><%= message %></p>
+        <% } %>
+    </form>
+
+    <!-- Resend OTP button and timer -->
+    <div class="form-group text-center">
+        <div id="otpTimer" class="otp-timer">
+            <span id="timerValue">60</span>
+        </div>
+        <button type="button" id="resendBtn" onclick="handleResendOTP()">Resend OTP</button>
+    </div>
+
+    <script>
+        let timer = 60;
+        let timerInterval;
+
+        function startTimer() {
+            document.getElementById('resendBtn').disabled = true;
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById("timerValue").textContent = timer;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("timerValue").classList.add("expired");
+                    document.getElementById("timerValue").textContent = "Expired";
+                    document.getElementById("resendBtn").disabled = false;
+                }
+            }, 1000);
+        }
+
+        function handleResendOTP() {
+            // Implement the resend OTP functionality here
+            document.getElementById('resendBtn').disabled = true;
+            timer = 60;
+            startTimer();
+            // Make an AJAX request or form submission to resend the OTP
+            fetch('/resend-otp?user_id=<%= user_id %>')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('OTP resent successfully');
+                    } else {
+                        console.error('Failed to resend OTP');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Start the timer on page load
+        startTimer();
+    </script>
+</body>
+</html>

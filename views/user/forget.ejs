@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="User/assets/css/login.css">
+    <link rel="stylesheet" href="User/assets/css/msg-boxes.css">
+    
+    <style>
+        .msg-box .msg-para {
+            color: red; 
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="login-div">
+            <h2 class="heading">Forget Password</h2>
+            <form action="/forget" method="post" id="login-form">
+                <div class="input-field form-child">
+                    <label for="email">Email: </label>
+                    <input type="email" placeholder="xyz@gmail.com" name="email" required>
+                </div>
+                
+                <div class="input-field form-child button-div">
+                    <button id="submit-button">Send Reset Link</button>
+                </div>
+                <% if (typeof message !== 'undefined') { %>
+                    <p style="color: rgb(3, 13, 61);"><%= message %></p>
+                <% } %>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

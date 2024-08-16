@@ -35,14 +35,13 @@ const productSchema = new mongoose.Schema({
   }],
   price: {
     type: Number,
-    default: 0
+    default: 1
   },
   images: [{
     url: {
       type: String,
       required: true
-    },
-    
+    }
   }],
   softDelete: {
     type: Boolean,

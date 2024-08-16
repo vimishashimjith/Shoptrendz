@@ -92,7 +92,8 @@
                                 </div>
                             </div>
                             <div class="text-center py-4">
-                                <a class="h6 text-decoration-none text-truncate" href="product"><%= product.name %></a>
+                                <a class="h6 text-decoration-none text-truncate" href="productdetail/<%= product._id %>"><%= product.name %></a>
+
                                 <div class="d-flex align-items-center justify-content-center mt-2">
                                     <h5>$<%= product.price.toFixed(2) %></h5>
                                     <% if (product.discountedPrice) { %>

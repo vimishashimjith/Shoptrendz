@@ -38,9 +38,9 @@
 </head>
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
-    <% include('../partials/admin/sidebar.ejs') %>
+    <%- include('../partials/admin/sidebar.ejs') %>
     <div class="body-wrapper">
-      <% include('../partials/admin/header.ejs') %>
+      <%- include('../partials/admin/header.ejs') %>
       <br>
       <br>
       <div class="page-wrapper">
@@ -105,7 +105,8 @@
 
                 <div class="mb-4">
                   <label class="form-label">Image-1</label>
-                  <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)">
+                  <input class="form-control" id="product_images" type="file" name="images[]" accept="image/png, image/jpeg, image/jpg" multiple>
+
                   <span id="image1-error" style="font-size: 14px; margin-top: -20px"></span>
                   <button class="btn btn-link" id="dropdown-trigger1" type="button" onclick="togglePreview(1)">Click Here to Preview</button>
                   <div id="image-preview-container1" class="image-preview mb-2" style="display:none;">
@@ -123,7 +124,8 @@
 
                 <div class="mb-4">
                   <label class="form-label">Image-2</label>
-                  <input class="form-control" id="product_image2" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 2)">
+                  <input class="form-control" id="product_images" type="file" name="images[]" accept="image/png, image/jpeg, image/jpg" multiple>
+
                   <span id="image2-error" style="font-size: 14px; margin-top: -20px"></span>
                   <button class="btn btn-link" id="dropdown-trigger2" type="button" onclick="togglePreview(2)">Click Here to Preview</button>
                   <div id="image-preview-container2" class="image-preview mb-2" style="display:none;">
@@ -139,7 +141,8 @@
 
                 <div class="mb-4">
                   <label class="form-label">Image-3</label>
-                  <input class="form-control" id="product_image3" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 3)">
+                  <input class="form-control" id="product_images" type="file" name="images[]" accept="image/png, image/jpeg, image/jpg" multiple>
+
                   <span id="image3-error" style="font-size: 14px; margin-top: -20px"></span>
                   <button class="btn btn-link" id="dropdown-trigger3" type="button" onclick="togglePreview(3)">Click Here to Preview</button>
                   <div id="image-preview-container3" class="image-preview mb-2" style="display:none;">

@@ -35,8 +35,12 @@
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2) ;
 }
 
-
-
+.btn-outline-danger{
+    display: block;
+}
+.mt-2px {
+    text-align: center;
+}
 #signup-form
 {
     width: 90%;

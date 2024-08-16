@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer')
 const flash=require('connect-flash')
 const nocache=require('nocache')
 const session=require('express-session')
+const passport=require('./config/passport')
 
 
 
@@ -47,6 +48,10 @@ app.use(
     resave:false,
     saveUninitialized:false
   }));
+
+  app.use(passport.initialize())
+  app.use(passport.session())
+
   app.use(isAuthenticated);
  
   

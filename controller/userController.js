@@ -7,8 +7,7 @@ const otpGenerator = require('otp-generator');
 const bodyParser = require('body-parser');
 const Product=require('../model/productSchema')
 const Cart=require('../model/cartSchema')
-
-
+const randomstring=require('randomstring')
 
 const securePassword = async (password) => {
     try {
@@ -267,30 +266,34 @@ const verifyOtpLoad = async (req, res) => {
     }
 };
 
-const verifyLogin = async(req,res)=>{
+const verifyLogin = async (req, res) => {
     try {
         const email = req.body.email;
         const password = req.body.password;
-        console.log(email,password)
-        const userData = await User.findOne({email:email})
-        
-        if(userData){
-         
-            const passwordMatch = await bcrypt.compare(password,userData.password)
-            if(passwordMatch){
-                req.session.user_id = userData._id;
-                res.redirect('/')
-            }else{
-                res.render('user/login',{message:"email and password is incorrect",user:null})
-            }}else{
-                res.render('user/login',{message:"email and password is incorrect",user:null})
-            }
-        }
+        console.log(email, password);
+        const userData = await User.findOne({ email: email });
 
-    catch (error) {
-     console.log(error.message);   
+        if (userData) {
+            if (userData.isBlocked) {
+                return res.render('user/login', { message: "Your account has been blocked by the admin" });
+            }
+
+            const passwordMatch = await bcrypt.compare(password, userData.password);
+            if (passwordMatch) {
+                req.session.user_id = userData._id;
+                return res.redirect('/');
+            } else {
+                return res.render('user/login', { message: "Email and password are incorrect" });
+            }
+        } else {
+            return res.render('user/login', { message: "Email and password are incorrect" });
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.render('user/login', { message: "An error occurred. Please try again later." });
     }
 }
+
 
 
 
@@ -306,6 +309,26 @@ const loadHome = async (req, res) => {
         console.log(error.message);
     }
 };
+const loadProductdetail = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        console.log('Requested Product ID:', productId);
+        
+        const product = await Product.findById(productId);
+        if (!product) {
+            console.log('Product not found');
+            return res.status(404).send('Product not found');
+        }
+
+        console.log('Product found:', product);
+        res.render('user/productdetail',{product});
+    } catch (error) {
+        console.error('Error loading product details:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+
 
 const loadCart = async (req, res) => {
     try {
@@ -318,38 +341,7 @@ const loadCart = async (req, res) => {
         res.render('error', { message: "An error occurred while loading the cart. Please try again." });
     }
 };
-const addToCart = async (req, res) => {
-    try {
-        const userId = req.session.user_id;
-        const { productId, quantity } = req.body;
 
-        let cart = await Cart.findOne({ userId, active: true });
-
-        if (!cart) {
-            cart = new Cart({ userId, products: [] });
-        }
-
-        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
-        if (productIndex !== -1) {
-            cart.products[productIndex].quantity += quantity;
-        } else {
-            const product = await Product.findById(productId);
-            cart.products.push({
-                productId,
-                quantity,
-                name: product.name,
-                price: product.price,
-                size: product.sizes
-            });
-        }
-
-        await cart.save();
-        res.status(200).json({ message: 'Product added to cart' });
-    } catch (error) {
-        console.log(error.message);
-        res.status(500).json({ message: 'An error occurred while adding to cart' });
-    }
-};
 
 const userLogout= async(req,res)=>{
     try {
@@ -365,8 +357,94 @@ const userLogout= async(req,res)=>{
    console.log(error.message)        
     }
 }
+const forgetLoad = async (req, res) => {
+    try {
+        res.render('user/forget');
+    } catch (error) {
+        console.log(error.message);
+    }
+};
 
-
+const forgetVerify = async (req, res) => {
+    try {
+        const email=req.body.email;
+        const userData= await User.findOne({email:email})
+        if(userData){
+          
+           if(userData.isVerified===0){
+            res.render('user/forget',{message:"Please verify your mail"})
+           }else{
+            const randomString=randomstring.generate();
+            const updatedData= await User.updateOne({email:email},{$set:{token:randomString}})
+            sendResetPasswordMail(userData.username,userData.email,randomString)
+            res.render('user/forget',{message:"Please check your mail to reset your password"})
+           }
+        }else{
+            res.render('user/forget',{message:"User email is incorrect"})
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+//Reset password//
+const sendResetPasswordMail = async (username, email,token) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 456,
+            secure: false,
+            auth: {
+                user: process.env.BREVO_MAIL,
+                pass: process.env.BREVO_PASS
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+        const mailOptions = {
+            from: process.env.BREVO_MAIL,
+            to: email,
+            subject: 'For Reset Password',
+            html: `<p>Hi ${username}, please click here to <a href="http://localhost:3000/forget-password?token=${token}">Reset</a> your password.</p>`
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log("Email has been sent", info.response);
+            }
+        });
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+const forgetPasswordLoad = async(req,res)=>{
+    try {
+        const token= req.query.token;
+        const tokenData= await User.findOne({token:token});
+        if(tokenData){
+            res.render('user/forget-password',{user_id:tokenData._id})
+        }else{
+            res.render('user/404',{message:"Token is invalid"})
+        }
+    } catch (error) {
+        console.log(error.message);
+        
+        
+    }
+}
+const resetPassword=async(req,res)=>{
+    try {
+        const password=req.body.password
+        const user_id=req.body.user_id
+        const secure_password = await securePassword(password)
+        const updatedData= await User.findByIdAndUpdate({_id:user_id},{$set:{password:secure_password,token:''}})
+        res.redirect('/')
+    } catch (error) {
+     console.log(error.message)   
+    }
+}
 module.exports = {
     loadRegister,
     insertUser,
@@ -379,6 +457,11 @@ module.exports = {
     userLogout,
     resendOTP,
     loadCart,
-    addToCart
+    loadProductdetail,
+    forgetLoad,
+    forgetVerify,
+    sendResetPasswordMail,
+    forgetPasswordLoad,
+    resetPassword
 
 };

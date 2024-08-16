@@ -1,19 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {loginLoad, insertUser, verifyLogin, loadHome, loadRegister,verifyOtpLoad, verifyMail, userLogout,verifyOtp, loadProduct, validateSignupBody, resendOTP,loadCart, addToCart}=require('../controller/userController')
+const {loginLoad, insertUser, verifyLogin, loadHome, loadRegister,verifyOtpLoad,resetPassword, forgetPasswordLoad, verifyMail,forgetVerify, userLogout,verifyOtp, loadProduct, validateSignupBody, resendOTP,loadCart, addToCart, loadProductdetail,forgetLoad}=require('../controller/userController')
 const bodyparser=require('body-parser')
 const auth = require('../middleware/auth')
-
-
-
-
+const passport=require('passport')
 
 router.use(bodyparser.urlencoded({extended:true}))
 router.use(bodyparser.json());
-
-
-
-/* GET users listing. */
 router.get('/signup', auth.isLogout, loadRegister);
 router.post('/signup',insertUser);
 router.get('/login', auth.isLogout, loginLoad);
@@ -22,16 +15,17 @@ router.post('/login', auth.isLogout, verifyLogin);
 router.get('/verify-otp', verifyOtpLoad);
 router.get('/resend-otp', verifyOtpLoad);
 router.post('/verify-otp', verifyOtp);
-
-
+router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
+router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
+    res.redirect('/')
+});
+router.get('/forget',auth.isLogout,forgetLoad)
+router.get('/forget-password',auth.isLogout,forgetPasswordLoad)
+router.post('/forget-password',resetPassword)
+router.post('/forget',forgetVerify)
 router.get('/', loadHome);
 router.get('/product', loadProduct);
+router.get('/productdetail/:id', loadProductdetail);
 router.get('/cart', loadCart);
-router.post('/add-to-cart', addToCart);
-
-
-
-
-
 
 module.exports = router;

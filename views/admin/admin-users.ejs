@@ -22,16 +22,9 @@
     <%- include('../partials/admin/header.ejs')%>
       <!--  Header End -->
       
-                  
-
     <div class="page-wrapper">
-
-        <!-- Navbar starts here -->
-    
-        <!-- Navbar ends here -->
         <div class="content-wrapper">
             <div class="container-fluid">
-
                 <div class="row mt-3">
                     <div class="col-lg">
                         <div class="card">
@@ -45,72 +38,45 @@
                                         <th>MOBILE</th>
                                         <th>STATUS</th>
                                         <th>ACTION</th>
-
                                     </thead>
-
                                     <tbody class="text-black">
-
                                         <% if(users.length> 0) { %>
                                             <% for (let i=0;i < users.length; i++) { %>
-
                                                 <tr>
-
+                                                    <td><%=users[i].username%></td>
+                                                    <td class="pt-3"><%=users[i].email%></td>
+                                                    <td><%=users[i].mobileno%></td>
                                                     <td>
-                                                        <%=users[i].username%>
-                                                    </td>
-
-                                                    <td class="pt-3">
-                                                        <%=users[i].email%>
-                                                    </td>
-                                                    <td>
-                                                        <%=users[i].mobileno%>
-                                                    </td>
-                                                    <td>
-                                                        <span  id="status_<%=users[i]._id%>">
-                                                            <% if(users[i].isBlocked){%>
-                                                                <span 
-                                                                    class="badge rounded-pill alert-success">Blocked</span>
-                                                                <% } else {%>
-                                                                    <span
-                                                                        class="badge rounded-pill alert-success">Active</span>
-                                                                    <% } %>
+                                                        <span id="status_<%=users[i]._id%>">
+                                                            <% if(users[i].isBlocked) { %>
+                                                                <span class="badge rounded-pill alert-success">Blocked</span>
+                                                            <% } else { %>
+                                                                <span class="badge rounded-pill alert-success">Active</span>
+                                                            <% } %>
                                                         </span>
-
                                                     </td>
-                                                    
                                                     <td>
-                                                        <button class="btn btn-sm rounded font-sm block-user bg-info"
-                                                            ><a href="/admin/block/<%=users[i]._id%>">Block</a></button>
-                                                        <button
-                                                            class="btn btn-sm rounded font-sm unblock-user bg-success"
-                                                            ><a href="/admin/unblock/<%=users[i]._id%>">UnBlock</a></button>
+                                                        <button class="btn btn-sm rounded font-sm toggle-block-user" style="color: rgb(39, 11, 141);"
+                                                            data-id="<%=users[i]._id%>"
+                                                            data-status="<%=users[i].isBlocked ? 'Unblock' : 'Block' %>">
+                                                            <%=users[i].isBlocked ? 'Unblock' : 'Block' %>
+                                                        </button>
                                                     </td>
-
                                                 </tr>
-
-
-                                                <% } %>
-                                                    <% } else { %>
-                                                        <tr>
-                                                            <td colspan="5">Users not found</td>
-                                                        </tr>
-                                                        <% } %>
-
-
+                                            <% } %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="5">Users not found</td>
+                                            </tr>
+                                        <% } %>
                                     </tbody>
-
-
                                 </table>
-
                             </div>
                         </div>
                     </div>
-
-                </div><!--End Row-->
-
-
-        
-   
+                </div><!-- End Row -->
+            </div>
+        </div>
     </div>
   </div>
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
@@ -118,6 +84,20 @@
   <script src="../Admin/assets/js/sidebarmenu.js"></script>
   <script src="../Admin/assets/js/app.min.js"></script>
   <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+
+  <script>
+    $(document).ready(function() {
+        $('.toggle-block-user').click(function() {
+            var userId = $(this).data('id');
+            var action = $(this).data('status');
+            var confirmation = confirm(`Are you sure you want to ${action} this user?`);
+            
+            if (confirmation) {
+                window.location.href = `/admin/block/${userId}`;
+            }
+        });
+    });
+  </script>
 </body>
 
 </html>
