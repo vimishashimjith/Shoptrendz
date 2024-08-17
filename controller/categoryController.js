@@ -1,6 +1,7 @@
 
 const Category = require('../model/categorySchema');
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
+const User=require('../model/userSchema')
 
 module.exports = {
     adminCategory: async (req, res) => {
@@ -15,17 +16,44 @@ module.exports = {
         }
     },
 
-    addCategory: async (req, res) => {
+     addCategory : async (req, res) => {
         try {
             const { name, description } = req.body;
-            const newCategory = new Category({ name, description });
+            const normalizedName = name.toLowerCase(); 
+    
+            
+            const existingCategory = await Category.findOne({ name: normalizedName }).collation({ locale: 'en', strength: 2 });
+            if (existingCategory) {
+                
+                const user = await User.findById(req.session.User_id);
+                return res.render('admin/category-add', {
+                    layout:adminLayout,
+                    admin: user,
+                    message: 'Category with this name already exists.',
+                    name,
+                    description
+                });
+            }
+    
+            const newCategory = new Category({
+                name: normalizedName,
+                description
+            });
             await newCategory.save();
-            res.redirect('/admin/categories');
+            res.redirect('/admin/categories'); 
+    
         } catch (error) {
             console.error(error.message);
-            res.status(500).send("Internal Server Error");
+            const user = await User.findById(req.session.User_id);
+            res.render('admin/category-add', {
+                admin: user,
+                message: 'An error occurred while adding the category.',
+                username,
+                description
+            });
         }
     },
+    
 
     listCategories: async (req, res) => {
         try {
@@ -74,7 +102,7 @@ module.exports = {
         }
     },
 
-    deleteCategory: async (req, res) => {
+  /* deleteCategory: async (req, res) => {
         try {
             const categoryId = req.params.id;
             const deletedCategory = await Category.findByIdAndDelete(categoryId);
@@ -86,5 +114,5 @@ module.exports = {
             console.error(error.message);
             res.status(500).send("Internal Server Error");
         }
-    }
+    }*/
 };

@@ -13,13 +13,14 @@ const passport=require('./config/passport')
 
 
 
-
 const connectDB = require('./config/db');
 
 const usersRouter = require('./routes/users');
 
 const adminsRouter = require('./routes/admins');
 const { isAuthenticated } = require('./middleware/auth');
+
+
 
 
 
@@ -53,6 +54,8 @@ app.use(
   app.use(passport.session())
 
   app.use(isAuthenticated);
+
+  
  
   
 

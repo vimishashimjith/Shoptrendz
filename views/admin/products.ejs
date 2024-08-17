@@ -39,7 +39,6 @@
                       <% prod.sizes.forEach(sizeStock => { %>
                         <div><%= sizeStock.size %>: <%= sizeStock.stock %></div>
                       <% }) %>
-                      <% console.log(prod.sizes); %>
                     </td>
                     <td><%= prod.price %></td>
                     <td>
@@ -47,11 +46,37 @@
                       <img src="/uploads/<%= img.url %>" alt="Product Image" width="50">
                       <% }) %>
                   </td>
-                    </td>
-                    <td>
-                        <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
-                        <a href="/admin/product-delete/<%= prod._id %>" onclick="return confirm('Are you sure?')">Delete</a>
-                    </td>
+                  <tbody>
+                    <% products.forEach(prod => { %>
+                    <tr>
+                        <td><%= prod.name %></td>
+                        <td><%= prod.brand %></td>
+                        <td><%= prod.description %></td>
+                        <td><%= prod.category.name %></td>
+                        <td>
+                            <% prod.sizes.forEach(sizeStock => { %>
+                                <div><%= sizeStock.size %>: <%= sizeStock.stock %></div>
+                            <% }) %>
+                        </td>
+                        <td><%= prod.price %></td>
+                        <td>
+                            <% prod.images.forEach(img => { %>
+                                <img src="/uploads/<%= img.url %>" alt="Product Image" width="50">
+                            <% }) %>
+                        </td>
+                        <td>
+                          <a href="/admin/product-edit/<%= prod._id %>">Edit</a>
+                          <button type="button" class="btn btn-primary">
+                              <% if (!prod.softDelete) { %>
+                                  <a href="/admin/products/softdeleteproduct?id=<%= prod._id %>" class="text-light">Unlink</a>
+                              <% } else { %>
+                                  <a href="/admin/products/removeSoftDeleteProduct?id=<%= prod._id %>" class="text-light">Link</a>
+                              <% } %>
+                          </button>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
                 </tr>
                 <% }) %>
             </tbody>

@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const Product=require('../model/productSchema')
 const Cart=require('../model/cartSchema')
 const randomstring=require('randomstring')
+const address=require('../model/addressSchema')
 
 const securePassword = async (password) => {
     try {
@@ -100,6 +101,46 @@ const loadProduct = async (req, res) => {
         console.log(error.message);
     }
 };
+const addAddressLoad = async (req, res, next) => {
+    try {
+        res.render('user/add-address')
+        }
+        catch(error){
+            console.log(error.message)
+        }
+       
+       
+}
+const addAddress = async (req, res, next) => {
+    try {
+       
+        let address = new address({
+            
+            fullname: req.body.fullname,
+            mobile: req.body.mobile,
+            pincode: req.body.pincode,
+            street: req.body.street,
+            city: req.body.city,
+            state: req.body.state,
+            country: req.body.country,
+        });
+
+        address = await address.save();
+        res.redirect('user/showAddress');
+    } catch (error) {
+        next(error);
+    }};
+    const showAddress = async (req, res, next) => {
+        try {
+            
+            
+            const addresses = await address.find();
+    
+            res.render('user/showAddress');
+        } catch (error) {
+            next(error);
+        }
+    };
 const insertUser = async (req, res) => {
     try {
         const { username, email, mobileno, password, passwordRe } = req.body;
@@ -330,18 +371,46 @@ const loadProductdetail = async (req, res) => {
 
 
 
-const loadCart = async (req, res) => {
+const addToCart = async (req, res) => {
     try {
-        const userId = req.session.user_id;
+        const userId = req.session.user_id; 
+        const { productId, quantity } = req.body;
+
+        let cart = await Cart.findOne({ userId, active: true });
+
+        if (cart) {
+            const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+            if (productIndex > -1) {
+                cart.products[productIndex].quantity += parseInt(quantity);
+            } else {
+                cart.products.push({ productId, quantity });
+            }
+        } else {
+            cart = new Cart({
+                userId,
+                products: [{ productId, quantity }]
+            });
+        }
+
+        await cart.save();
+        res.status(200).json({ message: 'Product added to cart' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding product to cart' });
+    }
+};
+
+const viewCart = async (req, res) => {
+    try {
+        const userId = req.session.user_id; 
         const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
 
         res.render('user/cart', { cart });
     } catch (error) {
-        console.log(error.message);
-        res.render('error', { message: "An error occurred while loading the cart. Please try again." });
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching cart details' });
     }
 };
-
 
 const userLogout= async(req,res)=>{
     try {
@@ -364,7 +433,13 @@ const forgetLoad = async (req, res) => {
         console.log(error.message);
     }
 };
-
+const checkoutLoad=async(req,res)=>{
+    try {
+        res.render('user/checkout')
+    } catch (error) {
+        console.log(error.message)
+    }
+}
 const forgetVerify = async (req, res) => {
     try {
         const email=req.body.email;
@@ -456,12 +531,17 @@ module.exports = {
     verifyOtpLoad,
     userLogout,
     resendOTP,
-    loadCart,
+    viewCart,
     loadProductdetail,
     forgetLoad,
     forgetVerify,
     sendResetPasswordMail,
     forgetPasswordLoad,
-    resetPassword
+    resetPassword,
+    addToCart,
+    checkoutLoad,
+    addAddressLoad,
+    addAddress,
+    showAddress
 
 };

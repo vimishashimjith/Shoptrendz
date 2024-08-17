@@ -4,11 +4,13 @@ const multer = require('multer');
 const fs=require('fs')
 const path=require('path')
 
+
 const layout = './layouts/adminLayout.ejs';
 const adminController = require('../controller/adminController');
 const categoryController=require('../controller/categoryController');
 const productController=require('../controller/productController')
 const bodyParser =require('body-parser');
+const { isLogin } = require('../middleware/auth');
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended:true}));
 
@@ -29,7 +31,7 @@ const upload = multer({ storage: storage });
 
 
 
-router.get('/login', adminController.getAdminLogin);
+router.get('/login',adminController.getAdminLogin);
 router.post('/login', adminController.verifyLogin);
 router.get('/home', adminController.loadDashboard);
 router.get('/admin-users', adminController.adminDashboard);
@@ -38,15 +40,17 @@ router.get('/category-add', categoryController.adminCategory);
 router.post('/category-add', categoryController.addCategory);
 router.get('/category-edit/:id', categoryController.editCategory);
 router.post('/category-edit/:id', categoryController.updateCategory);
-router.get('/category-delete/:id',categoryController.deleteCategory);
+/*router.get('/category-delete/:id',categoryController.deleteCategory);*/
 router.get('/products', productController.showProduct);
 router.get('/product-add', productController.addProduct);
 router.post('/product-add', upload.array('images', 10), productController.addProduct);
 router.get('/product-edit/:id', productController.editProduct);
 router.post('/product-edit/:id', upload.array('images[]', 10), productController.updateProduct);
+router.get('/products/softdeleteproduct', productController.softDeleteProduct);
 
 
-router.get('/product-delete/:id', productController.deleteProduct);
+router.get('/products/removeSoftDeleteProduct', productController.removeSoftDeleteProduct);
+
 
 router.get('/block/:id', adminController.blockUser);
 

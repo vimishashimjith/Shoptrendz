@@ -33,6 +33,7 @@
                       <a href="/" class="nav-item nav-link active">Home</a>
                       <a href="product" class="nav-item nav-link">Shop</a>
                       <a href="detail.html" class="nav-item nav-link">Shop Detail</a>
+                      
                   </div>
                   <div class="navbar-nav ml-auto py-0 d-none d-lg-block">
                     <% if (isAuthenticated) { %>
@@ -59,6 +60,10 @@
                             <a class="dropdown-item" href="/login">
                                 <i class="fas fa-sign-in-alt text-primary"></i>
                                 Log In
+                            </a>
+                            <a class="dropdown-item" href="/add-address">
+                                <i class="fas fa-sign-in-alt text-primary"></i>
+                                Address
                             </a>
                         </div>
                     <% } %>

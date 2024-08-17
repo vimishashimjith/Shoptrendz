@@ -127,18 +127,59 @@ module.exports = {
         }
     },
     
-    
-    deleteProduct: async (req, res) => {
+     productList:async(req,res)=>{
         try {
             const productId = req.params.id;
-            const deletedProduct = await Product.findByIdAndDelete(productId);
-            if (!deletedProduct) {
+            const product = await Product.findById(productId);
+    
+            if (!product) {
                 return res.status(404).send("Product not found");
             }
+    
+            
+            await product.save();
             res.redirect('/admin/products');
         } catch (error) {
-            console.error(error.message);
+            console.error('Error listing product:', error.message);
             res.status(500).send("Internal Server Error");
         }
     }
-};
+     ,
+
+
+      softDeleteProduct : async (req, res) => {
+        try {
+            const id = req.query.id;
+            const product = await Product.findById(id);
+    
+            if (!product) {
+                return res.status(404).send("Product not found");
+            }
+    
+            product.softDelete = true;
+            await product.save();
+            res.redirect('/admin/products');
+        } catch (error) {
+            console.error('Error in softDeleting product:', error.message);
+            res.status(500).send("Internal Server Error");
+        }
+    },
+    
+    removeSoftDeleteProduct : async (req, res) => {
+        try {
+            const id = req.query.id;
+            const product = await Product.findById(id);
+    
+            if (!product) {
+                return res.status(404).send("Product not found");
+            }
+    
+            product.softDelete = false;
+            await product.save();
+            res.redirect('/admin/products');
+        } catch (error) {
+            console.error('Error in removing soft delete from product:', error.message);
+            res.status(500).send("Internal Server Error");
+        }
+}
+}
