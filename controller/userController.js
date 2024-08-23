@@ -364,7 +364,11 @@ const addToCart = async (req, res) => {
     try {
         const userId = req.session.user_id;
         const productId = req.params.productId;
-        const { size } = req.body;  // Extract size from the request body
+        const { size, quantity } = req.body;
+        console.log('User ID:', userId);
+        console.log('Product ID:', productId);
+        console.log('Size:', size);
+        console.log('Quantity:', quantity);
         
         if (!userId) {
             return res.status(401).json({ message: 'User not logged in' });
@@ -372,6 +376,10 @@ const addToCart = async (req, res) => {
 
         if (!size) {
             return res.status(400).json({ message: 'Size is required' });
+        }
+
+        if (!quantity || quantity <= 0) {
+            return res.status(400).json({ message: 'Valid quantity is required' });
         }
 
         let cart = await Cart.findOne({ userId, active: true });
@@ -383,22 +391,23 @@ const addToCart = async (req, res) => {
         const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
 
         if (productIndex > -1) {
-            // If product already in cart, increase quantity
-            cart.products[productIndex].quantity += 1;
+            cart.products[productIndex].quantity += quantity;
         } else {
             const product = await Product.findById(productId);
 
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
             }
-
-            // Add the new product to the cart
+            
             cart.products.push({
                 productId: product._id,
-                quantity: 1,
+                quantity: quantity,
                 name: product.name,
                 price: product.price,
-                size: size  // Include size in the cart
+                size: size,
+                
+               
+                
             });
         }
 
@@ -406,10 +415,12 @@ const addToCart = async (req, res) => {
         res.status(200).json({ message: 'Product added to cart', cart });
 
     } catch (error) {
-        console.error(error.message);
+        console.error('Error adding product to cart:', error.message);
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
+
+
 
 
 

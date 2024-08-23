@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const Category = require('../model/categorySchema');
 const Product = require('../model/productSchema'); 
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
+const  validationResult  = require('express-validator')
+
 module.exports = {
     showProduct: async (req, res) => {
         try {
@@ -36,34 +38,32 @@ module.exports = {
                 console.log('Request Body:', req.body);
     
                 const { name, brand, description, price, category, color } = req.body;
-                const sizes = req.body.sizes;  // Corrected from req.body.size to req.body.sizes
+                const sizes = req.body.sizes; // Ensure this matches the field name in the request body
                 const categories = await Category.find();
     
-                if (!Array.isArray(sizes)) {
+                // Convert price to number
+                const parsedPrice = parseFloat(price);
+                if (isNaN(parsedPrice)) {
                     return res.render('admin/product-add', {
-                        message: 'Sizes must be an array',
+                        message: 'Invalid price',
                         categories,
                         validSizes,
                     });
                 }
     
-                // Validate each size entry
-                for (const sizeEntry of sizes) {
-                    if (sizeEntry && sizeEntry.size && sizeEntry.stock !== undefined) {
-                        if (!validSizes.includes(sizeEntry.size)) {
-                            return res.render('admin/product-add', {
-                                message: `Invalid size: ${sizeEntry.size}`,
-                                categories,
-                                validSizes,
-                            });
-                        }
+                // Convert sizes to correct format and validate
+                const productSizes = sizes.map(sizeEntry => {
+                    // Convert stock to number
+                    const parsedStock = parseInt(sizeEntry.stock);
+                    if (isNaN(parsedStock) || !validSizes.includes(sizeEntry.size)) {
+                        throw new Error(`Invalid size or stock value`);
                     }
-                }
+                    return {
+                        size: sizeEntry.size,
+                        stock: parsedStock
+                    };
+                });
     
-                const productSizes = sizes.map(sizeEntry => ({
-                    size: sizeEntry.size,  // Corrected from sizeEntry.sizes to sizeEntry.size
-                    stock: parseInt(sizeEntry.stock),
-                }));
                 const images = req.files ? req.files.map(file => ({ url: file.filename })) : [];
     
                 const newProduct = new Product({
@@ -72,8 +72,8 @@ module.exports = {
                     description,
                     category,
                     color,
-                    size: productSizes,
-                    price: parseFloat(price),
+                    sizes: productSizes,
+                    price: parsedPrice,
                     images
                 });
     
@@ -86,52 +86,99 @@ module.exports = {
         }
     },
     
-      editProduct: async (req, res) => {
-        const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    editProduct: async (req, res) => {
+        const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+    
         try {
             if (req.method === 'GET') {
-                const categories = await Category.find();
-                const product = await Product.findById(req.params.id);
+                const productId = req.params.id; // Correctly extract productId
+                const product = await Product.findById(productId);
+    
                 if (!product) {
-                    return res.status(404).send('Product not found');
+                    return res.status(404).render('admin/product-edit', {
+                        title: 'Edit Product',
+                        layout: adminLayout,
+                        categories: await Category.find(),
+                        validSizes,
+                        message: 'Product not found'
+                    });
                 }
+    
+                const categories = await Category.find();
+    
                 res.render('admin/product-edit', {
                     title: 'Edit Product',
-                    layout:adminLayout,
+                    layout: adminLayout,
                     categories,
                     validSizes,
                     product,
-                    message: null 
+                    productId,
+                    message: null
                 });
             } else if (req.method === 'POST') {
-                const { name, brand, description, price, category, sizes } = req.body;
+                console.log('Request Body:', req.body);
+    
+                const productId = req.params.productId; // Correctly extract productId
+                const { name, brand, description, price, category, color } = req.body;
+                const sizes = req.body.sizes; // Ensure this matches the field name in the request body
+                const categories = await Category.find();
+    
+                // Convert price to number
+                const parsedPrice = parseFloat(price);
+                if (isNaN(parsedPrice)) {
+                    return res.render('admin/product-edit', {
+                        message: 'Invalid price',
+                        categories,
+                        validSizes,
+                        product: await Product.findById(productId)
+                    });
+                }
+    
+                // Convert sizes to correct format and validate
+                const productSizes = sizes.map(sizeEntry => {
+                    // Convert stock to number
+                    const parsedStock = parseInt(sizeEntry.stock);
+                    if (isNaN(parsedStock) || !validSizes.includes(sizeEntry.size)) {
+                        throw new Error(`Invalid size or stock value`);
+                    }
+                    return {
+                        size: sizeEntry.size,
+                        stock: parsedStock
+                    };
+                });
+    
                 const images = req.files ? req.files.map(file => ({ url: file.filename })) : [];
-                
-                await Product.findByIdAndUpdate(req.params.id, {
+    
+                // Update product with new data
+                await Product.findByIdAndUpdate(productId, {
                     name,
                     brand,
                     description,
-                    price,
                     category,
-                    sizes,
+                    color,
+                    sizes: productSizes,
+                    price: parsedPrice,
                     images
                 });
     
-                res.redirect('/admin/products'); 
+                res.redirect('/admin/products');
             }
         } catch (error) {
-            console.error(error.message);
-            res.status(500).send("Internal Server Error");
+            console.error('Error editing product:', error);
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
         }
     },
     
-     updateProduct : async (req, res) => {
+
+
+    updateProduct : async (req, res) => {
         try {
-            const { id } = req.params;
-            const { name, brand, description, price, category, sizes } = req.body;
-            const files = req.files || [];
-            const images = files.map(file => ({ url: file.filename }));
+            const { id } = req.params; // Extract product ID from request parameters
+            const { name, brand, description, price, category, sizes } = req.body; // Extract product details from request body
+            const files = req.files || []; // Handle file uploads
+            const images = files.map(file => ({ url: file.filename })); // Map files to image URLs
     
+            // Construct the update data object
             const updateData = {
                 name,
                 brand,
@@ -139,22 +186,23 @@ module.exports = {
                 price,
                 category,
                 sizes,
-                images: images.length ? images : undefined 
+                images: images.length ? images : undefined // Include images only if there are any
             };
     
+            // Find the product by ID and update it with the new data
             const updatedProduct = await Product.findByIdAndUpdate(id, { $set: updateData }, { new: true });
     
             if (!updatedProduct) {
-                return res.status(404).send('Product not found');
+                return res.status(404).send('Product not found'); // Handle case where product is not found
             }
     
+            // Redirect to the products list page
             res.redirect('/admin/products');
         } catch (error) {
-            console.error('Error updating product:', error.message);
-            res.status(500).send('Internal Server Error');
+            console.error('Error updating product:', error.message); // Log error details
+            res.status(500).send('Internal Server Error'); // Send error response
         }
     },
-    
      productList:async(req,res)=>{
         try {
             const productId = req.params.id;

@@ -1,40 +1,87 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin</title>
+  <title>Edit Product</title>
   <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
   <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
- 
+  <style>
+    .msg-box .msg-para {
+        color: red; 
+    }
+  </style>
 </head>
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
-    <%- include('../partials/admin/sidebar.ejs')%>
+    <%- include('../partials/admin/sidebar.ejs') %>
     <div class="body-wrapper">
-      <%- include('../partials/admin/header.ejs')%>
-      <br>
-      <br>
-      <br>
+      <%- include('../partials/admin/header.ejs') %>
       <div class="page-wrapper">
         <div class="container-fluid">
-            <div class="form-container">
-                <h1>Update Category</h1>
-                <form action="/admin/category-edit/<%= category._id %>" method="POST">
-                    <input type="hidden" name="_method" value="PUT">
-                    <label for="name">Category Name:</label>
-                    <input type="text" id="name" name="name" value="<%= category.name %>" required>
-                    <br>
-                    <br>
-                    <label for="description">Description:</label>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="description" name="description" value="<%= category.description %>" required>
-                    <br>
-                    <br>
-                    <button type="submit">Update Category</button>
-                </form>
-            </div> 
+          <div class="card">
+            <div class="card-body">
+              <h4>Edit Product</h4>
+              <form action="/admin/product-edit/<%= product._id %>" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="productName" class="form-label">Product Name</label>
+                  <input type="text" class="form-control" id="productName" name="name" value="<%= product.name %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="brand" class="form-label">Brand</label>
+                  <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="description" class="form-label">Description</label>
+                  <textarea class="form-control" id="description" name="description" rows="3" required><%= product.description %></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="category" class="form-label">Category</label>
+                  <select class="form-control" id="category" name="category" required>
+                    <% categories.forEach(cat => { %>
+                      <option value="<%= cat._id %>" <%= product.category.equals(cat._id) ? 'selected' : '' %>><%= cat.name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="price" class="form-label">Price</label>
+                  <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="sizes" class="form-label">Sizes and Stocks</label>
+                  <div id="size-stock-container">
+                    <% product.sizes.forEach((size, index) => { %>
+                      <div class="input-group mb-3 size-stock-item">
+                        <select class="form-control size-select" name="sizes[<%= index %>][size]" required>
+                          <% validSizes.forEach(validSize => { %>
+                            <option value="<%= validSize %>" <%= size.size === validSize ? 'selected' : '' %>><%= validSize %></option>
+                          <% }) %>
+                        </select>
+                        <input type="number" class="form-control stock-input" name="sizes[<%= index %>][stock]" value="<%= size.stock %>" placeholder="Stock" required>
+                        <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                  <button type="button" id="add-size-stock" class="btn btn-secondary">Add Size/Stock</button>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label">Images</label>
+                  <input class="form-control" type="file" name="images[]" accept="image/png, image/jpeg, image/jpg" multiple>
+                  <% product.images.forEach((pic, index) => { %>
+                    <div class="image-preview mb-2">
+                      <img src="/uploads/<%= pic.url %>" alt="Product Image <%= index + 1 %>" style="width: 100px; height: auto; margin-right: 10px;">
+                    </div>
+                  <% }) %>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Product</button>
+                <% if (typeof message !== 'undefined') { %>
+                  <p style="color: red;"><%= message %></p>
+                <% } %>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -43,6 +90,30 @@
   <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../Admin/assets/js/sidebarmenu.js"></script>
   <script src="../Admin/assets/js/app.min.js"></script>
-  <script src="..Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('#add-size-stock').click(function() {
+        const sizeStockHtml = `
+          <div class="input-group mb-3 size-stock-item">
+            <select class="form-control size-select" name="sizes[][size]" required>
+              <% validSizes.forEach(size => { %>
+                <option value="<%= size %>"><%= size %></option>
+              <% }) %>
+            </select>
+            <input type="number" class="form-control stock-input" name="sizes[][stock]" placeholder="Stock" required>
+            <div class="input-group-append">
+              <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+            </div>
+          </div>
+        `;
+        $('#size-stock-container').append(sizeStockHtml);
+      });
+
+      $(document).on('click', '.remove-size-stock', function() {
+        $(this).closest('.size-stock-item').remove();
+      });
+    });
+  </script>
 </body>
 </html>
