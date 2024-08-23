@@ -9,8 +9,37 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let sizeIndex = 1;
 
-  <style>
+      window.addSize = function() {
+        const container = document.getElementById('sizes-container');
+        const newSizeEntry = document.createElement('div');
+        newSizeEntry.classList.add('size-entry', 'mb-3');
+        newSizeEntry.innerHTML = `
+          <label for="size">Size:</label>
+          <select name="sizes[${sizeIndex}][size]" required>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+
+          <label for="stock">Stock:</label>
+          <input type="number" name="sizes[${sizeIndex}][stock]" min="0" required>
+        `;
+        container.appendChild(newSizeEntry);
+        sizeIndex++;
+      }
+    });
+  </script>
+ <style>
+    .msg-box .msg-para {
+        color: red; 
+    }
+
     .image-preview {
         width: 679px; /* Adjust as needed */
         height: 679px; /* Adjust as needed */
@@ -60,51 +89,55 @@
                   <% if (typeof errors !== 'undefined' && errors.name) { %>
                       <p class="error-message"><%= errors.name %></p>
                   <% } %>
-              </div>
+                </div>
 
                 <div class="mb-3">
                   <label for="brand" class="form-label">Brand</label>
                   <input type="text" class="form-control" id="brand" name="brand" required>
                 </div>
-
+              
                 <div class="mb-3">
                   <label for="description" class="form-label">Description</label>
                   <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
                 </div>
-
-                <div class="mb-3">
-                  <label for="category" class="form-label">Category</label>
-                  <select class="form-control" id="category" name="category" required>
-                    <% categories.forEach(cat => { %>
-                      <option value="<%= cat._id %>"><%= cat.name %></option>
-                    <% }) %>
-                  </select>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label">Sizes and Stocks</label>
-                  <div id="size-stock-container">
-                    <div class="input-group mb-3 size-stock-item">
-                      <select class="form-control size-select" name="sizes[][size]" required>
-                        <% validSizes.forEach(size => { %>
-                          <option value="<%= size %>"><%= size %></option>
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category" class="form-control" required>
+                    <option value="">Select Category</option>
+                    <% if (categories && categories.length > 0) { %>
+                        <% categories.forEach(cat => { %>
+                            <option value="<%= cat._id %>"><%= cat.name %></option>
                         <% }) %>
-                      </select>
-                      <input type="number" class="form-control stock-input" name="sizes[][stock]" placeholder="Stock" required>
-                      <div class="input-group-append">
-                        <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
-                      </div>
-                      <span class="tick-icon">&#10004;</span>
-                    </div>
+                    <% } else { %>
+                        <option value="">No categories available</option>
+                    <% } %>
+                </select>
+                <div id="sizes-container" class="mb-3">
+                  <div class="size-entry mb-3">
+                  <label for="size">Size:</label>
+                  <select name="sizes[0][size]">
+                      <option value="XS">XS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                  </select>
+
+                  <label for="stock">Stock:</label>
+                  <input type="number" name="sizes[0][stock]" min="0" required>
                   </div>
-                  <button type="button" id="add-size-stock" class="btn btn-secondary">Add Size/Stock</button>
-                </div>
+              </div>
+
+              <button type="button" onclick="addSize()">Add another size</button>
 
                 <div class="mb-3">
                   <label for="price" class="form-label">Price</label>
                   <input type="number" class="form-control" id="price" name="price" required>
                 </div>
-
+                <div class="mb-3">
+                  <label for="color" class="form-label">Color</label>
+                  <input type="text" class="form-control" id="color" name="color" required>
+                </div>
                 <div class="mb-4">
                   <label class="form-label">Image-1</label>
                   <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)" required>
@@ -155,6 +188,29 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
   <script>
+     let sizeIndex = 1;
+
+function addSize() {
+  const container = document.getElementById('sizes-container');
+  const newSizeEntry = document.createElement('div');
+  newSizeEntry.classList.add('size-entry');
+  newSizeEntry.innerHTML = `
+    <label for="size">Size:</label>
+    <select name="sizes[${sizeIndex}][size]">
+      <option value="XS">XS</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="XXL">XXL</option>
+    </select>
+
+    <label for="stock">Stock:</label>
+    <input type="number" name="sizes[${sizeIndex}][stock]" min="0" required>
+  `;
+  container.appendChild(newSizeEntry);
+  sizeIndex++;
+}
     let croppers = {};
 
     function togglePreview(id) {
@@ -252,6 +308,8 @@
             }
         }
     });
+
   </script>
+
 </body>
 </html>

@@ -4,29 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Detail - ShopTrends</title>
-    <!-- Include CSS -->
-    <link rel="stylesheet" href="User/assets/style.css">
+    <link rel="stylesheet" href="/User/assets/style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .zoom-container {
+            overflow: hidden;
+        }
+        .zoom-container img {
+            transition: transform 0.5s ease;
+            cursor: pointer;
+        }
+        .zoom-container img:hover {
+            transform: scale(1.5);
+        }
+    </style>
 </head>
 <body>
-    <!-- Shop Detail Start -->
     <div class="container-fluid pb-5">
         <div class="row px-xl-5">
-            <!-- Product Image and Thumbnails -->
             <div class="col-lg-5 mb-30">
-                <div class="bg-light p-3">
+                <div class="bg-light p-3 zoom-container">
                     <img id="main-image" class="img-fluid" src="/uploads/<%= product.images[0].url %>" alt="Product Image">
                 </div>
                 <div class="row mt-3">
                     <% for (let i = 1; i < product.images.length; i++) { %>
-                        <div class="col-4">
+                        <div class="col-4 zoom-container">
                             <img class="img-fluid" src="/uploads/<%= product.images[i].url %>" alt="Product Thumbnail">
                         </div>
                     <% } %>
                 </div>
             </div>
-
-            <!-- Product Details -->
             <div class="col-lg-7 h-auto mb-30">
                 <div class="h-100 bg-light p-30">
                     <h3><%= product.name %></h3>
@@ -46,65 +54,64 @@
                                     <i class="fa fa-plus"></i>
                                 </button>
                             </div>
+                           
+                            
                         </div>
-                        <button class="btn btn-primary px-3" onclick="addToCart('<%= product.id %>')">
+                       
+                        <button class="btn btn-primary px-3" onclick="addToCart('<%= product._id %>')">
                             <i class="fa fa-shopping-cart mr-1"></i> Add To Cart
                         </button>
                         
-                    </div>
-                    <div class="d-flex pt-2">
-                        <strong class="text-dark mr-2">Share on:</strong>
-                        <div class="d-inline-flex">
-                            <a class="text-dark px-2" href="">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a class="text-dark px-2" href="">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a class="text-dark px-2" href="">
-                                <i class="fab fa-linkedin-in"></i>
-                            </a>
-                            <a class="text-dark px-2" href="">
-                                <i class="fab fa-pinterest"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Product Description Tabs -->
-        <div class="row px-xl-5">
-            <div class="col">
-                <div class="bg-light p-30">
-                    <div class="nav nav-tabs mb-4">
-                        <a class="nav-item nav-link text-dark active" data-toggle="tab" href="#tab-pane-1">Description</a>
                         
-                    </div>
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="tab-pane-1">
-                            <h4 class="mb-3">Product Description</h4>
-                            <p><%= product.description %></p>
-                        </div>
-                        <div class="tab-pane fade" id="tab-pane-2">
-                            <h4 class="mb-3">Additional Information</h4>
-                            <p><%= product.additionalInformation %></p>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Shop Detail End -->
 
-    <!-- Include jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- Add to Cart Function -->
     <script>
-        function addToCart(productId) {
-            // Add your add to cart logic here
-            alert('Product ' + productId + ' added to cart!');
+   function addToCart(productId, size) {
+    fetch(`/cart/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ size }) // Include size in the request body
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Product added to cart successfully!',
+                icon: 'success',
+                confirmButtonText: 'Go to Cart',
+                showCancelButton: true,
+                cancelButtonText: 'Continue Shopping'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/cart'; 
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error adding product to cart:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'There was an error adding the product to the cart.',
+            icon: 'error',
+            confirmButtonText: 'Try Again'
+        });
+    });
+}
+
+ 
     </script>
 </body>
 </html>

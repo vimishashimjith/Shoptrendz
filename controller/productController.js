@@ -5,7 +5,9 @@ const adminLayout = './layouts/auth/admin/authLayout.ejs';
 module.exports = {
     showProduct: async (req, res) => {
         try {
-            const products = await Product.find();
+            const products = await Product.find()
+            .populate('category', 'name') 
+            .exec();
             res.render('admin/products', { 
                 title: 'Products',
                 layout: adminLayout,
@@ -17,48 +19,74 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
     },
-   
-    addProduct : async (req, res) => {
-        const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    addProduct: async (req, res) => {
+        const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+    
         try {
             if (req.method === 'GET') {
                 const categories = await Category.find();
                 res.render('admin/product-add', {
                     title: 'Add Product',
-                    layout:adminLayout,
+                    layout: adminLayout,
                     categories,
                     validSizes,
                     message: null
                 });
             } else if (req.method === 'POST') {
-                const { name, brand, description, price, category, sizes } = req.body;
+                console.log('Request Body:', req.body);
+    
+                const { name, brand, description, price, category, color } = req.body;
+                const sizes = req.body.sizes;  // Corrected from req.body.size to req.body.sizes
+                const categories = await Category.find();
+    
+                if (!Array.isArray(sizes)) {
+                    return res.render('admin/product-add', {
+                        message: 'Sizes must be an array',
+                        categories,
+                        validSizes,
+                    });
+                }
+    
+                // Validate each size entry
+                for (const sizeEntry of sizes) {
+                    if (sizeEntry && sizeEntry.size && sizeEntry.stock !== undefined) {
+                        if (!validSizes.includes(sizeEntry.size)) {
+                            return res.render('admin/product-add', {
+                                message: `Invalid size: ${sizeEntry.size}`,
+                                categories,
+                                validSizes,
+                            });
+                        }
+                    }
+                }
+    
+                const productSizes = sizes.map(sizeEntry => ({
+                    size: sizeEntry.size,  // Corrected from sizeEntry.sizes to sizeEntry.size
+                    stock: parseInt(sizeEntry.stock),
+                }));
                 const images = req.files ? req.files.map(file => ({ url: file.filename })) : [];
-                const sizeStockArray = sizes ? sizes.map(sizeStock => ({
-                    size: sizeStock.size,
-                    stock: sizeStock.stock
-                })) : [];
     
                 const newProduct = new Product({
                     name,
                     brand,
                     description,
-                    price,
                     category,
-                    sizes: sizeStockArray,
+                    color,
+                    size: productSizes,
+                    price: parseFloat(price),
                     images
                 });
     
                 await newProduct.save();
-                console.log(newProduct);
-                res.redirect('/admin/products'); 
+                res.redirect('/admin/products');
             }
         } catch (error) {
-            console.error(error.message);
-            res.status(500).send("Internal Server Error");
+            console.error('Error adding product:', error);
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
         }
     },
-
-    editProduct: async (req, res) => {
+    
+      editProduct: async (req, res) => {
         const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
         try {
             if (req.method === 'GET') {

@@ -10,6 +10,7 @@ const Cart=require('../model/cartSchema')
 const randomstring=require('randomstring')
 const address=require('../model/addressSchema')
 
+
 const securePassword = async (password) => {
     try {
         const passwordHash = await bcrypt.hash(password, 10);
@@ -130,17 +131,7 @@ const addAddress = async (req, res, next) => {
     } catch (error) {
         next(error);
     }};
-    const showAddress = async (req, res, next) => {
-        try {
-            
-            
-            const addresses = await address.find();
     
-            res.render('user/showAddress');
-        } catch (error) {
-            next(error);
-        }
-    };
 const insertUser = async (req, res) => {
     try {
         const { username, email, mobileno, password, passwordRe } = req.body;
@@ -338,13 +329,11 @@ const verifyLogin = async (req, res) => {
 
 
 
-
-
 const loadHome = async (req, res) => {
     try {
         
         const product= await Product.find()
-        res.render('user/index',{product,user:req.session.user});
+        res.render('user/index',{product,user:req.session.user_id});
         console.log(product)
     } catch (error) {
         console.log(error.message);
@@ -373,37 +362,63 @@ const loadProductdetail = async (req, res) => {
 
 const addToCart = async (req, res) => {
     try {
-        const userId = req.session.user_id; 
-        const { productId, quantity } = req.body;
+        const userId = req.session.user_id;
+        const productId = req.params.productId;
+        const { size } = req.body;  // Extract size from the request body
+        
+        if (!userId) {
+            return res.status(401).json({ message: 'User not logged in' });
+        }
+
+        if (!size) {
+            return res.status(400).json({ message: 'Size is required' });
+        }
 
         let cart = await Cart.findOne({ userId, active: true });
 
-        if (cart) {
-            const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
-            if (productIndex > -1) {
-                cart.products[productIndex].quantity += parseInt(quantity);
-            } else {
-                cart.products.push({ productId, quantity });
-            }
+        if (!cart) {
+            cart = new Cart({ userId, products: [] });
+        }
+
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+
+        if (productIndex > -1) {
+            // If product already in cart, increase quantity
+            cart.products[productIndex].quantity += 1;
         } else {
-            cart = new Cart({
-                userId,
-                products: [{ productId, quantity }]
+            const product = await Product.findById(productId);
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            // Add the new product to the cart
+            cart.products.push({
+                productId: product._id,
+                quantity: 1,
+                name: product.name,
+                price: product.price,
+                size: size  // Include size in the cart
             });
         }
 
         await cart.save();
-        res.status(200).json({ message: 'Product added to cart' });
+        res.status(200).json({ message: 'Product added to cart', cart });
+
     } catch (error) {
-        console.error(error);
+        console.error(error.message);
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
 
+
+
+
+
 const viewCart = async (req, res) => {
     try {
         const userId = req.session.user_id; 
-        const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
+        const cart = await Cart.findOne({ userId });
 
         res.render('user/cart', { cart });
     } catch (error) {
@@ -520,6 +535,24 @@ const resetPassword=async(req,res)=>{
      console.log(error.message)   
     }
 }
+const successGoogleLogin = async (req, res, next) => {
+    try {
+     
+        if (!req.user) {
+
+            return res.render('user/login', { message: "Failed to sign in with Google" });
+        }
+        return res.redirect('/');
+    } catch (error) {
+      
+        return next(error);
+    }
+};
+
+const errorlogin = async (req, res) => {
+   
+    return res.send("An error occurred during login.");
+};
 module.exports = {
     loadRegister,
     insertUser,
@@ -542,6 +575,7 @@ module.exports = {
     checkoutLoad,
     addAddressLoad,
     addAddress,
-    showAddress
+    successGoogleLogin,
+   errorlogin 
 
 };

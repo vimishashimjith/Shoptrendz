@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
-
+const sizeSchema = new mongoose.Schema({
+  size: { type: String, required: true },
+  stock: {
+    type: Number,
+    required: true,
+    min: [0, 'Stock must be a non-negative number'],
+    max: 200
+  }
+});
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -21,18 +29,10 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: true
   },
-  sizes: [{
-    size: {
-      type: String,
-      required: true
-    },
-    stock: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 200
-    }
-  }],
+  sizes: [sizeSchema],  
+  color: {
+     type: String, 
+     required: true },
   price: {
     type: Number,
     default: 1
