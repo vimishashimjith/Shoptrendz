@@ -6,6 +6,7 @@ const expressLayouts = require('express-ejs-layouts');
 const nocache = require('nocache');
 const session = require('express-session');
 const flash = require('connect-flash');
+const createError = require('http-errors');
 
 const connectDB = require('./config/db');
 const dotenv = require('dotenv').config();

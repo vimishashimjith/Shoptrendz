@@ -365,11 +365,7 @@ const addToCart = async (req, res) => {
         const userId = req.session.user_id;
         const productId = req.params.productId;
         const { size, quantity } = req.body;
-        console.log('User ID:', userId);
-        console.log('Product ID:', productId);
-        console.log('Size:', size);
-        console.log('Quantity:', quantity);
-        
+
         if (!userId) {
             return res.status(401).json({ message: 'User not logged in' });
         }
@@ -398,16 +394,15 @@ const addToCart = async (req, res) => {
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
             }
+
             
             cart.products.push({
                 productId: product._id,
                 quantity: quantity,
+                size: size,
                 name: product.name,
                 price: product.price,
-                size: size,
-                
-               
-                
+            
             });
         }
 
@@ -421,9 +416,82 @@ const addToCart = async (req, res) => {
 };
 
 
+const updateCartQuantity = async (req, res) => {
+    try {
+        const userId = req.session.user_id; // Ensure the user is logged in
+        const productId = req.params.productId;
+        const { change } = req.body; // The quantity change requested
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'User not logged in' });
+        }
+
+        if (!change || typeof change !== 'number') {
+            return res.status(400).json({ success: false, message: 'Invalid quantity change' });
+        }
+
+        let cart = await Cart.findOne({ userId, active: true });
+
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found' });
+        }
+
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+
+        if (productIndex > -1) {
+            // Update the quantity of the product in the cart
+            cart.products[productIndex].quantity += change;
+
+            if (cart.products[productIndex].quantity <= 0) {
+                // Remove the product from the cart if quantity is zero or negative
+                cart.products.splice(productIndex, 1);
+            }
+
+            await cart.save();
+            return res.status(200).json({ success: true, message: 'Cart updated successfully', cart });
+        } else {
+            return res.status(404).json({ success: false, message: 'Product not found in cart' });
+        }
+
+    } catch (error) {
+        console.error('Error updating cart:', error.message);
+        res.status(500).json({ success: false, message: 'Error updating cart' });
+    }
+};
 
 
 
+const removeFromCart = async (req, res) => {
+    try {
+        const userId = req.session.user_id; // Ensure the user is logged in
+        const productId = req.params.productId;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'User not logged in' });
+        }
+
+        let cart = await Cart.findOne({ userId, active: true });
+
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found' });
+        }
+
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+
+        if (productIndex > -1) {
+           
+            cart.products.splice(productIndex, 1);
+            await cart.save();
+            return res.status(200).json({ success: true, message: 'Product removed from cart', cart });
+        } else {
+            return res.status(404).json({ success: false, message: 'Product not found in cart' });
+        }
+
+    } catch (error) {
+        console.error('Error removing product from cart:', error.message);
+        res.status(500).json({ success: false, message: 'Error removing product from cart' });
+    }
+};
 
 
 const viewCart = async (req, res) => {
@@ -546,20 +614,17 @@ const resetPassword=async(req,res)=>{
      console.log(error.message)   
     }
 }
-const successGoogleLogin = async (req, res, next) => {
+const successGoogleLogin = async (req, res,next) => {
     try {
-     
-        if (!req.user) {
-
-            return res.render('user/login', { message: "Failed to sign in with Google" });
-        }
-        return res.redirect('/');
+      if (!req.user) {
+        res.render("user/login", { message: "failed to sing in with google" });
+      }
+      req.session.user;
+      res.redirect("/");
     } catch (error) {
-      
-        return next(error);
+      next(error);
     }
-};
-
+  };
 const errorlogin = async (req, res) => {
    
     return res.send("An error occurred during login.");
@@ -587,6 +652,8 @@ module.exports = {
     addAddressLoad,
     addAddress,
     successGoogleLogin,
-   errorlogin 
+   errorlogin,
+   updateCartQuantity ,
+   removeFromCart
 
 };

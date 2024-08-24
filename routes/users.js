@@ -4,7 +4,7 @@ const {
     loginLoad, insertUser, verifyLogin, loadHome, loadRegister,
     verifyOtpLoad, resetPassword, forgetPasswordLoad, forgetVerify,
     userLogout, verifyOtp, loadProduct, loadProductdetail, forgetLoad,
-    viewCart, addToCart, checkoutLoad, loadAddress, addAddress, addAddressLoad,successGoogleLogin,errorlogin 
+    viewCart, addToCart, checkoutLoad, loadAddress, addAddress, addAddressLoad,successGoogleLogin,errorlogin , updateCartQuantity,removeFromCart
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -27,12 +27,13 @@ router.get('/verify-otp', verifyOtpLoad);
 router.get('/resend-otp', verifyOtpLoad);
 router.post('/verify-otp', verifyOtp);
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/failure' }),(req, res) => {
-       
-        res.redirect('/');
+router.get('/auth/google/callback', 
+    passport.authenticate("google", { failureRedirect: "/failure" }),
+    (req, res) => {
+      req.session.user_id = req.user;
+      res.redirect("/");
     }
-);
+  );
    
 router.get('/forget', auth.isLogout, forgetLoad);
 router.get('/forget-password', auth.isLogout, forgetPasswordLoad);
@@ -43,9 +44,14 @@ router.get('/product', loadProduct);
 router.get('/productdetail/:id', loadProductdetail);
 router.get('/cart', viewCart);
 router.post('/cart/:productId', auth.isAuthenticated, addToCart);
+router.post('/cart/update-quantity/:productId', updateCartQuantity);
+router.post('/cart/remove/:productId', removeFromCart);
+
 router.get('/checkout', checkoutLoad);
 router.get("/success", successGoogleLogin);
 router.get("/failure",errorlogin );
+
+
 
 
 

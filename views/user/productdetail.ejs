@@ -1,114 +1,120 @@
-<style>
-    .zoom-container {
-        overflow: hidden;
-    }
-    .zoom-container img {
-        transition: transform 0.5s ease;
-        cursor: pointer;
-    }
-    .zoom-container img:hover {
-        transform: scale(1.5);
-    }
-</style>
 
-<div class="container-fluid pb-5">
-    <div class="row px-xl-5">
-        <div class="col-lg-5 mb-30">
-            <div class="bg-light p-3 zoom-container">
-                <img id="main-image" class="img-fluid" src="/uploads/<%= product.images[0].url %>" alt="Product Image">
-            </div>
-            <div class="row mt-3">
-                <% for (let i = 1; i < product.images.length; i++) { %>
-                    <div class="col-4 zoom-container">
-                        <img class="img-fluid" src="/uploads/<%= product.images[i].url %>" alt="Product Thumbnail">
+    <style>
+        .zoom-container {
+            overflow: hidden;
+        }
+        .zoom-container img {
+            transition: transform 0.5s ease;
+            cursor: pointer;
+        }
+        .zoom-container img:hover {
+            transform: scale(1.5);
+        }
+    </style>
+
+
+  
+        <div class="container-fluid pb-5">
+            <div class="row px-xl-5">
+                <div class="col-lg-5 mb-30">
+                    <div class="bg-light p-3 zoom-container">
+                        <img id="main-image" class="img-fluid" src="/uploads/<%= product.images[0].url %>" alt="Product Image">
                     </div>
-                <% } %>
-            </div>
-        </div>
-        <div class="col-lg-7 h-auto mb-30">
-            <div class="h-100 bg-light p-30">
-                <h3><%= product.name %></h3>
-                <h3 class="font-weight-semi-bold mb-4">$<%= product.price %></h3>
-                <p class="mb-4"><%= product.description %></p>
-
-                <!-- Size Selection -->
-                <div id="sizes-container" class="mb-3">
-                    <div class="size-entry mb-3">
-                        <label for="size">Size:</label>
-                        <select id="size-select" name="size">
-                            <option value="XS">XS</option>
-                            <option value="S">S</option>
-                            <option value="M">M</option>
-                            <option value="L">L</option>
-                            <option value="XL">XL</option>
-                            <option value="XXL">XXL</option>
-                        </select>
+                    <div class="row mt-3">
+                        <% for (let i = 1; i < product.images.length; i++) { %>
+                            <div class="col-4 zoom-container">
+                                <img class="img-fluid" src="/uploads/<%= product.images[i].url %>" alt="Product Thumbnail">
+                            </div>
+                        <% } %>
                     </div>
-
-                    <!-- Quantity Selection -->
-                    <div>
-                        <label for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 50px; height: 40px; padding-left: 10px; font-size: 16px; margin-right: 1px;" required>
-                        <button class="btn btn-primary px-3" onclick="addToCart('<%= product._id %>')">
-                            <i class="fa fa-shopping-cart mr-1"></i> Add To Cart
-                        </button>
+                </div>
+                <div class="col-lg-7 h-auto mb-30">
+                    <div class="h-100 bg-light p-30">
+                        <h3><%= product.name %></h3>
+                        <h3 class="font-weight-semi-bold mb-4">$<%= product.price %></h3>
+                        <p class="mb-4"><%= product.description %></p>
+        
+                        <!-- Size Selection -->
+                        <div id="sizes-container" class="mb-3">
+                            <div class="size-entry mb-3">
+                                <label for="size">Size:</label>
+                                <!-- Added ID to the select element -->
+                                <select id="size-select" name="sizes[0][size]">
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
+                            </div>
+        
+                            <!-- Quantity Selection -->
+                            <div>
+                                <label for="quantity">Quantity:</label>
+                                <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 50px; height: 40px; padding-left: 10px; font-size: 16px; margin-right: 1px;" required>
+        
+                                <button class="btn btn-primary px-3" onclick="addToCart('<%= product._id %>')">
+                                    <i class="fa fa-shopping-cart mr-1"></i> Add To Cart
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<script>
-function addToCart(productId) {
-    const size = document.getElementById('size-select').value;
-    const quantity = parseInt(document.getElementById('quantity').value, 10);
-
-    // Validate size and quantity before sending
-    if (!size || isNaN(quantity) || quantity <= 0) {
-        alert('Please select a valid size and quantity.');
-        return;
-    }
-
-    fetch(`/cart/${productId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ size, quantity }) // Include size and quantity in the request body
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.message) {
-            Swal.fire({
-                title: 'Success!',
-                text: 'Product added to cart successfully!',
-                icon: 'success',
-                confirmButtonText: 'Go to Cart',
-                showCancelButton: true,
-                cancelButtonText: 'Continue Shopping'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '/cart'; 
+        
+        <script>
+        function addToCart(productId) {
+            // Get size and quantity from the DOM
+            const size = document.getElementById('size-select').value;
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+        
+            fetch(`/cart/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Include size and quantity in the request body
+                body: JSON.stringify({ size, quantity })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                return response.json();
+            })
+            .then(data => {
+                if (data.message) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Product added to cart successfully!',
+                        icon: 'success',
+                        confirmButtonText: 'Go to Cart',
+                        showCancelButton: true,
+                        cancelButtonText: 'Continue Shopping'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/cart'; 
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error adding product to cart:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'There was an error adding the product to the cart.',
+                    icon: 'error',
+                    confirmButtonText: 'Try Again'
+                });
             });
         }
-    })
-    .catch(error => {
-        console.error('Error adding product to cart:', error);
-        Swal.fire({
-            title: 'Error!',
-            text: 'There was an error adding the product to the cart.',
-            icon: 'error',
-            confirmButtonText: 'Try Again'
-        });
-    });
-}
-</script>
+        </script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ 

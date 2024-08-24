@@ -4,14 +4,13 @@ const User = require('../model/userSchema');
 const { request } = require('../app');
 require('dotenv').config();
 
-passport.serializeUser((user, done) => {
-    done(null, user._id);
-});
-
-passport.deserializeUser(async (id, done) => {
+passport.serializeUser((user,done)=>{
+    done(null,user._id);
+})
+passport.deserializeUser( async function(id,done){
     try {
         const user = await User.findById(id);
-        done(null, user);
+        done(null, user);  // Retrieve user from the database
     } catch (err) {
         done(err, null);
     }
@@ -45,8 +44,8 @@ async (request, accessToken, refreshToken, profile, done) => {
                 token: ''
             });
         }
-         request.session.user=user;
-        return done(null, user._id);
+        request.session.user = user;
+        return done(null, user);
     } catch (err) {
         return done(err, null);
     }

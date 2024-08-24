@@ -17,7 +17,11 @@
                         <% cart.products.forEach(product => { %>
                             <tr data-product-id="<%= product.productId._id %>">
                                 <td class="align-middle">
-                                    <img src="/uploads/<%= product.productId._id.images %>" alt="<%= product.name %>" style="width: 50px;">
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <img src="/uploads/<%= product.images %>" alt="<%= product.name %>" style="width: 50px;">
+                                        <% } else { %>
+                                            <p>No image available</p>
+                                    <% } %>
                                 </td>
                                 <td class="align-middle">$<%= product.price %></td>
                                 <td class="align-middle">
@@ -49,6 +53,7 @@
                         </tr>
                     <% } %>
                 </tbody>
+                
             </table>
             
         </div>
@@ -98,17 +103,34 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();  // Reload the page to reflect changes
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Quantity updated successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    location.reload();  
+                });
             } else {
-                alert(data.message || 'Error updating quantity');
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Error updating quantity',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             }
         })
         .catch(error => {
             console.error('Error updating cart:', error);
-            alert('An error occurred while updating the cart.');
+            Swal.fire({
+                title: 'Error!',
+                text: 'An error occurred while updating the cart.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         });
     }
-
+    
     function removeFromCart(productId) {
         fetch(`/cart/remove/${productId}`, {
             method: 'POST',
@@ -119,14 +141,39 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();  // Reload the page to reflect changes
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Product removed from cart.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    location.reload();  // Reload the page to reflect changes
+                });
             } else {
-                alert(data.message || 'Error removing product');
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Error removing product',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             }
         })
         .catch(error => {
             console.error('Error removing product:', error);
-            alert('An error occurred while removing the product.');
+            Swal.fire({
+                title: 'Error!',
+                text: 'An error occurred while removing the product.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         });
     }
+
+
 </script>
+
+<!-- SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
