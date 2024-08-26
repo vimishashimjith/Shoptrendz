@@ -19,8 +19,8 @@
                                 <td class="align-middle">
                                     <% if (product.images && product.images.length > 0) { %>
                                         <img src="/uploads/<%= product.images %>" alt="<%= product.name %>" style="width: 50px;">
-                                        <% } else { %>
-                                            <p>No image available</p>
+                                    <% } else { %>
+                                        <p>No image available</p>
                                     <% } %>
                                 </td>
                                 <td class="align-middle">$<%= product.price %></td>
@@ -83,7 +83,7 @@
                         <h5>Total</h5>
                         <h5>$<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.price * product.quantity), 0) + 10 : 10 %></h5>
                     </div>
-                    <button class="btn btn-block btn-primary font-weight-bold my-3 py-3">Proceed To Checkout</button>
+                    <button class="btn btn-block btn-primary font-weight-bold my-3 py-3" onclick="proceedToCheckout()">Proceed To Checkout</button>
                 </div>
             </div>
         </div>
@@ -169,7 +169,9 @@
         });
     }
 
-
+    function proceedToCheckout() {
+        window.location.href = '/checkout'; // Redirect to the checkout page
+    }
 </script>
 
 <!-- SweetAlert CSS -->

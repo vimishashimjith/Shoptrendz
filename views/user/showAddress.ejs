@@ -1,66 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Address List</title>
-    <link rel="stylesheet" href="/path/to/your/styles.css">
-</head>
-<body>
-    <header>
-        <!-- Include breadcrumbs -->
-        <nav>
-            <ul>
-                <% breadcrumbs.forEach(breadcrumb => { %>
-                    <li><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
-                <% }) %>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
-        <h1>Address List</h1>
-        <a href="/add-address" class="btn btn-primary">Add New Address</a>
-        
-        <% if (addresses.length > 0) { %>
-            <table>
-                <thead>
+<div class="container">
+    <h2>Your Addresses</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Mobile No</th>
+                <th>Street</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>ZIP Code</th>
+                <th>Actions</th> <!-- Added header for actions -->
+            </tr>
+        </thead>
+        <tbody>
+            <% if (addresses.length > 0) { %>
+                <% addresses.forEach(function(address) { %>
                     <tr>
-                        <th>Fullname</th>
-                        <th>Mobile</th>
-                        <th>Pincode</th>
-                        <th>Street</th>
-                        <th>City</th>
-                        <th>State</th>
-                        <th>Country</th>
-                        <th>Actions</th>
+                        <td><%= address.fullname %></td>
+                        <td><%= address.mobile %></td>
+                        <td><%= address.street %></td>
+                        <td><%= address.city %></td>
+                        <td><%= address.state %></td>
+                        <td><%= address.country %></td>
+                        <td><%= address.pincode %></td>
+                        <td>
+                            <!-- Edit button -->
+                            <a href="/edit-address/<%= address._id %>" class="btn btn-warning btn-sm">Edit</a>
+                            <!-- Delete button with SweetAlert -->
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= address._id %>')">Delete</button>
+                            <form id="delete-form-<%= address._id %>" action="/delete-address/<%= address._id %>" method="POST" style="display:none;"></form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <% addresses.forEach(address => { %>
-                        <tr>
-                            <td><%= address.fullname %></td>
-                            <td><%= address.mobile %></td>
-                            <td><%= address.pincode %></td>
-                            <td><%= address.street %></td>
-                            <td><%= address.city %></td>
-                            <td><%= address.state %></td>
-                            <td><%= address.country %></td>
-                            <td>
-                                <a href="/editAddress?id=<%= address._id %>" class="btn btn-secondary">Edit</a>
-                                <a href="/deleteAddress?id=<%= address._id %>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        <% } else { %>
-            <p>No addresses found.</p>
-        <% } %>
-    </main>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="8" class="text-center">No addresses found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <a href="/add-address" class="btn btn-primary">Add New Address</a>
+</div>
 
-    <footer>
-        <p>&copy; 2024 Your Company</p>
-    </footer>
-</body>
-</html>
+<!-- SweetAlert confirmation script -->
+<script>
+    function confirmDelete(addressId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to delete this address?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + addressId).submit();
+            }
+        })
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

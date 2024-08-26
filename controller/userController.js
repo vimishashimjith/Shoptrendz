@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const Product=require('../model/productSchema')
 const Cart=require('../model/cartSchema')
 const randomstring=require('randomstring')
-const address=require('../model/addressSchema')
+const Address=require('../model/addressSchema')
 
 
 const securePassword = async (password) => {
@@ -104,34 +104,100 @@ const loadProduct = async (req, res) => {
 };
 const addAddressLoad = async (req, res, next) => {
     try {
-        res.render('user/add-address')
-        }
-        catch(error){
-            console.log(error.message)
-        }
-       
-       
-}
+        res.render('user/add-address');
+    } catch (error) {
+        console.error(error.message);
+        next(error); // Passes error to error-handling middleware
+    }
+};
 const addAddress = async (req, res, next) => {
     try {
-       
-        let address = new address({
-            
-            fullname: req.body.fullname,
-            mobile: req.body.mobile,
-            pincode: req.body.pincode,
-            street: req.body.street,
-            city: req.body.city,
-            state: req.body.state,
-            country: req.body.country,
+        const { firstname, lastname, mobile, pincode, street, city, state, country } = req.body;
+
+        // Basic validation
+        if (!firstname || !lastname || !mobile || !pincode || !street || !city || !state || !country) {
+            return res.status(400).send('All fields are required.');
+        }
+
+        // Creating a new Address instance
+        let address = new Address({
+            user: req.session.user_id,  
+            fullname: `${firstname} ${lastname}`,
+            mobile: mobile,
+            pincode: pincode,
+            street: street,
+            city: city,
+            state: state,
+            country: country,
         });
 
-        address = await address.save();
-        res.redirect('user/showAddress');
+      
+        await address.save();
+
+      
+        res.redirect('showAddress');
+
     } catch (error) {
+        console.error(error.message);
+        next(error); 
+    }
+};
+const showAddress = async (req, res, next) => {
+    try {
+        const addresses = await Address.find({ user: req.session.user_id });
+        res.render('user/showAddress', { addresses });
+    } catch (error) {
+        console.error(error.message);
         next(error);
-    }};
-    
+    }
+};
+
+const loadEditAddress = async (req, res, next) => {
+    try {
+        const address = await Address.findById(req.params.id);
+        if (!address) return res.status(404).send('Address not found.');
+        res.render('user/edit-address', { address }); // Make sure to create an 'edit-address.ejs' view
+    } catch (error) {
+        console.error(error.message);
+        next(error);
+    }
+};
+
+const updateAddress = async (req, res, next) => {
+    try {
+        const { firstname, lastname, mobile, pincode, street, city, state, country } = req.body;
+
+        // Validation could be added here if necessary
+        if (!firstname || !lastname || !mobile || !pincode || !street || !city || !state || !country) {
+            return res.status(400).send('All fields are required.');
+        }
+
+        await Address.findByIdAndUpdate(req.params.id, {
+            fullname: `${firstname} ${lastname}`,
+            mobile,
+            pincode,
+            street,
+            city,
+            state,
+            country
+        });
+
+        res.redirect('/showAddress'); // Redirect back to the addresses page
+    } catch (error) {
+        console.error(error.message);
+        next(error);
+    }
+};
+const deleteAddress = async (req, res, next) => {
+    try {
+        await Address.findByIdAndDelete(req.params.id);
+        res.redirect('/showAddress');
+    } catch (error) {
+        console.error(error.message);
+        next(error);
+    }
+};
+   
 const insertUser = async (req, res) => {
     try {
         const { username, email, mobileno, password, passwordRe } = req.body;
@@ -418,9 +484,9 @@ const addToCart = async (req, res) => {
 
 const updateCartQuantity = async (req, res) => {
     try {
-        const userId = req.session.user_id; // Ensure the user is logged in
+        const userId = req.session.user_id; 
         const productId = req.params.productId;
-        const { change } = req.body; // The quantity change requested
+        const { change } = req.body; 
 
         if (!userId) {
             return res.status(401).json({ success: false, message: 'User not logged in' });
@@ -439,11 +505,11 @@ const updateCartQuantity = async (req, res) => {
         const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
 
         if (productIndex > -1) {
-            // Update the quantity of the product in the cart
+            
             cart.products[productIndex].quantity += change;
 
             if (cart.products[productIndex].quantity <= 0) {
-                // Remove the product from the cart if quantity is zero or negative
+              
                 cart.products.splice(productIndex, 1);
             }
 
@@ -463,7 +529,7 @@ const updateCartQuantity = async (req, res) => {
 
 const removeFromCart = async (req, res) => {
     try {
-        const userId = req.session.user_id; // Ensure the user is logged in
+        const userId = req.session.user_id;
         const productId = req.params.productId;
 
         if (!userId) {
@@ -654,6 +720,11 @@ module.exports = {
     successGoogleLogin,
    errorlogin,
    updateCartQuantity ,
-   removeFromCart
+   removeFromCart,
+   showAddress,
+   loadEditAddress,
+   updateAddress,
+   deleteAddress
+    
 
 };
