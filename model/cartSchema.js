@@ -28,6 +28,10 @@ const cartSchema = new mongoose.Schema({
       type: String,
       required: true
     },
+    images:{
+      type:String,
+      require:true
+    }
     
   }],
   active: {

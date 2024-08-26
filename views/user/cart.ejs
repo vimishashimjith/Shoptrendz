@@ -17,12 +17,13 @@
                         <% cart.products.forEach(product => { %>
                             <tr data-product-id="<%= product.productId._id %>">
                                 <td class="align-middle">
-                                    <% if (product.images && product.images.length > 0) { %>
+                                    <% if (product.images) { %>
                                         <img src="/uploads/<%= product.images %>" alt="<%= product.name %>" style="width: 50px;">
                                     <% } else { %>
                                         <p>No image available</p>
                                     <% } %>
                                 </td>
+                                
                                 <td class="align-middle">$<%= product.price %></td>
                                 <td class="align-middle">
                                     <div class="input-group quantity mx-auto" style="width: 100px;">
@@ -53,6 +54,7 @@
                         </tr>
                     <% } %>
                 </tbody>
+                
                 
             </table>
             

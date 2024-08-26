@@ -456,19 +456,19 @@ const addToCart = async (req, res) => {
             cart.products[productIndex].quantity += quantity;
         } else {
             const product = await Product.findById(productId);
-
+          
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
             }
 
-            
+            const productImage = product.images.length > 0 ? product.images[0].url : ''; // Correctly fetches the first image URL
             cart.products.push({
                 productId: product._id,
                 quantity: quantity,
                 size: size,
                 name: product.name,
                 price: product.price,
-            
+                images: productImage  
             });
         }
 
@@ -480,6 +480,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
+
 
 
 const updateCartQuantity = async (req, res) => {
@@ -593,13 +594,58 @@ const forgetLoad = async (req, res) => {
         console.log(error.message);
     }
 };
-const checkoutLoad=async(req,res)=>{
+const checkoutLoad = async (req, res) => {
     try {
-        res.render('user/checkout')
+        // Check if user is logged in
+        const isLoggedIn = req.session.user || req.user;
+        if (!isLoggedIn) {
+            return res.status(401).render('404', {
+                url: req.originalUrl,
+                message: 'Please login to view the checkout page',
+                isLoggedIn: false,
+                count: 0
+            });
+        }
+
+        // Retrieve user ID from session
+        const userId = isLoggedIn._id;
+
+        // Fetch the cart for the user
+        const userCart = await Cart.findOne({ userId }).populate('products.productId').lean();
+
+        if (!userCart) {
+            return res.status(404).render('404', {
+                url: req.originalUrl,
+                message: 'Cart not found',
+                isLoggedIn: true,
+                count: 0
+            });
+        }
+
+        // Calculate subtotal
+        const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
+
+        // Define shipping cost
+        const shippingCost = 10;
+
+        // Calculate total amount
+        const total = subtotal + shippingCost;
+
+        // Render checkout page with populated cart data
+        res.render('user/checkout', {
+            cart: userCart,
+            subtotal,
+            shippingCost,
+            total,
+            isLoggedIn: true
+        });
+
+        console.log('Cart data:', userCart);
     } catch (error) {
-        console.log(error.message)
+        console.log('Error:', error.message);
+        res.status(500).send('Internal Server Error');
     }
-}
+};
 const forgetVerify = async (req, res) => {
     try {
         const email=req.body.email;
