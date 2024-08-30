@@ -166,9 +166,9 @@
                           <a class="h6 text-decoration-none text-truncate" href="productdetail/<%= product._id %>"><%= product.name %></a><br>
     
                           <div class="d-flex align-items-center justify-content-center mt-2">
-                            <h5>$<%= product.price.toFixed(2) %></h5>
+                            <h5>₹<%= product.price.toFixed(2) %></h5>
                             <% if (product.oldPrice) { %>
-                            <h6 class="text-muted ml-2"><del>$<%= product.oldPrice.toFixed(2) %></del></h6>
+                            <h6 class="text-muted ml-2"><del>₹<%= product.oldPrice.toFixed(2) %></del></h6>
                             <% } %>
                           </div>
                           
@@ -212,3 +212,8 @@
         <!-- Shop Product End -->
     </div>
 </div>
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Include Bootstrap JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>

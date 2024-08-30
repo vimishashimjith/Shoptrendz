@@ -4,12 +4,15 @@ const {
     loginLoad, insertUser, verifyLogin, loadHome, loadRegister,
     verifyOtpLoad, resetPassword, forgetPasswordLoad, forgetVerify,
     userLogout, verifyOtp, loadProduct, loadProductdetail, forgetLoad,
-    viewCart, addToCart, checkoutLoad, loadAddress, addAddress, addAddressLoad,successGoogleLogin,errorlogin , updateCartQuantity,removeFromCart,
-    showAddress,loadEditAddress,updateAddress,deleteAddress
+    viewCart, addToCart, checkoutLoad, addAddress, addAddressLoad,successGoogleLogin,errorlogin , updateCartQuantity,removeFromCart,
+    showAddress,loadEditAddress,updateAddress,deleteAddress, getUserDetails,editProfileLoad,editProfile,getChangePasswordPage,
+    changePassword, placeOrder,orderLoad
+   
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
 const passport = require('passport');
+
 require('../config/passport')
 router.use(passport.initialize());
 router.use(passport.session())
@@ -41,7 +44,7 @@ router.get('/auth/google/callback',
       res.redirect("/");
     }
   );
-   
+
 router.get('/forget', auth.isLogout, forgetLoad);
 router.get('/forget-password', auth.isLogout, forgetPasswordLoad);
 router.post('/forget-password', resetPassword);
@@ -55,10 +58,23 @@ router.post('/cart/update-quantity/:productId', updateCartQuantity);
 router.post('/cart/remove/:productId', removeFromCart);
 
 router.get('/checkout',checkoutLoad);
+router.post('/checkout', auth.isAuthenticated, auth.isLogin, placeOrder);
+
+router.get('/orders',auth.isAuthenticated, auth.isLogin,orderLoad)
+
+
 router.get("/success", successGoogleLogin);
 router.get("/failure",errorlogin );
+router.get('/userDetails', auth.isAuthenticated, auth.isLogin, getUserDetails);
+
+router.get('/editProfile', editProfileLoad);
 
 
+router.post('/editProfile', editProfile);
+router.get('/changePassword',auth.isLogin,getChangePasswordPage);
+
+
+router.post('/changePassword',auth.isLogin,changePassword);
 
 
 

@@ -1,10 +1,8 @@
-<!-- Checkout Page Start -->
-
 <!-- Breadcrumb Start -->
 <div class="container-fluid">
     <div class="row px-xl-5">
         <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
+            <nav class="breadcrumb bg-light mb-30 rounded shadow-sm">
                 <span class="breadcrumb-item active">Home</span>
                 <span class="breadcrumb-item active">Shop</span>
                 <span class="breadcrumb-item active">Checkout</span>
@@ -15,6 +13,7 @@
 <!-- Breadcrumb End -->
 
 <style>
+    /* Button Styles */
     #submit-button {
         width: 20%;
         background-color: #6f42c1;
@@ -24,10 +23,112 @@
         border: none;
         font-size: 16px;
         cursor: pointer;
+        transition: background-color 0.3s ease;
     }
-    
+
     #submit-button:hover {
         background-color: #5a2a8d;
+    }
+
+    /* Address Option Styles */
+    .address-option {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .address-option:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .address-option p {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .add-address-btn {
+        margin-top: 20px;
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .add-address-btn:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+
+    /* Order Total Section Styles */
+    .order-total {
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+
+    .order-total h5 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .order-total .d-flex {
+        margin-bottom: 10px;
+    }
+
+    .order-total .d-flex p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    /* Payment Section Styles */
+    .payment-method {
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .payment-method .custom-control-label {
+        font-size: 14px;
+    }
+
+    .edit-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .payment-method .btn-primary {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        font-size: 16px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .payment-method .btn-primary:hover {
+        background-color: #5a2a8d;
+        border-color: #5a2a8d;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .col-lg-8, .col-lg-4 {
+            padding: 15px;
+        }
+
+        .order-total {
+            margin-top: 20px;
+        }
     }
 </style>
 
@@ -38,65 +139,43 @@
             <h5 class="section-title position-relative text-uppercase mb-3">
                 <span class="bg-secondary pr-3">Billing Address</span>
             </h5>
-            <div class="bg-light p-30 mb-5">
-                <div class="row">
-                    <!-- Form Fields for Billing Address -->
-                    <div class="col-md-6 form-group">
-                        <label>First Name</label>
-                        <input class="form-control" type="text" placeholder="John">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>Last Name</label>
-                        <input class="form-control" type="text" placeholder="Doe">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>Mobile No</label>
-                        <input class="form-control" type="number" placeholder="+123 456 789">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>ZIP Code</label>
-                        <input class="form-control" type="number" placeholder="123">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>Street</label>
-                        <input class="form-control" type="text" placeholder="Street">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>City</label>
-                        <input class="form-control" type="text" placeholder="City">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>State</label>
-                        <input class="form-control" type="text" placeholder="New York">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label>Country</label>
-                        <select class="custom-select">
-                            <option selected>United States</option>
-                            <option>Afghanistan</option>
-                            <option>Albania</option>
-                            <option>Algeria</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12 text-center mt-4">
-                        <button id="submit-button">Submit</button>
-                    </div>
-                </div>
+           <!-- Address Selection -->
+<div class="bg-light p-30 mb-5">
+    <% if (addresses.length > 0) { %>
+        <h6 class="mb-3">Select Existing Address</h6>
+        <% addresses.forEach(function(address) { %>
+            <div class="address-option">
+                <input type="radio" name="address" id="address-<%= address._id %>" value="<%= address._id %>" onclick="selectAddress('<%= address._id %>')">
+               <br>
+                <label for="address-<%= address._id %>">
+                    <p><%= address.fullname %></p>
+                    <p><%= address.street %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
+                    <p><%= address.country %></p>
+                    <p>Mobile No: <%= address.mobile %></p>
+                </label>
+                <button class="edit-btn" onclick="editAddress('<%= address._id %>')">Edit</button>
             </div>
-        </div>
+        <% }) %>
+    <% } else { %>
+        <p>No addresses found. Please add a new address.</p>
+    <% } %>
+    <button class="btn btn-primary add-address-btn" onclick="window.location.href='/add-address'">Add New Address</button>
+</div>
+ </div>
 
         <div class="col-lg-4">
             <h5 class="section-title position-relative text-uppercase mb-3">
                 <span class="bg-secondary pr-3">Order Total</span>
             </h5>
-            <div class="bg-light p-30 mb-5">
+            <!-- Order Total Section -->
+            <div class="order-total">
                 <div class="border-bottom">
                     <h6 class="mb-3">Products</h6>
                     <% if (cart && cart.products.length > 0) { %>
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between">
                                 <p><%= item.productId.name %></p>
-                                <p>$<%= item.productId.price %></p>
+                                <p>$<%= (item.productId.price * item.quantity).toFixed(2) %></p>
                             </div>
                         <% }) %>
                     <% } else { %>
@@ -106,41 +185,39 @@
                 <div class="border-bottom pt-3 pb-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h6>Subtotal</h6>
-                        <h6>$<%= subtotal %></h6>
+                        <h6>$<%= subtotal.toFixed(2) %></h6>
                     </div>
                     <div class="d-flex justify-content-between">
                         <h6 class="font-weight-medium">Shipping</h6>
-                        <h6 class="font-weight-medium">$<%= shippingCost %></h6>
+                        <h6 class="font-weight-medium">$<%= shippingCost.toFixed(2) %></h6>
                     </div>
                 </div>
                 <div class="pt-2">
                     <div class="d-flex justify-content-between mt-2">
                         <h5>Total</h5>
-                        <h5>$<%= total %></h5>
+                        <h5>$<%= total.toFixed(2) %></h5>
                     </div>
                 </div>
             </div>
-            
-            
 
-            <div class="mb-5">
+            <div class="payment-method">
                 <h5 class="section-title position-relative text-uppercase mb-3">
                     <span class="bg-secondary pr-3">Payment</span>
                 </h5>
                 <div class="bg-light p-30">
                     <div class="form-group">
                         <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="cashondelivery">
+                            <input type="radio" class="custom-control-input" name="payment" id="cashondelivery" value="COD">
                             <label class="custom-control-label" for="cashondelivery">Cash On Delivery</label>
                         </div>
                     </div>
                     <div class="form-group mb-4">
                         <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="banktransfer">
+                            <input type="radio" class="custom-control-input" name="payment" id="banktransfer" value="Bank Transfer">
                             <label class="custom-control-label" for="banktransfer">Bank Transfer</label>
                         </div>
                     </div>
-                    <button class="btn btn-block btn-primary font-weight-bold py-3">Place Order</button>
+                    <button class="btn btn-block btn-primary font-weight-bold py-3" onclick="placeOrder()">Place Order</button>
                 </div>
             </div>
         </div>
@@ -151,5 +228,93 @@
 <!-- SweetAlert CSS and JS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Add additional JavaScript for handling form submissions and further SweetAlert dialogs if needed -->
+<!-- JavaScript for Handling Address Management -->
+<!-- Updated JavaScript for Address Management -->
+<script>
+    let selectedAddressId = null;
+
+    // Function to handle address selection
+    function selectAddress(addressId) {
+        selectedAddressId = addressId;
+    }
+
+    // Function to handle address editing
+    function editAddress(addressId) {
+        window.location.href = `/edit-address/${addressId}`;
+    }
+
+    // Function to place the order
+    function placeOrder() {
+    const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
+
+    if (!selectedAddressId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please select an address!'
+        });
+        return;
+    }
+
+    if (!paymentMethod) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please select a payment method!'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to place the order?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, place the order!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we process your order.',
+                allowOutsideClick: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/checkout',
+                type: 'POST',
+                data: {
+                    addressId: selectedAddressId,
+                    paymentMethod: paymentMethod
+                },
+                success: function(response) {
+                    Swal.fire(
+                        'Order Placed!',
+                        'Your order has been placed successfully.',
+                        'success'
+                    ).then(() => {
+                        window.location.href = '/orders';
+                    });
+                },
+                error: function() {
+                    Swal.fire(
+                        'Error!',
+                        'There was an error placing your order.',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+}
+
+</script>
+

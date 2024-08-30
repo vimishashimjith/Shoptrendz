@@ -1,0 +1,24 @@
+<div class="container">
+    <h2>Your Orders</h2>
+    <div class="order-list">
+        <% orders.forEach(order => { %>
+            <div class="order-card">
+                <h3>Order ID: <%= order._id %></h3>
+                <p><strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %></p>
+                <p><strong>Total Amount:</strong> $<%= order.totalAmount %></p>
+                <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                <p><strong>Status:</strong> <%= order.status %></p>
+                <h4>Products:</h4>
+                <ul>
+                    <% order.products.forEach(product => { %>
+                        <li>
+                            Product ID: <%= product.productId %> - Quantity: <%= product.quantity %>
+                        </li>
+                    <% }) %>
+                </ul>
+                <p><strong>Shipping Address:</strong></p>
+                <!-- Display shipping address details here -->
+            </div>
+        <% }) %>
+    </div>
+</div>

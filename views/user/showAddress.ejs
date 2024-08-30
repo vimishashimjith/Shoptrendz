@@ -28,8 +28,8 @@
                             <!-- Edit button -->
                             <a href="/edit-address/<%= address._id %>" class="btn btn-warning btn-sm">Edit</a>
                             <!-- Delete button with SweetAlert -->
-                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= address._id %>')">Delete</button>
-                            <form id="delete-form-<%= address._id %>" action="/delete-address/<%= address._id %>" method="POST" style="display:none;"></form>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= address._id%>')">Delete</button>
+                            <form id="delete-form-<%= address._id %>" action="/delete-address/<%=address._id %>" method="POST" style="display:none;"></form>
                         </td>
                     </tr>
                 <% }); %>
@@ -42,7 +42,15 @@
     </table>
     <a href="/add-address" class="btn btn-primary">Add New Address</a>
 </div>
-
+<br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br>
 <!-- SweetAlert confirmation script -->
 <script>
     function confirmDelete(addressId) {

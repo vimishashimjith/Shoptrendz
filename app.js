@@ -48,7 +48,10 @@ app.use(
 
 
 
-
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || req.user; // Make user available in all views
+  next();
+});
 
 app.use(flash());
 app.use((req, res, next) => {

@@ -137,9 +137,23 @@
                   <input type="number" class="form-control" id="price" name="price" required>
                 </div>
                 <div class="mb-3">
-                  <label for="color" class="form-label">Color</label>
-                  <input type="text" class="form-control" id="color" name="color" required>
-                </div>
+                  <label class="form-label">Color</label>
+                  <select name="color">
+                      <option value="Blue">Blue</option>
+                      <option value="Green">Green</option>
+                      <option value="Red">Red</option>
+                      <option value="Yellow">Yellow</option>
+                      <option value="Orange">Orange</option>
+                      <option value="Pink">Pink</option>
+                      <option value="Purple">Purple</option>
+                      <option value="Brown">Brown</option>
+                      <option value="Magenta">Magenta</option>
+                      <option value="Violet">Violet</option>
+                      <option value="White">White</option>
+                      <option value="Black">Black</option>
+                  </select>
+                  <div class="error" id="color-error"></div>
+              </div>
                 <div class="mb-4">
                   <label class="form-label">Image-1</label>
                   <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)" required>

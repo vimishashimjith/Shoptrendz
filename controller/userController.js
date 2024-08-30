@@ -9,7 +9,8 @@ const Product=require('../model/productSchema')
 const Cart=require('../model/cartSchema')
 const randomstring=require('randomstring')
 const Address=require('../model/addressSchema')
-
+const Order=require('../model/orderSchema')
+const userLayout = './layouts/auth/admin/authLayout.ejs';
 
 const securePassword = async (password) => {
     try {
@@ -97,14 +98,20 @@ const loadRegister = async (req, res) => {
 const loadProduct = async (req, res) => {
     try {
         const product= await Product.find();
-        res.render('user/product',{product});
+        const userId = req.session.user_id;
+        const user = await User.findById(userId);
+       
+        res.render('user/product',{product,user});
     } catch (error) {
         console.log(error.message);
     }
 };
 const addAddressLoad = async (req, res, next) => {
     try {
-        res.render('user/add-address');
+        const userId = req.session.user_id;
+        const user = await Address.find({ user: userId });
+
+        res.render('user/add-address',{user:user});
     } catch (error) {
         console.error(error.message);
         next(error); // Passes error to error-handling middleware
@@ -113,7 +120,7 @@ const addAddressLoad = async (req, res, next) => {
 const addAddress = async (req, res, next) => {
     try {
         const { firstname, lastname, mobile, pincode, street, city, state, country } = req.body;
-
+        
         // Basic validation
         if (!firstname || !lastname || !mobile || !pincode || !street || !city || !state || !country) {
             return res.status(400).send('All fields are required.');
@@ -128,7 +135,7 @@ const addAddress = async (req, res, next) => {
             street: street,
             city: city,
             state: state,
-            country: country,
+            country: country
         });
 
       
@@ -144,13 +151,35 @@ const addAddress = async (req, res, next) => {
 };
 const showAddress = async (req, res, next) => {
     try {
-        const addresses = await Address.find({ user: req.session.user_id });
-        res.render('user/showAddress', { addresses });
+        // Get the user ID from the session
+        const userId = req.session.user_id;
+
+        if (!userId) {
+            // If the user is not logged in, redirect to the login page
+            console.log('User is not defined');
+            return res.redirect('/login');
+        }
+
+        // Fetch the addresses associated with the logged-in user
+        const addresses = await Address.find({ user: userId });
+
+        // Fetch user details for personalized display
+        const user = await User.findById(userId);
+
+        if (!user) {
+            console.log('User not found');
+            return res.redirect('/login');
+        }
+
+        // Render the showAddress page with the user's addresses and user details
+        res.render('user/showAddress', { addresses, user });
+
     } catch (error) {
-        console.error(error.message);
+        console.error('Error loading address page:', error.message);
         next(error);
     }
 };
+
 
 const loadEditAddress = async (req, res, next) => {
     try {
@@ -379,6 +408,7 @@ const verifyLogin = async (req, res) => {
             const passwordMatch = await bcrypt.compare(password, userData.password);
             if (passwordMatch) {
                 req.session.user_id = userData._id;
+                
                 return res.redirect('/');
             } else {
                 return res.render('user/login', { message: "Email and password are incorrect" });
@@ -399,7 +429,11 @@ const loadHome = async (req, res) => {
     try {
         
         const product= await Product.find()
-        res.render('user/index',{product,user:req.session.user_id});
+        const user = await User.findById(req.session.user_id); 
+        res.render('user/index',{product:product,user:user
+            
+        });
+      
         console.log(product)
     } catch (error) {
         console.log(error.message);
@@ -407,6 +441,8 @@ const loadHome = async (req, res) => {
 };
 const loadProductdetail = async (req, res) => {
     try {
+        const userId = req.session.user_id;
+        const user = await User.findById(userId);
         const productId = req.params.id;
         console.log('Requested Product ID:', productId);
         
@@ -417,7 +453,7 @@ const loadProductdetail = async (req, res) => {
         }
 
         console.log('Product found:', product);
-        res.render('user/productdetail',{product});
+        res.render('user/productdetail',{product,user});
     } catch (error) {
         console.error('Error loading product details:', error.message);
         res.status(500).send('Server Error');
@@ -429,6 +465,8 @@ const loadProductdetail = async (req, res) => {
 const addToCart = async (req, res) => {
     try {
         const userId = req.session.user_id;
+       
+      
         const productId = req.params.productId;
         const { size, quantity } = req.body;
 
@@ -461,14 +499,15 @@ const addToCart = async (req, res) => {
                 return res.status(404).json({ message: 'Product not found' });
             }
 
-            const productImage = product.images.length > 0 ? product.images[0].url : ''; // Correctly fetches the first image URL
+            const productImage = product.images.length > 0 ? product.images[0].url : '';
             cart.products.push({
                 productId: product._id,
                 quantity: quantity,
                 size: size,
                 name: product.name,
                 price: product.price,
-                images: productImage  
+                images:productImage 
+            
             });
         }
 
@@ -480,7 +519,6 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
-
 
 
 const updateCartQuantity = async (req, res) => {
@@ -564,9 +602,11 @@ const removeFromCart = async (req, res) => {
 const viewCart = async (req, res) => {
     try {
         const userId = req.session.user_id; 
+        
+        const user = await User.findById(userId);
         const cart = await Cart.findOne({ userId });
 
-        res.render('user/cart', { cart });
+        res.render('user/cart', { cart,user });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error fetching cart details' });
@@ -597,27 +637,23 @@ const forgetLoad = async (req, res) => {
 const checkoutLoad = async (req, res) => {
     try {
         // Check if user is logged in
-        const isLoggedIn = req.session.user || req.user;
-        if (!isLoggedIn) {
-            return res.status(401).render('404', {
+        const userId = req.session.user_id;
+        const user= await User.findById(userId)
+        if (!userId) {
+            return res.status(401).render('error', {
                 url: req.originalUrl,
                 message: 'Please login to view the checkout page',
-                isLoggedIn: false,
                 count: 0
             });
         }
 
-        // Retrieve user ID from session
-        const userId = isLoggedIn._id;
-
-        // Fetch the cart for the user
-        const userCart = await Cart.findOne({ userId }).populate('products.productId').lean();
+        // Fetch the active cart for the user
+        let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
 
         if (!userCart) {
-            return res.status(404).render('404', {
+            return res.status(404).render('error', {
                 url: req.originalUrl,
                 message: 'Cart not found',
-                isLoggedIn: true,
                 count: 0
             });
         }
@@ -626,23 +662,27 @@ const checkoutLoad = async (req, res) => {
         const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
 
         // Define shipping cost
-        const shippingCost = 10;
+        const shippingCost = 10; // You can adjust or calculate based on your logic
 
         // Calculate total amount
         const total = subtotal + shippingCost;
 
+        // Retrieve any existing addresses for the user
+        
+        const addresses = await Address.find({ user: userId });
         // Render checkout page with populated cart data
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
             shippingCost,
             total,
-            isLoggedIn: true
+            addresses, // Pass addresses to the view
+            user
         });
 
         console.log('Cart data:', userCart);
     } catch (error) {
-        console.log('Error:', error.message);
+        console.error('Error:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
@@ -741,6 +781,248 @@ const errorlogin = async (req, res) => {
    
     return res.send("An error occurred during login.");
 };
+
+const getUserDetails = async (req, res, next) => {
+    try {
+        // Log session data for debugging
+        console.log('Session User ID:', req.session.user_id);
+        
+        // Use the user_id directly from the session
+        const userId = req.session.user_id;
+        
+        if (!userId) {
+            // User is not logged in; redirect to login page
+            console.log('User is not defined');
+            return res.redirect('/login');
+        }
+
+        // Fetch user details from the database using userId
+        const user = await User.findById(userId); // Assuming you have a User model
+
+        if (!user) {
+            console.log('User not found');
+            return res.redirect('/login');
+        }
+
+        // Render the user details page with the user object
+        res.render('user/userDetails', { user });
+        
+    } catch (error) {
+        console.error('Error fetching user details:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+
+const editProfileLoad = async (req, res, next) => {
+    try {
+        // Check if the user is logged in
+        const userId = req.session.user_id;
+        if (!userId) {
+            console.log('User is not defined');
+            return res.redirect('/login');
+        }
+
+        // Fetch user details using the session user ID
+        const user = await User.findById(userId);
+
+        if (user) {
+            // Render the edit profile page with user data
+            res.render('user/editProfile', { user, errors: null, message: null });
+        } else {
+            console.log('User not found');
+            return res.redirect('/login');
+        }
+    } catch (error) {
+        console.error('Error loading edit profile page:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+const editProfile = async (req, res, next) => {
+    try {
+        // Check if the user is logged in
+        const userId = req.session.user_id;
+        if (!userId) {
+            console.log('User is not defined');
+            return res.redirect('/login');
+        }
+
+        // Extract the updated profile data from the request body
+        const { username, email, mobileno } = req.body;
+
+        // Validate the data (basic example, expand as needed)
+        const errors = {};
+        if (!username || username.trim() === '') errors.username = { msg: 'Username is required' };
+        if (!email || email.trim() === '') errors.email = { msg: 'Email is required' };
+        if (!mobileno || mobileno.trim() === '') errors.mobileno = { msg: 'Mobile number is required' };
+
+        // If there are validation errors, render the edit form with errors
+        if (Object.keys(errors).length > 0) {
+            const user = await User.findById(userId);
+            return res.render('user/editProfile', { user, errors, message: 'Please fix the errors' });
+        }
+
+        // Update the user's profile in the database
+        await User.findByIdAndUpdate(userId, {
+            username,
+            email,
+            mobileno,
+        }, { new: true }); // `new: true` returns the updated document
+
+        // Redirect to the user profile page after successful update
+        res.redirect('/userDetails');
+    } catch (error) {
+        console.error('Error updating user profile:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+
+const getChangePasswordPage = async (req, res) => {
+    try {
+        // Get user ID from session
+        const userId = req.session.user_id;
+
+        if (!userId) {
+            // If no user is logged in, redirect to the login page
+            return res.redirect('/login');
+        }
+
+        // Fetch user details from the database
+        const user = await User.findById(userId);
+
+        if (!user) {
+            // If user is not found, redirect to the login page
+            return res.redirect('/login');
+        }
+
+        // Render the change password page with user data
+        res.render('user/changePassword', { user, message: null, errors: null });
+
+    } catch (error) {
+        console.error('Error loading change password page:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.session.user_id;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        // Fetch user from database
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Check if current password is correct
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.render('user/changePassword', {user,
+                message: 'Current password is incorrect.',
+                errors: null,
+            });
+        }
+
+        // Check if new password and confirm password match
+        if (newPassword !== confirmPassword) {
+            return res.render('user/changePassword', {user,
+                message: 'New password and confirm password do not match.',
+                errors: null,
+            });
+        }
+
+        // Validate new password (Add more validation as needed)
+        if (newPassword.length < 6) {
+            return res.render('user/changePassword', {
+                message: 'New password must be at least 6 characters long.',
+                errors: null,
+            });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user's password in the database
+        user.password = hashedPassword;
+        await user.save();
+
+        // Redirect to the profile page with success message
+        res.redirect('/userDetails'); // Adjust redirect path as needed
+    } catch (error) {
+        console.error('Error changing password:', error.message);
+        res.status(500).send('Server Error');
+    }
+};
+const placeOrder = async (req, res) => {
+    try {
+        const userId = req.session.user_id;
+        const { addressId, paymentMethod } = req.body;
+
+        // Validate input
+        if (!userId || !addressId || !paymentMethod) {
+            return res.status(400).send('Invalid input');
+        }
+
+        // Retrieve the active cart
+        const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
+        if (!cart) {
+            return res.status(404).send('Cart not found');
+        }
+
+        // Calculate the total amount
+        const totalAmount = cart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
+
+        // Create a new order
+        const newOrder = new Order({
+            userId,
+            addressId,
+            products: cart.products.map(item => ({
+                productId: item.productId._id,
+                quantity: item.quantity
+            })),
+            totalAmount,
+            paymentMethod,
+            status: 'Pending'
+        });
+
+        // Save the order
+        await newOrder.save();
+
+        // Mark cart as inactive
+        cart.active = false;
+        await cart.save();
+
+        // Optionally delete the cart if needed
+        await Cart.deleteOne({ _id: cart._id });
+
+        // Redirect to orders page or send a success response
+        res.redirect('/orders');
+    } catch (error) {
+        console.error('Error placing order:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
+
+
+const orderLoad = async (req, res) => {
+    try {
+        const orders = await Order.find().populate('products.productId').populate('addressId');
+        console.log('Fetched Orders:', orders);  // Debug output
+        res.json({ orders });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
+
+
 module.exports = {
     loadRegister,
     insertUser,
@@ -770,7 +1052,15 @@ module.exports = {
    showAddress,
    loadEditAddress,
    updateAddress,
-   deleteAddress
+   deleteAddress,
+   getUserDetails,
+   editProfile,
+   editProfileLoad,
+   getChangePasswordPage,
+    changePassword,
+    placeOrder,
+    orderLoad
+
     
 
 };
