@@ -10,7 +10,7 @@ const Cart=require('../model/cartSchema')
 const randomstring=require('randomstring')
 const Address=require('../model/addressSchema')
 const Order=require('../model/orderSchema')
-const userLayout = './layouts/auth/admin/authLayout.ejs';
+
 
 const securePassword = async (password) => {
     try {
@@ -109,24 +109,72 @@ const loadProduct = async (req, res) => {
 const addAddressLoad = async (req, res, next) => {
     try {
         const userId = req.session.user_id;
-        const user = await Address.find({ user: userId });
+        const user = await User.findById(userId);
 
         res.render('user/add-address',{user:user});
     } catch (error) {
         console.error(error.message);
-        next(error); // Passes error to error-handling middleware
+        next(error); 
     }
 };
 const addAddress = async (req, res, next) => {
     try {
+        const userId = req.session.user_id;
+        const user = await User.findById(userId);
         const { firstname, lastname, mobile, pincode, street, city, state, country } = req.body;
-        
-        // Basic validation
-        if (!firstname || !lastname || !mobile || !pincode || !street || !city || !state || !country) {
-            return res.status(400).send('All fields are required.');
+        const errors = {};
+     
+        if (!firstname) {
+            errors.firstname = "Firstname is required";
+        } else {
+            const firstnameRegex = /^[A-Za-z]+$/;
+            if (!firstnameRegex.test(firstname)) {
+                errors.firstname = "Firstname must contain only alphabets";
+            }
         }
 
-        // Creating a new Address instance
+        if (!lastname) {
+            errors.lastname = "Lastname is required";
+        } else {
+            const lastnameRegex = /^[A-Za-z]+$/;
+            if (!lastnameRegex.test(lastname)) {
+                errors.lastname = "Lastname must contain only alphabets";
+            }
+        }
+
+        if (!mobile) {
+            errors.mobile = "Mobile number is required";
+        } else {
+            const mobileRegex = /^[0-9]{10}$/;
+            if (!mobileRegex.test(mobile)) {
+                errors.mobile = "Mobile number must be 10 digits";
+            }
+        }
+
+        if (!pincode) {
+            errors.pincode = "Pincode is required";
+        } else {
+            const pincodeRegex = /^[0-9]{6}$/;
+            if (!pincodeRegex.test(pincode)) {
+                errors.pincode = "Pincode must be 6 digits";
+            }
+        }
+
+       
+        if (Object.keys(errors).length > 0) {
+            return res.render('user/add-address', { user:user,
+                errors, 
+                firstname, 
+                lastname, 
+                mobile, 
+                pincode, 
+                street, 
+                city,
+                state,
+                country
+            });
+        }
+
         let address = new Address({
             user: req.session.user_id,  
             fullname: `${firstname} ${lastname}`,
@@ -134,36 +182,35 @@ const addAddress = async (req, res, next) => {
             pincode: pincode,
             street: street,
             city: city,
-            state: state,
-            country: country
+            state:state,
+            country:country
+           
         });
-
-      
         await address.save();
-
-      
-        res.redirect('showAddress');
+        res.redirect('/showAddress');
 
     } catch (error) {
         console.error(error.message);
-        next(error); 
+        next(error);
     }
 };
+
+
 const showAddress = async (req, res, next) => {
     try {
-        // Get the user ID from the session
+       
         const userId = req.session.user_id;
 
         if (!userId) {
-            // If the user is not logged in, redirect to the login page
+           
             console.log('User is not defined');
             return res.redirect('/login');
         }
 
-        // Fetch the addresses associated with the logged-in user
+       
         const addresses = await Address.find({ user: userId });
 
-        // Fetch user details for personalized display
+     
         const user = await User.findById(userId);
 
         if (!user) {
@@ -171,7 +218,7 @@ const showAddress = async (req, res, next) => {
             return res.redirect('/login');
         }
 
-        // Render the showAddress page with the user's addresses and user details
+      
         res.render('user/showAddress', { addresses, user });
 
     } catch (error) {
@@ -183,9 +230,11 @@ const showAddress = async (req, res, next) => {
 
 const loadEditAddress = async (req, res, next) => {
     try {
+        const userId = req.session.user_id;
+        const user=await User.findById(userId)
         const address = await Address.findById(req.params.id);
         if (!address) return res.status(404).send('Address not found.');
-        res.render('user/edit-address', { address }); // Make sure to create an 'edit-address.ejs' view
+        res.render('user/edit-address', { address,user }); 
     } catch (error) {
         console.error(error.message);
         next(error);
@@ -196,7 +245,7 @@ const updateAddress = async (req, res, next) => {
     try {
         const { firstname, lastname, mobile, pincode, street, city, state, country } = req.body;
 
-        // Validation could be added here if necessary
+      
         if (!firstname || !lastname || !mobile || !pincode || !street || !city || !state || !country) {
             return res.status(400).send('All fields are required.');
         }
@@ -211,7 +260,7 @@ const updateAddress = async (req, res, next) => {
             country
         });
 
-        res.redirect('/showAddress'); // Redirect back to the addresses page
+        res.redirect('/showAddress');
     } catch (error) {
         console.error(error.message);
         next(error);
@@ -319,13 +368,13 @@ const insertUser = async (req, res) => {
 
 
 
-const resendOTP= async (req, res) => {
+const resendOTP = async (req, res) => {
     try {
         const { user_id } = req.query;
 
         const userData = await User.findById(user_id);
         if (!userData) {
-            return res.render('user/verify-otp', { message: "User not found" });
+            return res.json({ success: false, message: "User not found" });
         }
 
         const newOtp = generateOtp();
@@ -333,10 +382,10 @@ const resendOTP= async (req, res) => {
 
         sendOtpMail(userData.email, newOtp);
 
-        res.render('user/verify-otp', { user_id, message: "OTP resent successfully. Please check your email." });
+        res.json({ success: true, message: "OTP resent successfully. Please check your email." });
     } catch (error) {
-        console.log(error);
-        res.render('error', { message: "An error occurred while resending OTP. Please try again." });
+        console.error(error);
+        res.json({ success: false, message: "An error occurred while resending OTP. Please try again." });
     }
 };
 
@@ -398,7 +447,7 @@ const verifyLogin = async (req, res) => {
         const email = req.body.email;
         const password = req.body.password;
         console.log(email, password);
-        const userData = await User.findOne({ email: email });
+        const userData = await User.findOne({ email: email,isAdmin: false  });
 
         if (userData) {
             if (userData.isBlocked) {
@@ -461,44 +510,56 @@ const loadProductdetail = async (req, res) => {
 };
 
 
-
 const addToCart = async (req, res) => {
     try {
         const userId = req.session.user_id;
-       
-      
         const productId = req.params.productId;
         const { size, quantity } = req.body;
+
+        const MAX_QUANTITY_PER_USER = 10;
 
         if (!userId) {
             return res.status(401).json({ message: 'User not logged in' });
         }
 
-        if (!size) {
-            return res.status(400).json({ message: 'Size is required' });
+        if (!size || !quantity || quantity <= 0) {
+            return res.status(400).json({ message: 'Size and valid quantity are required' });
         }
 
-        if (!quantity || quantity <= 0) {
-            return res.status(400).json({ message: 'Valid quantity is required' });
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        const selectedSize = product.sizes.find(s => s.size === size);
+        if (!selectedSize) {
+            return res.status(400).json({ message: 'Selected size not available' });
+        }
+
+        if (quantity > selectedSize.stock) {
+            return res.status(400).json({ message: `Only ${selectedSize.stock} units of this size are available.` });
         }
 
         let cart = await Cart.findOne({ userId, active: true });
-
         if (!cart) {
             cart = new Cart({ userId, products: [] });
         }
 
-        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId && p.size === size);
+        let currentQuantity = 0;
 
         if (productIndex > -1) {
-            cart.products[productIndex].quantity += quantity;
-        } else {
-            const product = await Product.findById(productId);
-          
-            if (!product) {
-                return res.status(404).json({ message: 'Product not found' });
-            }
+            currentQuantity = cart.products[productIndex].quantity;
+        }
 
+        const totalQuantity = currentQuantity + quantity;
+        if (totalQuantity > MAX_QUANTITY_PER_USER) {
+            return res.status(400).json({ message: `You can only add up to ${MAX_QUANTITY_PER_USER} units of this product.` });
+        }
+
+        if (productIndex > -1) {
+            cart.products[productIndex].quantity = totalQuantity;
+        } else {
             const productImage = product.images.length > 0 ? product.images[0].url : '';
             cart.products.push({
                 productId: product._id,
@@ -506,14 +567,13 @@ const addToCart = async (req, res) => {
                 size: size,
                 name: product.name,
                 price: product.price,
-                images:productImage 
-            
+                images: productImage,
             });
         }
 
         await cart.save();
-        res.status(200).json({ message: 'Product added to cart', cart });
 
+        res.status(200).json({ message: 'Product added to cart', cart });
     } catch (error) {
         console.error('Error adding product to cart:', error.message);
         res.status(500).json({ message: 'Error adding product to cart' });
@@ -523,46 +583,74 @@ const addToCart = async (req, res) => {
 
 const updateCartQuantity = async (req, res) => {
     try {
-        const userId = req.session.user_id; 
+        const userId = req.session.user_id;
         const productId = req.params.productId;
-        const { change } = req.body; 
+        const { size, change } = req.body;
+
+        const MAX_QUANTITY_PER_USER = 10;
 
         if (!userId) {
-            return res.status(401).json({ success: false, message: 'User not logged in' });
+            return res.status(401).json({ message: 'User not logged in' });
         }
 
-        if (!change || typeof change !== 'number') {
-            return res.status(400).json({ success: false, message: 'Invalid quantity change' });
-        }
-
-        let cart = await Cart.findOne({ userId, active: true });
+        // Find the user's cart
+        const cart = await Cart.findOne({ userId });
 
         if (!cart) {
-            return res.status(404).json({ success: false, message: 'Cart not found' });
+            return res.status(404).json({ message: 'Cart not found' });
         }
 
-        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+        // Find the product in the cart
+        const productIndex = cart.products.findIndex(p => p.productId.equals(productId) && p.size === size);
 
-        if (productIndex > -1) {
-            
-            cart.products[productIndex].quantity += change;
-
-            if (cart.products[productIndex].quantity <= 0) {
-              
-                cart.products.splice(productIndex, 1);
-            }
-
-            await cart.save();
-            return res.status(200).json({ success: true, message: 'Cart updated successfully', cart });
-        } else {
-            return res.status(404).json({ success: false, message: 'Product not found in cart' });
+        if (productIndex === -1) {
+            return res.status(404).json({ message: 'Product not found in cart' });
         }
 
+        const product = cart.products[productIndex];
+        const newQuantity = product.quantity + change;
+
+        if (newQuantity < 1) {
+            return res.status(400).json({ message: 'Quantity cannot be less than 1' });
+        }
+
+        // Fetch product details from the database
+        const productDetails = await Product.findById(productId);
+
+        if (!productDetails) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Find the stock for the specific size
+        const sizeDetails = productDetails.sizes.find(s => s.size === size);
+
+        if (!sizeDetails) {
+            return res.status(404).json({ message: 'Size not found' });
+        }
+
+        // Check if the new quantity exceeds the available stock
+        if (newQuantity > sizeDetails.stock) {
+            return res.status(400).json({ message: `Only ${sizeDetails.stock} units available for size ${size}` });
+        }
+
+        // Check if the new quantity exceeds the maximum allowed per user
+        if (newQuantity > MAX_QUANTITY_PER_USER) {
+            return res.status(400).json({ message: `Cannot add more than ${MAX_QUANTITY_PER_USER} units` });
+        }
+
+        // Update quantity in cart
+        cart.products[productIndex].quantity = newQuantity;
+
+        // Save cart
+        await cart.save();
+
+        res.json({ success: true, message: 'Quantity updated successfully' });
     } catch (error) {
-        console.error('Error updating cart:', error.message);
-        res.status(500).json({ success: false, message: 'Error updating cart' });
+        console.error('Error updating cart quantity:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 
 
@@ -636,7 +724,7 @@ const forgetLoad = async (req, res) => {
 };
 const checkoutLoad = async (req, res) => {
     try {
-        // Check if user is logged in
+    
         const userId = req.session.user_id;
         const user= await User.findById(userId)
         if (!userId) {
@@ -647,7 +735,7 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Fetch the active cart for the user
+      
         let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
 
         if (!userCart) {
@@ -658,25 +746,25 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Calculate subtotal
+     
         const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
 
-        // Define shipping cost
-        const shippingCost = 10; // You can adjust or calculate based on your logic
+       
+        const shippingCost = 10; 
 
-        // Calculate total amount
+      
         const total = subtotal + shippingCost;
 
-        // Retrieve any existing addresses for the user
+      
         
         const addresses = await Address.find({ user: userId });
-        // Render checkout page with populated cart data
+      
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
             shippingCost,
             total,
-            addresses, // Pass addresses to the view
+            addresses, 
             user
         });
 
@@ -784,27 +872,26 @@ const errorlogin = async (req, res) => {
 
 const getUserDetails = async (req, res, next) => {
     try {
-        // Log session data for debugging
+        
         console.log('Session User ID:', req.session.user_id);
         
-        // Use the user_id directly from the session
+        
         const userId = req.session.user_id;
         
         if (!userId) {
-            // User is not logged in; redirect to login page
+       
             console.log('User is not defined');
             return res.redirect('/login');
         }
 
-        // Fetch user details from the database using userId
-        const user = await User.findById(userId); // Assuming you have a User model
+        const user = await User.findById(userId); 
 
         if (!user) {
             console.log('User not found');
             return res.redirect('/login');
         }
 
-        // Render the user details page with the user object
+    
         res.render('user/userDetails', { user });
         
     } catch (error) {
@@ -816,18 +903,18 @@ const getUserDetails = async (req, res, next) => {
 
 const editProfileLoad = async (req, res, next) => {
     try {
-        // Check if the user is logged in
+        
         const userId = req.session.user_id;
         if (!userId) {
             console.log('User is not defined');
             return res.redirect('/login');
         }
 
-        // Fetch user details using the session user ID
+        
         const user = await User.findById(userId);
 
         if (user) {
-            // Render the edit profile page with user data
+            
             res.render('user/editProfile', { user, errors: null, message: null });
         } else {
             console.log('User not found');
@@ -840,36 +927,36 @@ const editProfileLoad = async (req, res, next) => {
 };
 const editProfile = async (req, res, next) => {
     try {
-        // Check if the user is logged in
+      
         const userId = req.session.user_id;
         if (!userId) {
             console.log('User is not defined');
             return res.redirect('/login');
         }
 
-        // Extract the updated profile data from the request body
+        
         const { username, email, mobileno } = req.body;
 
-        // Validate the data (basic example, expand as needed)
+        
         const errors = {};
         if (!username || username.trim() === '') errors.username = { msg: 'Username is required' };
         if (!email || email.trim() === '') errors.email = { msg: 'Email is required' };
         if (!mobileno || mobileno.trim() === '') errors.mobileno = { msg: 'Mobile number is required' };
 
-        // If there are validation errors, render the edit form with errors
+        
         if (Object.keys(errors).length > 0) {
             const user = await User.findById(userId);
             return res.render('user/editProfile', { user, errors, message: 'Please fix the errors' });
         }
 
-        // Update the user's profile in the database
+        
         await User.findByIdAndUpdate(userId, {
             username,
             email,
             mobileno,
-        }, { new: true }); // `new: true` returns the updated document
+        }, { new: true }); 
 
-        // Redirect to the user profile page after successful update
+       
         res.redirect('/userDetails');
     } catch (error) {
         console.error('Error updating user profile:', error.message);
@@ -880,23 +967,23 @@ const editProfile = async (req, res, next) => {
 
 const getChangePasswordPage = async (req, res) => {
     try {
-        // Get user ID from session
+       
         const userId = req.session.user_id;
 
         if (!userId) {
-            // If no user is logged in, redirect to the login page
+            
             return res.redirect('/login');
         }
 
-        // Fetch user details from the database
+    
         const user = await User.findById(userId);
 
         if (!user) {
-            // If user is not found, redirect to the login page
+         
             return res.redirect('/login');
         }
 
-        // Render the change password page with user data
+        
         res.render('user/changePassword', { user, message: null, errors: null });
 
     } catch (error) {
@@ -909,13 +996,13 @@ const changePassword = async (req, res) => {
         const userId = req.session.user_id;
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
-        // Fetch user from database
+       
         const user = await User.findById(userId);
         if (!user) {
             return res.redirect('/login');
         }
 
-        // Check if current password is correct
+       
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.render('user/changePassword', {user,
@@ -924,7 +1011,7 @@ const changePassword = async (req, res) => {
             });
         }
 
-        // Check if new password and confirm password match
+      
         if (newPassword !== confirmPassword) {
             return res.render('user/changePassword', {user,
                 message: 'New password and confirm password do not match.',
@@ -932,7 +1019,7 @@ const changePassword = async (req, res) => {
             });
         }
 
-        // Validate new password (Add more validation as needed)
+     
         if (newPassword.length < 6) {
             return res.render('user/changePassword', {
                 message: 'New password must be at least 6 characters long.',
@@ -940,31 +1027,34 @@ const changePassword = async (req, res) => {
             });
         }
 
-        // Hash the new password
+    
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // Update user's password in the database
+        
         user.password = hashedPassword;
         await user.save();
 
-        // Redirect to the profile page with success message
-        res.redirect('/userDetails'); // Adjust redirect path as needed
+       
+        res.redirect('/userDetails'); 
     } catch (error) {
         console.error('Error changing password:', error.message);
         res.status(500).send('Server Error');
     }
 };
+const generateOrderId = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit number
+};
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user_id;
         const { addressId, paymentMethod } = req.body;
 
-        // Validate input
         if (!userId || !addressId || !paymentMethod) {
             return res.status(400).send('Invalid input');
         }
 
-        // Retrieve the active cart
+        // Find the active cart for the user
         const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
         if (!cart) {
             return res.status(404).send('Cart not found');
@@ -973,8 +1063,12 @@ const placeOrder = async (req, res) => {
         // Calculate the total amount
         const totalAmount = cart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
 
+        // Generate a unique 6-digit order ID
+        const orderId = generateOrderId();
+
         // Create a new order
         const newOrder = new Order({
+            orderId,
             userId,
             addressId,
             products: cart.products.map(item => ({
@@ -986,17 +1080,13 @@ const placeOrder = async (req, res) => {
             status: 'Pending'
         });
 
-        // Save the order
         await newOrder.save();
 
-        // Mark cart as inactive
+        // Mark the cart as inactive and delete it
         cart.active = false;
         await cart.save();
-
-        // Optionally delete the cart if needed
         await Cart.deleteOne({ _id: cart._id });
 
-        // Redirect to orders page or send a success response
         res.redirect('/orders');
     } catch (error) {
         console.error('Error placing order:', error.message);
@@ -1008,17 +1098,87 @@ const placeOrder = async (req, res) => {
 
 
 
+
+
 const orderLoad = async (req, res) => {
     try {
-        const orders = await Order.find().populate('products.productId').populate('addressId');
-        console.log('Fetched Orders:', orders);  // Debug output
-        res.json({ orders });
+        const userId = req.session.user_id;
+        const user = await User.findById(userId);
+
+        if (!userId) {
+            return res.status(401).render('error', {
+                url: req.originalUrl,
+                message: 'Please login to view your orders',
+                count: 0
+            });
+        }
+
+        let orders;
+
+        if (req.params.id) {
+            orders = await Order.find({ userId, orderId: req.params.id }) // Use orderId instead of _id
+                .populate('addressId', 'street city pincode')
+                .populate('products.productId','name')
+                .exec();
+
+            if (!orders || orders.length === 0) {
+                return res.status(404).render('error', {
+                    url: req.originalUrl,
+                    message: 'Order not found',
+                    count: 0
+                });
+            }
+        } else {
+            orders = await Order.find({ userId })
+                .populate('products.productId')
+                .populate('addressId');
+        }
+
+        console.log('Fetched Orders:', orders);
+
+        res.render('user/orders', { orders, user });
+
     } catch (error) {
         console.error('Error fetching orders:', error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('error', {
+            url: req.originalUrl,
+            message: 'Internal Server Error',
+            count: 0
+        });
     }
 };
 
+
+
+
+const cancelOrder= async (req, res) => {
+    try {
+        const { reason, orderId } = req.body;
+
+       
+        if (!reason || !orderId) {
+            return res.status(400).json({ success: false, message: 'Invalid input' });
+        }
+
+       
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+    
+        order.status = 'Cancelled';
+        await order.save();
+
+        
+        console.log(`Order ${orderId} cancelled for reason: ${reason}`);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 
 
@@ -1059,7 +1219,8 @@ module.exports = {
    getChangePasswordPage,
     changePassword,
     placeOrder,
-    orderLoad
+    orderLoad,
+    cancelOrder
 
     
 

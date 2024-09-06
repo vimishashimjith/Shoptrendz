@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <style>
+      .card-title {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 20px 0;
+      }
+      .btn-details {
+          background-color: #007bff; /* Bootstrap primary color */
+          color: white;
+          padding: 6px 12px; /* Reduced padding */
+          text-decoration: none;
+          border-radius: 4px; /* Slightly smaller border radius */
+          border: none;
+          cursor: pointer;
+          font-size: 12px; /* Smaller font size */
+      }
+      .btn-details:hover {
+          background-color: #0056b3; /* Darker shade for hover effect */
+      }
+      .badge {
+          padding: 4px 8px; /* Reduced padding */
+          font-size: 10px; /* Smaller font size */
+          border-radius: 4px; /* Slightly smaller border radius */
+          color: #fff;
+      }
+      .badge-success {
+          background-color: #28a745; /* Success color */
+      }
+      .badge-warning {
+          background-color: #ffc107; /* Warning color */
+      }
+      .table-responsive {
+          max-width: 100%; /* Ensure table fits within the container */
+          overflow-x: auto; /* Add horizontal scroll if needed */
+      }
+      table {
+          width: 100%; /* Set table to full width of the container */
+      }
+      th, td {
+          padding: 8px; /* Padding for cells */
+          vertical-align: middle; /* Center-align text vertically */
+      }
+      th {
+          background-color: #f8f9fa; /* Light background for header */
+      }
+      .custom-container {
+          max-width: 2000px; /* Adjust to desired width */
+          margin: 0 auto; /* Center the container */
+      }
+  </style>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <script>
+function updateStatus(orderId) {
+    const newStatus = document.getElementById(`changeStatus-${orderId}`);
+    let status = newStatus.value;
+
+    if (status === 'changeStatus') {
+        swal("Warning", "Please select a valid status.", "warning");
+        return;
+    }
+
+    // Show confirmation dialog before proceeding
+    swal({
+        title: "Are you sure?",
+        text: `You are about to change the status to "${status}".`,
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+    }).then((willUpdate) => {
+        if (willUpdate) {
+            // If confirmed, proceed with the status update
+            fetch('/admin/updateStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: status,
+                    orderId: orderId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    swal("Status changed!", "Order status changed successfully.", "success")
+                        .then(() => {
+                            window.location.reload(); // Reload the page to reflect changes
+                        });
+                } else {
+                    swal("Error", "An error occurred while updating the status: " + data.message, "error");
+                }
+            })
+            .catch(error => {
+                swal("Error", "An error occurred while updating the status.", "error");
+            });
+        } else {
+            // Reset the select value if the user cancels
+            newStatus.value = 'changeStatus';
+        }
+    });
+}
+
+function cancelOrders() {
+  const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+  
+  if (selectedOrders.length > 0) {
+    swal({
+      title: "Are you sure?",
+      text: "Once canceled, you will not be able to recover these orders!",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    })
+    .then((willCancel) => {
+      if (willCancel) {
+        fetch(`/admin/cancelOrders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ids: selectedOrders })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            swal("Canceled!", "Selected orders have been canceled.", "success")
+              .then(() => {
+                window.location.reload(); // Reload the page to reflect changes
+              });
+          } else {
+            swal("Error", "An error occurred while canceling orders: " + data.message, "error");
+          }
+        })
+        .catch(error => {
+          swal("Error", "An error occurred while canceling orders.", "error");
+        });
+      }
+    });
+  } else {
+    swal("No Orders Selected", "Please select orders to cancel.", "info");
+  }
+}
+
+  </script>
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs') %>
+      <div class="container-fluid custom-container">
+        <div class="col-12">
+          <div class="bg-light rounded h-100 p-4">
+            <button class="btn btn-danger mb-3" onclick="cancelOrders()">Cancel Selected Orders</button>
+            <div class="table-responsive">
+              <table class="table table-bordered text-center">
+                <thead class="text-black">
+                  <tr>
+                    <th id="allSelector" scope="col">
+                      <input class="form-check-input" type="checkbox" id="selectAll"> All
+                    </th>
+                    <th scope="col">Sl</th>
+                    <th scope="col">Order ID</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Payment Method</th>
+                    <th scope="col">Payment Status</th>
+                    <th scope="col">Order Status</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Details</th>
+                  </tr>
+                </thead>
+                <tbody class="text-black">
+                  <% if (orders.length > 0) { %>
+                    <% orders.forEach((order, index) => { %>
+                      <tr>
+                        <td><input class="form-check-input order-checkbox" type="checkbox" value="<%= order._id %>" id="flexCheckDefault"></td>
+                        <td><%= index + 1 %></td>
+                        <td><%= order.orderId %></td>
+                        <td><%= order.userId ? order.userId.username : 'Unknown' %></td>
+                        <td>$<%= order.totalAmount.toFixed(2) %></td>
+                        <td><%= order.paymentMethod %></td>
+                        <td class="status">
+                          <% if (order.paymentStatus === 'pending') { %>
+                            <button class="btn btn-danger"><a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Pending</a></button>
+                          <% } else { %>
+                            <button class="btn btn-success"><a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Paid</a></button>
+                          <% } %>
+                        </td>
+                        <td>
+                          <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
+                            <%= order.status %>
+                            <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
+                              <option value="changeStatus">Change Status</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Out-For-Delivery">Out For Delivery</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancel</option>
+                            </select>
+                          <% } else { %>
+                            <%= order.status %>
+                          <% } %>
+                        </td>
+                        <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                        <td>
+                          <button class="btn btn-info"><a href="/admin/orderDetails?id=<%= order._id %>" class="text-light">Details</a></button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="10">No orders found</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Admin/assets/js/sidebarmenu.js"></script>
+  <script src="../Admin/assets/js/app.min.js"></script>
+  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+</body>
+</html>

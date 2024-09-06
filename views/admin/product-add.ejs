@@ -36,10 +36,10 @@
     });
   </script>
  <style>
-    .msg-box .msg-para {
-        color: red; 
+      .error-message {
+      color: red;
+      font-size: 0.875rem;
     }
-
     .image-preview {
         width: 679px; /* Adjust as needed */
         height: 679px; /* Adjust as needed */
@@ -63,6 +63,23 @@
         right: 10px;
         z-index: 20;
     }
+    
+    .btn{
+      background-color: #007bff; /* Bootstrap primary color */
+                          color:#5D87FF;
+                          padding: 10px 20px;
+                          text-decoration: none;
+                          border-radius: 5px;
+                          border: none;
+                          cursor: pointer; 
+    }
+    .card-title{
+      display: flex;
+                          justify-content: space-between;
+                          align-items:end;
+                          margin: 20px 0;
+    }
+   
   </style>
 </head>
 <body>
@@ -85,15 +102,13 @@
               <form id="image-form" action="/admin/product-add" method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label for="name" class="form-label">Product Name:</label>
-                  <input type="text" class="form-control" id="name" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>" required>
-                  <% if (typeof errors !== 'undefined' && errors.name) { %>
-                      <p class="error-message"><%= errors.name %></p>
-                  <% } %>
+                  <input type="text" class="form-control" id="name" name="name" value="<%= typeof name !== 'undefined' ? name : '' %>">
                 </div>
 
                 <div class="mb-3">
                   <label for="brand" class="form-label">Brand</label>
                   <input type="text" class="form-control" id="brand" name="brand" required>
+
                 </div>
               
                 <div class="mb-3">
@@ -192,6 +207,13 @@
 
                 <button type="submit" class="btn btn-primary">Add Product</button>
               </form>
+              <div class="error-messages-container">
+                <% if (Object.keys(errors).length > 0) { %>
+                  <% Object.keys(errors).forEach(key => { %>
+                    <p class="error-message"><%= errors[key] %></p>
+                  <% }) %>
+                <% } %>
+              </div>
             </div>
           </div>
         </div>

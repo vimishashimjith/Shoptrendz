@@ -13,6 +13,11 @@
   #submit-button:hover {
     background-color: #5a2a8d;
   }
+  
+  .error-message {
+    color: red;
+    font-size: 0.875em;
+  }
 </style>
 
 <div class="container-fluid">
@@ -26,31 +31,49 @@
           <div class="row">
             <div class="col-md-6 form-group">
               <label for="firstname">First Name</label>
-              <input class="form-control" type="text" placeholder="John" name="firstname" required />
+              <input class="form-control" type="text" placeholder="John" name="firstname" value="<%= typeof firstname !== 'undefined' ? firstname : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.firstname) { %>
+                <p class="error-message"><%= errors.firstname %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="lastname">Last Name</label>
-              <input class="form-control" type="text" placeholder="Doe" name="lastname" required />
+              <input class="form-control" type="text" placeholder="Doe" name="lastname" value="<%= typeof lastname !== 'undefined' ? lastname : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.lastname) { %>
+                <p class="error-message"><%= errors.lastname %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="mobile">Mobile No</label>
-              <input class="form-control" type="tel" placeholder="+123 456 789" name="mobile" required />
+              <input class="form-control" type="tel" placeholder="+123 456 789" name="mobile" value="<%= typeof mobile !== 'undefined' ? mobile : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.mobile) { %>
+                <p class="error-message"><%= errors.mobile %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="pincode">ZIP Code</label>
-              <input class="form-control" type="text" placeholder="123456" name="pincode" required />
+              <input class="form-control" type="text" placeholder="123456" name="pincode" value="<%= typeof pincode !== 'undefined' ? pincode : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.pincode) { %>
+                <p class="error-message"><%= errors.pincode %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="street">Street</label>
-              <input class="form-control" type="text" placeholder="Street" name="street" required />
+              <input class="form-control" type="text" placeholder="Street" name="street" value="<%= typeof street !== 'undefined' ? street : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.street) { %>
+                <p class="error-message"><%= errors.street %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="city">City</label>
-              <input class="form-control" type="text" placeholder="City" name="city" required />
+              <input class="form-control" type="text" placeholder="City" name="city" value="<%= typeof city !== 'undefined' ? city : '' %>" required />
+              <% if (typeof errors !== 'undefined' && errors.city) { %>
+                <p class="error-message"><%= errors.city %></p>
+              <% } %>
             </div>
             <div class="col-md-6 form-group">
               <label for="state">State</label>
-              <select class="form-control" name="state" id="address-sta" required>
+              <select class="form-control" name="state" id="address-sta" >
                 <option value="Kerala">Kerala</option>
                 <option value="Tamil Nadu">Tamil Nadu</option>
                 <option value="Karnataka">Karnataka</option>

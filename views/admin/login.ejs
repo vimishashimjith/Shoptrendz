@@ -7,37 +7,39 @@
   <title>Admin Page</title>
   <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
   <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
-  
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
-    }
-
-    .page-wrapper {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: radial-gradient(circle, rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+      background: linear-gradient(135deg, rgb(59, 164, 212), rgb(128, 106, 129));
     }
 
     .card {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+      max-width: 400px;
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
       overflow: hidden;
+      background: #fff;
     }
 
     .card-body {
       padding: 2rem;
-      background: #ffffff;
     }
 
     h4 {
       text-align: center;
       margin-bottom: 1.5rem;
-      font-weight: 600;
-      color: #333333;
+      font-weight: 700;
+      color: #333;
+      letter-spacing: 1px;
     }
 
     form {
@@ -50,48 +52,67 @@
     input[type="password"] {
       width: 100%;
       padding: 0.75rem;
-      border: 1px solid #dddddd;
-      border-radius: 4px;
+      border: 2px solid #ddd;
+      border-radius: 30px;
       font-size: 1rem;
-      color: #333333;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      border-color: #007bff;
     }
 
     input[type="submit"] {
       padding: 0.75rem;
       border: none;
-      border-radius: 4px;
-      background-color: #007bff;
-      color: #ffffff;
+      border-radius: 30px;
+      background: linear-gradient(45deg, #007bff, #0056b3);
+      color: #fff;
       font-size: 1rem;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease;
+      margin-top: 1rem;
     }
 
     input[type="submit"]:hover {
-      background-color: #0056b3;
+      background: linear-gradient(45deg, #0056b3, #007bff);
+      transform: translateY(-3px);
+    }
+
+    input[type="submit"]:active {
+      transform: translateY(1px);
+    }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .form-footer a {
+      color: #007bff;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .form-footer a:hover {
+      color: #0056b3;
     }
   </style>
 </head>
 
 <body>
   <!--  Body Wrapper -->
-  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-    data-sidebar-position="fixed" data-header-position="fixed">
-    <div class="d-flex align-items-center justify-content-center w-100">
-      <div class="row justify-content-center w-100">
-        <div class="col-md-8 col-lg-6 col-xxl-3">
-          <div class="card mb-0">
-            <div class="card-body">
-              <h4>ADMIN LOGIN</h4>
-              <form action="/admin/login" method="post">
-                <input type="email" name="email" placeholder="Enter email" required>
-                <input type="password" name="password" placeholder="Enter password" required>
-                <input type="submit" value="Login">
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="card">
+    <div class="card-body">
+      <h4>ADMIN LOGIN</h4>
+      <form action="/admin/login" method="post">
+        <input type="email" name="email" placeholder="Enter email" required>
+        <input type="password" name="password" placeholder="Enter password" required>
+        <input type="submit" value="Login">
+      </form>
+     
     </div>
   </div>
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>

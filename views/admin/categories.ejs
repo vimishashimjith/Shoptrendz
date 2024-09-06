@@ -18,70 +18,40 @@
             <div class="col-lg">
               <div class="card">
                 <div class="card-body">
-                  <br>
-                  <br>
-                  <br>
-                  <br>
-                  <title>Category Listing</title>
-                  <style>
-                      .card-title {
-                          display: flex;
-                          justify-content: space-between;
-                          align-items: center;
-                          margin: 20px 0;
-                      }
-                      .btn {
-                          background-color: #007bff; /* Bootstrap primary color */
-                          color: white;
-                          padding: 10px 20px;
-                          text-decoration: none;
-                          border-radius: 5px;
-                          border: none;
-                          cursor: pointer;
-                      }
-                      .btn:hover {
-                          background-color: #0056b3; /* Darker shade for hover effect */
-                      }
-                  </style>
-              </head>
-              <body>
-                 
-              
                   <!-- Container for the title and button -->
                   <div class="card-title">
-                      <h3>CATEGORIES LIST</h3>
-                      <a href="/admin/category-add" class="btn">Add Category</a>
+                    <h3>CATEGORIES LIST</h3>
+                    <a href="/admin/category-add" class="btn btn-primary">Add Category</a>
                   </div>
-                  
                   <hr>
-                  <table class="table table-bordered text-center">
-                    <thead class="text-black">
-                      <tr>
-                        <th>CATEGORY NAME</th>
-                        <th>DESCRIPTION</th>
-                        <th>ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody class="text-black">
-                      <% if (categories.length > 0) { %>
-                        <% categories.forEach(category => { %>
-                          <tr>
-                            <td><%= category.name %></td>
-                            <td><%= category.description %></td>
-                            <td>
-                              <a href="/admin/category-edit/<%= category._id %>">Edit</a>
-                           
-                            </td>
-                          </tr>
-                        <% }) %>
-                      <% } else { %>
+                  <div class="table-responsive">
+                    <table class="table table-light">
+                      <thead class="thead-light">
                         <tr>
-                          <td colspan="3">No categories found</td>
+                          <th>CATEGORY NAME</th>
+                          <th>DESCRIPTION</th>
+                          <th>ACTION</th>
                         </tr>
-                      <% } %>
-                    </tbody>
-                  </table>
-                 
+                      </thead>
+                      <tbody>
+                        <% if (categories.length > 0) { %>
+                          <% categories.forEach(category => { %>
+                            <tr>
+                              <td class="table-info"><%= category.name %></td>
+                              <td class="table-info"><%= category.description %></td>
+                              <td>
+                                <a href="/admin/category-edit/<%= category._id %>" class="btn btn-sm btn-warning">Edit</a>
+                              </td>
+                            </tr>
+                          <% }) %>
+                        <% } else { %>
+                          <tr>
+                            <td colspan="3">No categories found</td>
+                          </tr>
+                        <% } %>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -97,3 +67,74 @@
   <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
 </body>
 </html>
+<style>
+  .card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0;
+      font-size: 1.5rem;
+      color: #333;
+  }
+
+  .btn-primary {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      border: none;
+      font-size: 14px;
+      transition: background-color 0.3s;
+  }
+
+  .btn-primary:hover {
+      background-color: #0056b3;
+  }
+
+  .table-responsive {
+      overflow-x: auto;
+      margin-top: 20px;
+  }
+
+  table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+
+  th, td {
+      padding: 12px;
+      text-align: center;
+  }
+
+  th {
+      background-color: #f8f9fa;
+      color: #333;
+      font-weight: bold;
+  }
+
+  .thead-light {
+      background-color: #e9ecef;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #f9f9f9;
+  }
+
+  .table-bordered {
+      border: 1px solid #dee2e6;
+  }
+
+  .btn-warning {
+      background-color: #ffc107;
+      color: #212529;
+      padding: 5px 10px;
+      border-radius: 2px;
+      border: none;
+      font-size: 12px;
+  }
+
+  .btn-warning:hover {
+      background-color: #e0a800;
+  }
+</style>

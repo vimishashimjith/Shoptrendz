@@ -237,9 +237,61 @@
     let selectedAddressId = null;
 
     // Function to handle address selection
-    function selectAddress(addressId) {
-        selectedAddressId = addressId;
-    }
+    function selectAddress(addressId, index) {
+				document.querySelectorAll('.address-card').forEach((card, idx) => {
+					if (idx !== index) {
+					card.remove();
+					} else {
+					card.classList.add('selected-address');
+					card.querySelector('.select-button').textContent = 'Selected';
+					card.querySelector('.select-button').disabled = true;
+					}
+				});
+
+				selectedAddressId = addressId;
+				fetchShippingCharge(addressId);
+				}
+				async function fetchShippingCharge(addressId){
+					try{
+						const response = await fetch(`/shippingCharge?addressId=${addressId}`);
+						if(!response.ok){
+							throw new Error('Failed to fetch shipping charge');
+						}
+						const data = await response.json();
+						const shippingcharge = parseFloat(data.shippingCharge); //shipping charge
+						console.log(shippingcharge,'shipping charge');
+						let total = parseFloat($('#finalTotal').val()); // current total
+						console.log(total,'current total');
+						if (isNaN(total)) {
+							console.error('Current total amount is not a number');
+							swal("Error", "Invalid current total amount.", "error");
+							return;
+						}
+						if (isNaN(shippingcharge)) {
+							console.error('Discount amount is not a number');
+							swal("Error", "Invalid discount amount received.", "error");
+							return;
+						}
+						const newTotal = Math.max(total + shippingcharge,0);
+
+						//update current values
+						$('#orderTotal').text(newTotal.toFixed(2));
+						$('#finalTotal').val(newTotal.toFixed(2));
+						//discount row show
+						$('#shippingChargeRow').show();
+						$('#shippingChargeAmount').html(`<i class="bi bi-currency-rupee"></i>${shippingcharge.toFixed(2)}`);
+						swal("Shipping Charge Added", `shipping chare${shippingcharge.toFixed(2)} added`, "success");
+
+
+					}catch(error){
+						console.error('Error fetching shipping charge:',error.message);
+						swal("Error", "An error occurred while adding shipping charge. Please try again later.", "error");
+					}
+				}
+
+
+
+
 
     // Function to handle address editing
     function editAddress(addressId) {

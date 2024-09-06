@@ -32,37 +32,62 @@ module.exports = {
                     layout: adminLayout,
                     categories,
                     validSizes,
-                    message: null
+                    message: null,
+                    errors: {}
                 });
             } else if (req.method === 'POST') {
                 console.log('Request Body:', req.body);
     
                 const { name, brand, description, price, category, color } = req.body;
-                const sizes = req.body.sizes; // Ensure this matches the field name in the request body
+                const sizes = req.body.sizes; 
                 const categories = await Category.find();
     
-                // Convert price to number
-                const parsedPrice = parseFloat(price);
-                if (isNaN(parsedPrice)) {
-                    return res.render('admin/product-add', {
-                        message: 'Invalid price',
-                        categories,
-                        validSizes,
+                let errors = {};
+    
+              
+                if (!name) errors.name = 'Product name is required.';
+                if (!brand) errors.brand = 'Brand is required.';
+                if (!description) errors.description = 'Description is required.';
+                if (!price) {
+                    errors.price = 'Price is required.';
+                } else {
+                    const parsedPrice = parseFloat(price);
+                    if (isNaN(parsedPrice) || parsedPrice < 0) {
+                        errors.price = 'Price must be a non-negative number.';
+                    }
+                }
+                if (!category) errors.category = 'Category is required.';
+                if (!color) errors.color = 'Color is required.';
+    
+                
+                if (!sizes || !Array.isArray(sizes) || sizes.length === 0) {
+                    errors.sizes = 'At least one size must be provided.';
+                } else {
+                    sizes.forEach((sizeEntry, index) => {
+                        const parsedStock = parseInt(sizeEntry.stock);
+                        if (!validSizes.includes(sizeEntry.size)) {
+                            errors[`sizes[${index}].size`] = 'Invalid size selected.';
+                        }
+                        if (isNaN(parsedStock) || parsedStock < 0) {
+                            errors[`sizes[${index}].stock`] = 'Stock must be a non-negative number.';
+                        }
                     });
                 }
     
-                // Convert sizes to correct format and validate
-                const productSizes = sizes.map(sizeEntry => {
-                    // Convert stock to number
-                    const parsedStock = parseInt(sizeEntry.stock);
-                    if (isNaN(parsedStock) || !validSizes.includes(sizeEntry.size)) {
-                        throw new Error(`Invalid size or stock value`);
-                    }
-                    return {
-                        size: sizeEntry.size,
-                        stock: parsedStock
-                    };
-                });
+               
+                if (Object.keys(errors).length > 0) {
+                    return res.render('admin/product-add', {
+                        message: 'Please fix the following errors:',
+                        categories,
+                        validSizes,
+                        errors
+                    });
+                }
+    
+                const productSizes = sizes.map(sizeEntry => ({
+                    size: sizeEntry.size,
+                    stock: parseInt(sizeEntry.stock)
+                }));
     
                 const images = req.files ? req.files.map(file => ({ url: file.filename })) : [];
     
@@ -73,7 +98,7 @@ module.exports = {
                     category,
                     color,
                     sizes: productSizes,
-                    price: parsedPrice,
+                    price: parseFloat(price),
                     images
                 });
     
@@ -85,7 +110,6 @@ module.exports = {
             res.status(500).json({ success: false, error: 'Internal Server Error' });
         }
     },
-    
     editProduct: async (req, res) => {
         const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     
@@ -203,6 +227,7 @@ module.exports = {
             res.status(500).send('Internal Server Error'); // Send error response
         }
     },
+    
      productList:async(req,res)=>{
         try {
             const productId = req.params.id;

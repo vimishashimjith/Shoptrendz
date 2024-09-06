@@ -1,10 +1,10 @@
 const isLogin = async (req, res, next) => {
     try {
         if (req.session.user_id) {
-            // User is logged in, proceed to the next middleware
+            
             return next();
         } else {
-            // User is not logged in, redirect to login page
+            
             return res.redirect('/login');
         }
     } catch (error) {
@@ -16,10 +16,10 @@ const isLogin = async (req, res, next) => {
 const isLogout = async (req, res, next) => {
     try {
         if (req.session.user_id) {
-            // User is logged in, redirect to home page
+          
             return res.redirect('/');
         } 
-        // User is not logged in, proceed to the next middleware
+     
         return next();
     } catch (error) {
         console.log(error.message);
@@ -28,7 +28,7 @@ const isLogout = async (req, res, next) => {
 };
 
 const isAuthenticated = (req, res, next) => {
-    res.locals.isAuthenticated = !!req.session.user_id; // Converts user_id to boolean (true if exists)
+    res.locals.isAuthenticated = !!req.session.user_id; 
     next();
 };
 
