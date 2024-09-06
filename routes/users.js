@@ -34,6 +34,7 @@ router.post('/forget', forgetVerify);
 router.get('/', loadHome);
 router.get('/product', loadProduct);
 router.get('/productdetail/:id', loadProductdetail);
+router.get('/logout', auth.isAuthenticated, userLogout);
 
 // Protected Routes
 router.get('/add-address', auth.isAuthenticated, addAddressLoad);

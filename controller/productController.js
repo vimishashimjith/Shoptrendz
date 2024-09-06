@@ -80,7 +80,8 @@ module.exports = {
                         message: 'Please fix the following errors:',
                         categories,
                         validSizes,
-                        errors
+                        errors,
+                        layout:adminLayout
                     });
                 }
     

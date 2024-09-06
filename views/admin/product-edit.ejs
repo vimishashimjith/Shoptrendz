@@ -218,28 +218,49 @@
       previewContainer.style.display = previewContainer.style.display === 'none' ? 'block' : 'none';
     }
 
-    $(document).ready(function() {
-      $('#add-size-stock').click(function() {
-        const sizeStockHtml = `
-          <div class="input-group mb-3 size-stock-item">
-            <select class="form-control size-select" name="sizes[][size]" required>
-              <% validSizes.forEach(size => { %>
-                <option value="<%= size %>"><%= size %></option>
-              <% }) %>
-            </select>
-            <input type="number" class="form-control stock-input" name="sizes[][stock]" placeholder="Stock" required>
-            <div class="input-group-append">
-              <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
-            </div>
-          </div>
-        `;
-        $('#size-stock-container').append(sizeStockHtml);
-      });
-
-      $(document).on('click', '.remove-size-stock', function() {
-        $(this).closest('.size-stock-item').remove();
-      });
-    });
+   
   </script>
+  <script>
+    // Dynamic Indexing
+    let sizeIndex = <%= product.sizes.length %>; // Start with the number of existing sizes
+
+    $(document).ready(function() {
+        // Add Size/Stock
+        $('#add-size-stock').click(function() {
+            const sizeStockHtml = `
+              <div class="input-group mb-3 size-stock-item" data-index="${sizeIndex}">
+                <select class="form-control size-select" name="sizes[${sizeIndex}][size]" required>
+                  <% validSizes.forEach(size => { %>
+                    <option value="<%= size %>"><%= size %></option>
+                  <% }) %>
+                </select>
+                <input type="number" class="form-control stock-input" name="sizes[${sizeIndex}][stock]" placeholder="Stock" required>
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+                </div>
+              </div>
+            `;
+            $('#size-stock-container').append(sizeStockHtml);
+            sizeIndex++; // Increment the index for the next size/stock entry
+        });
+
+        // Remove Size/Stock
+        $(document).on('click', '.remove-size-stock', function() {
+            $(this).closest('.size-stock-item').remove();
+            updateSizeIndexes(); // Update the index for remaining size/stock inputs
+        });
+    });
+
+    // Function to update index in name attributes after removal
+    function updateSizeIndexes() {
+        $('#size-stock-container .size-stock-item').each(function(index) {
+            $(this).attr('data-index', index);
+            $(this).find('.size-select').attr('name', `sizes[${index}][size]`);
+            $(this).find('.stock-input').attr('name', `sizes[${index}][stock]`);
+        });
+        sizeIndex = $('#size-stock-container .size-stock-item').length; // Update global index count
+    }
+</script>
+
 </body>
 </html>

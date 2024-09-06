@@ -16,40 +16,61 @@ module.exports = {
         }
     },
 
-     addCategory : async (req, res) => {
+    addCategory: async (req, res) => {
         try {
             const { name, description } = req.body;
-            const normalizedName = name.toLowerCase(); 
     
-            
-            const existingCategory = await Category.findOne({ name: normalizedName }).collation({ locale: 'en', strength: 2 });
-            if (existingCategory) {
-                
+            const errors = {};
+            if (!name) {
+                errors.name = 'Category name is required';
+            }
+            if (!description) {
+                errors.description = 'Description is required';
+            }
+    
+            if (Object.keys(errors).length > 0) {
                 const user = await User.findById(req.session.User_id);
                 return res.render('admin/category-add', {
-                    layout:adminLayout,
+                    layout: adminLayout,
                     admin: user,
-                    message: 'Category with this name already exists.',
-                    name,
-                    description
+                    errors, // Pass the actual errors object here
+                    name,  // Keep the previously entered name value
+                    description // Keep the previously entered description value
                 });
             }
     
-            const newCategory = new Category({
-                name: normalizedName,
-                description
-            });
+            const normalizedName = name.toLowerCase(); 
+    
+            // Check for existing category with case-insensitive name
+            const existingCategory = await Category.findOne({ name: normalizedName }).collation({ locale: 'en', strength: 2 });
+            if (existingCategory) {
+                const user = await User.findById(req.session.User_id);
+                return res.render('admin/category-add', {
+                    layout: adminLayout,
+                    admin: user,
+                    message: 'Category with this name already exists.',
+                    errors: {}, // No validation errors in this case
+                    name, // Keep the previously entered name
+                    description // Keep the previously entered description
+                });
+            }
+    
+            // Save the new category if validation passes
+            const newCategory = new Category({ name: normalizedName, description });
             await newCategory.save();
-            res.redirect('/admin/categories'); 
+    
+            res.redirect('/admin/categories');
     
         } catch (error) {
             console.error(error.message);
             const user = await User.findById(req.session.User_id);
             res.render('admin/category-add', {
+                layout: adminLayout,
                 admin: user,
                 message: 'An error occurred while adding the category.',
-                username,
-                description
+                errors: {}, // No validation errors
+                name: req.body.name || '', // Refill the form with submitted values
+                description: req.body.description || ''
             });
         }
     },

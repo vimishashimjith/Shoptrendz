@@ -159,8 +159,12 @@ const addAddress = async (req, res, next) => {
                 errors.pincode = "Pincode must be 6 digits";
             }
         }
-
-       
+      if(!street){
+        errors.street="Street name is required"
+      }
+       if(!city){
+        errors.city="City name is required"
+       }
         if (Object.keys(errors).length > 0) {
             return res.render('user/add-address', { user:user,
                 errors, 
@@ -948,6 +952,7 @@ const editProfile = async (req, res, next) => {
             const user = await User.findById(userId);
             return res.render('user/editProfile', { user, errors, message: 'Please fix the errors' });
         }
+        
 
         
         await User.findByIdAndUpdate(userId, {

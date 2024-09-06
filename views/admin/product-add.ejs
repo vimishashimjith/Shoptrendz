@@ -63,10 +63,14 @@
         right: 10px;
         z-index: 20;
     }
-    
+    .error-message {
+    color: red;
+    font-size: 0.875rem;
+}
+
     .btn{
-      background-color: #007bff; /* Bootstrap primary color */
-                          color:#5D87FF;
+      background-color: #5588be; /* Bootstrap primary color */
+                          color:#0333b8;
                           padding: 10px 20px;
                           text-decoration: none;
                           border-radius: 5px;
@@ -107,19 +111,19 @@
 
                 <div class="mb-3">
                   <label for="brand" class="form-label">Brand</label>
-                  <input type="text" class="form-control" id="brand" name="brand" required>
+                  <input type="text" class="form-control" id="brand" name="brand">
 
                 </div>
               
                 <div class="mb-3">
                   <label for="description" class="form-label">Description</label>
-                  <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                  <textarea class="form-control" id="description" name="description" rows="3" ></textarea>
                 </div>
 
                 
               
                 <label for="category" class="form-label">Category</label>
-                <select id="category" name="category" class="form-control" required>
+                <select id="category" name="category" class="form-control" >
                     <option value="">Select Category</option>
                     <% if (categories && categories.length > 0) { %>
                         <% categories.forEach(cat => { %>
@@ -142,14 +146,14 @@
                   </select>
 
                   <label for="stock">Stock:</label>
-                  <input type="number" name="sizes[0][stock]" min="0" required>
+                  <input type="number" name="sizes[0][stock]" min="0" >
                   </div>
               </div>
 
               <button type="button" onclick="addSize()">Add another size</button>
                 <div class="mb-3">
                   <label for="price" class="form-label">Price</label>
-                  <input type="number" class="form-control" id="price" name="price" required>
+                  <input type="number" class="form-control" id="price" name="price" >
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Color</label>
@@ -171,7 +175,7 @@
               </div>
                 <div class="mb-4">
                   <label class="form-label">Image-1</label>
-                  <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)" required>
+                  <input class="form-control" id="product_image1" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 1)" >
                   <span id="image1-error" style="font-size: 14px; margin-top: -20px"></span>
                   <button class="btn btn-link" id="dropdown-trigger1" type="button" onclick="togglePreview(1)">Click Here to Preview</button>
                   <div id="image-preview-container1" class="image-preview mb-2" style="display:none;">
@@ -183,7 +187,7 @@
 
                 <div class="mb-4">
                   <label class="form-label">Image-2</label>
-                  <input class="form-control" id="product_image2" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 2)" required>
+                  <input class="form-control" id="product_image2" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, 2)" >
                   <span id="image2-error" style="font-size: 14px; margin-top: -20px"></span>
                   <button class="btn btn-link" id="dropdown-trigger2" type="button" onclick="togglePreview(2)">Click Here to Preview</button>
                   <div id="image-preview-container2" class="image-preview mb-2" style="display:none;">
@@ -214,6 +218,7 @@
                   <% }) %>
                 <% } %>
               </div>
+              
             </div>
           </div>
         </div>
