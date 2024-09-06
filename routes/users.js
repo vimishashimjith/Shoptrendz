@@ -6,7 +6,8 @@ const {
     userLogout, verifyOtp, loadProduct, loadProductdetail, forgetLoad,
     viewCart, addToCart, checkoutLoad, addAddress, addAddressLoad, successGoogleLogin, errorlogin, updateCartQuantity, removeFromCart,
     showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails, editProfileLoad, editProfile, getChangePasswordPage,
-    changePassword, placeOrder, orderLoad, cancelOrder, resendOTP
+    changePassword, placeOrder, orderLoad, cancelOrder, resendOTP,
+    searchProduct
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -37,6 +38,7 @@ router.get('/productdetail/:id', loadProductdetail);
 router.get('/logout', auth.isAuthenticated, userLogout);
 
 // Protected Routes
+router.get('/searchProduct',searchProduct)
 router.get('/add-address', auth.isAuthenticated, addAddressLoad);
 router.post('/add-address', auth.isAuthenticated, addAddress);
 router.get('/showAddress', auth.isAuthenticated, showAddress);

@@ -1,15 +1,18 @@
 <!-- Breadcrumb Start -->
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30 rounded shadow-sm">
-                <span class="breadcrumb-item active">Home</span>
-                <span class="breadcrumb-item active">Shop</span>
-                <span class="breadcrumb-item active">Checkout</span>
-            </nav>
-        </div>
-    </div>
+<div class="col-12">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <% breadcrumbs.forEach((crumb, index) => { %>
+                <% if (index < breadcrumbs.length - 1) { %>
+                    <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                <% } else { %>
+                    <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                <% } %>
+            <% }) %>
+        </ol>
+    </nav>
 </div>
+
 <!-- Breadcrumb End -->
 
 <style>

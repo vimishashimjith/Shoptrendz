@@ -97,21 +97,37 @@ const loadRegister = async (req, res) => {
 
 const loadProduct = async (req, res) => {
     try {
-        const product= await Product.find();
+        // Fetch all products
+        const products = await Product.find();
+
+        // Fetch user data from session
         const userId = req.session.user_id;
         const user = await User.findById(userId);
-       
-        res.render('user/product',{product,user});
+
+        // Define breadcrumbs
+        const breadcrumbs = [
+            { name: 'Home', url: '/' },
+            { name: 'Product', url: '/product' }
+        ];
+
+        // Render the view with product data, user data, and breadcrumbs
+        res.render('user/product', { products, user, breadcrumbs });
     } catch (error) {
         console.log(error.message);
+        res.status(500).send('Server Error');
     }
 };
+
 const addAddressLoad = async (req, res, next) => {
     try {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
-
-        res.render('user/add-address',{user:user});
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "Address", url: "/add-address" },
+          ];
+        res.render('user/add-address',{user:user,breadcrumbs});
     } catch (error) {
         console.error(error.message);
         next(error); 
@@ -191,7 +207,13 @@ const addAddress = async (req, res, next) => {
            
         });
         await address.save();
-        res.redirect('/showAddress');
+        
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "Address", url: "/add-address" },
+          ];
+        res.redirect('/showAddress',breadcrumbs);
 
     } catch (error) {
         console.error(error.message);
@@ -222,8 +244,12 @@ const showAddress = async (req, res, next) => {
             return res.redirect('/login');
         }
 
-      
-        res.render('user/showAddress', { addresses, user });
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "ShowAddress", url: "/showAddress" },
+          ];
+        res.render('user/showAddress', { addresses, user,breadcrumbs });
 
     } catch (error) {
         console.error('Error loading address page:', error.message);
@@ -238,7 +264,12 @@ const loadEditAddress = async (req, res, next) => {
         const user=await User.findById(userId)
         const address = await Address.findById(req.params.id);
         if (!address) return res.status(404).send('Address not found.');
-        res.render('user/edit-address', { address,user }); 
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "editAddress", url: "/edit-address" },
+          ];
+        res.render('user/edit-address', { address,user,breadcrumbs }); 
     } catch (error) {
         console.error(error.message);
         next(error);
@@ -504,9 +535,13 @@ const loadProductdetail = async (req, res) => {
             console.log('Product not found');
             return res.status(404).send('Product not found');
         }
-
+        const breadcrumbs = [  
+      { name: "Home", url: "/" },
+      { name: "Product", url: "/product" },
+      { name: product.name, url: `/product/${productId}` },
+    ];
         console.log('Product found:', product);
-        res.render('user/productdetail',{product,user});
+        res.render('user/productdetail',{product,user,breadcrumbs});
     } catch (error) {
         console.error('Error loading product details:', error.message);
         res.status(500).send('Server Error');
@@ -576,7 +611,7 @@ const addToCart = async (req, res) => {
         }
 
         await cart.save();
-
+      
         res.status(200).json({ message: 'Product added to cart', cart });
     } catch (error) {
         console.error('Error adding product to cart:', error.message);
@@ -697,8 +732,12 @@ const viewCart = async (req, res) => {
         
         const user = await User.findById(userId);
         const cart = await Cart.findOne({ userId });
-
-        res.render('user/cart', { cart,user });
+        const breadcrumbs = [
+            { name: 'Home', url: '/' },
+            { name: 'product', url: '/product' },
+            { name: 'Cart', url: '/cart' }  // This should be the current page
+        ];
+        res.render('user/cart', { cart,user,breadcrumbs });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error fetching cart details' });
@@ -762,14 +801,20 @@ const checkoutLoad = async (req, res) => {
       
         
         const addresses = await Address.find({ user: userId });
-      
+        const breadcrumbs = [
+            { name: 'Home', url: '/' },
+            { name: 'Shop', url: '/shop' },
+            { name: 'Cart', url: '/cart' } ,
+            {name:'checkout',url:'/checkout'}
+
+        ];
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
             shippingCost,
             total,
             addresses, 
-            user
+            user,breadcrumbs
         });
 
         console.log('Cart data:', userCart);
@@ -894,9 +939,12 @@ const getUserDetails = async (req, res, next) => {
             console.log('User not found');
             return res.redirect('/login');
         }
-
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+          ];
     
-        res.render('user/userDetails', { user });
+        res.render('user/userDetails', { user,breadcrumbs });
         
     } catch (error) {
         console.error('Error fetching user details:', error.message);
@@ -916,10 +964,14 @@ const editProfileLoad = async (req, res, next) => {
 
         
         const user = await User.findById(userId);
-
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "EditProfile", url: "/editProfile" },
+          ];
         if (user) {
             
-            res.render('user/editProfile', { user, errors: null, message: null });
+            res.render('user/editProfile', { user, errors: null, message: null ,breadcrumbs});
         } else {
             console.log('User not found');
             return res.redirect('/login');
@@ -1185,7 +1237,61 @@ const cancelOrder= async (req, res) => {
     }
 };
 
+const searchProduct= async (req, res) => {
+    try {
+        const searchQuery = req.query.search || '';
+        const sortOption = req.query.sort || '';
 
+        // Build the query object
+        const query = {
+            name: { $regex: searchQuery, $options: 'i' } // Case-insensitive search
+        };
+
+        // Determine sorting
+        let sort = {};
+        switch (sortOption) {
+            case 'popularity':
+                sort = { popularity:1 };
+                break;
+            case 'price_low_high':
+                sort = { price: 1 };
+                break;
+            case 'price_high_low':
+                sort = { price: -1 };
+                break;
+            case 'average_ratings':
+                sort = { rating: -1 };
+                break;
+            case 'featured':
+                sort = { featured: -1 };
+                break;
+            case 'new_arrivals':
+                sort = { createdAt: -1 };
+                break;
+            case 'a_to_z':
+                sort = { name: 1 };
+                break;
+            case 'z_to_a':
+                sort = { name: -1 };
+                break;
+            default:
+                sort = { name: 1 }; // Default sorting
+        }
+
+        // Query the database
+        const products = await Product.find(query).sort(sort);
+        const breadcrumbs = [
+            { name: 'Home', url: '/' },
+            { name: 'Product', url: '/product' },
+            { name: 'ProductSearch', url: '/searchProduct' }
+        ];
+        // Render the results (replace 'searchResults' with your view template)
+        res.render('user/searchProduct', { products,breadcrumbs });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
 
 
 module.exports = {
@@ -1225,7 +1331,8 @@ module.exports = {
     changePassword,
     placeOrder,
     orderLoad,
-    cancelOrder
+    cancelOrder,
+    searchProduct
 
     
 

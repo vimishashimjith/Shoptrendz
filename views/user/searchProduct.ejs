@@ -1,0 +1,59 @@
+
+    <style>
+        .product-item {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .product-item img {
+            height: 400px;
+            object-fit: cover;
+        }
+        .product-item .text-center {
+            padding: 15px;
+        }
+        .product-item .price {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <% breadcrumbs.forEach((crumb, index) => { %>
+                        <% if (index < breadcrumbs.length - 1) { %>
+                            <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                        <% } else { %>
+                            <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                        <% } %>
+                    <% }) %>
+                </ol>
+            </nav>
+        </div>
+        <h2 class="mb-4">Search Results</h2>
+        <div class="row">
+            <% products.forEach(product => { %>
+                <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                    
+                    <div class="product-item bg-light border rounded shadow-sm">
+                        <img class="img-fluid w-100" src="/uploads/<%= product.images[0].url %>" alt="<%= product.name %>">
+                        <div class="text-center py-3">
+                            <h5 class="text-truncate"><%= product.name %></h5>
+                            <p class="price">₹<%= product.price.toFixed(2) %></p>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Bootstrap JavaScript -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+

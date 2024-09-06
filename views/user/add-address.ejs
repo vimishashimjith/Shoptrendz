@@ -1,3 +1,16 @@
+<div class="col-12">
+  <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+          <% breadcrumbs.forEach((crumb, index) => { %>
+              <% if (index < breadcrumbs.length - 1) { %>
+                  <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+              <% } else { %>
+                  <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+              <% } %>
+          <% }) %>
+      </ol>
+  </nav>
+</div>
 <style>
   #submit-button {
     width: 20%;

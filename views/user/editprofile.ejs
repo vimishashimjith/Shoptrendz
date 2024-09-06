@@ -1,3 +1,23 @@
+<!-- Breadcrumb Navigation Start -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <% breadcrumbs.forEach((crumb, index) => { %>
+            <% if (index < breadcrumbs.length - 1) { %>
+              <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+            <% } else { %>
+              <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+            <% } %>
+          <% }) %>
+        </ol>
+      </nav>
+    </div>
+  </div>
+</div>
+<!-- Breadcrumb Navigation End -->
+
 <!-- Edit Profile Page -->
 <div class="borderNav">
     <div class="container">
@@ -26,43 +46,42 @@
           <% } %>
   
           <!-- Form for Editing Profile -->
-        <!-- Form for Editing Profile -->
-<form action="/editProfile" method="post" id="profile">
-  <input type="hidden" value="<%= user._id %>" name="id">
+          <form action="/editProfile" method="post" id="profile">
+            <input type="hidden" value="<%= user._id %>" name="id">
 
-  <!-- Username Field -->
-  <div class="mb-3">
-      <label for="username" class="form-label">Username</label>
-      <input type="text" class="form-control" id="username" name="username" value="<%= user.username %>">
-      <!-- Display validation error if exists -->
-      <% if (errors && errors.username) { %>
-          <span class="text-danger"><%= errors.username.msg %></span>
-      <% } %>
-  </div>
+            <!-- Username Field -->
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" value="<%= user.username %>">
+                <!-- Display validation error if exists -->
+                <% if (errors && errors.username) { %>
+                    <span class="text-danger"><%= errors.username.msg %></span>
+                <% } %>
+            </div>
 
-  <!-- Email Field -->
-  <div class="mb-3">
-      <label for="email" class="form-label">Email</label>
-      <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" >
-      <!-- Display validation error if exists -->
-      <% if (errors && errors.email) { %>
-          <span class="text-danger"><%= errors.email.msg %></span>
-      <% } %>
-  </div>
+            <!-- Email Field -->
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" >
+                <!-- Display validation error if exists -->
+                <% if (errors && errors.email) { %>
+                    <span class="text-danger"><%= errors.email.msg %></span>
+                <% } %>
+            </div>
 
-  <!-- Mobile Number Field -->
-  <div class="mb-3">
-      <label for="mobileno" class="form-label">Phone</label>
-      <input type="tel" class="form-control" id="mobileno" name="mobileno" value="<%= user.mobileno %>">
-      <!-- Display validation error if exists -->
-      <% if (errors && errors.mobileno) { %>
-          <span class="text-danger"><%= errors.mobileno.msg %></span>
-      <% } %>
-  </div>
+            <!-- Mobile Number Field -->
+            <div class="mb-3">
+                <label for="mobileno" class="form-label">Phone</label>
+                <input type="tel" class="form-control" id="mobileno" name="mobileno" value="<%= user.mobileno %>">
+                <!-- Display validation error if exists -->
+                <% if (errors && errors.mobileno) { %>
+                    <span class="text-danger"><%= errors.mobileno.msg %></span>
+                <% } %>
+            </div>
 
-  <!-- Save Button -->
-  <button type="submit" class="btn btn-primary">Save</button>
-</form>
+            <!-- Save Button -->
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
 
         </div>
       </div>
@@ -107,10 +126,9 @@
     .alert {
       margin-bottom: 20px;
     }
+    
     .text-danger {
-    color: #dc3545;
-    font-weight: bold;
-}
-
+      color: #dc3545;
+      font-weight: bold;
+    }
   </style>
-  

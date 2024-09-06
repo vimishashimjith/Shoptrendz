@@ -1,3 +1,23 @@
+<!-- Breadcrumb Navigation Start -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <% breadcrumbs.forEach((crumb, index) => { %>
+            <% if (index < breadcrumbs.length - 1) { %>
+              <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+            <% } else { %>
+              <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+            <% } %>
+          <% }) %>
+        </ol>
+      </nav>
+    </div>
+  </div>
+</div>
+<!-- Breadcrumb Navigation End -->
+
 <!-- User Profile Header Section -->
 <div class="borderNav" style="background-color: #f4f4f4; padding: 20px 0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
     <div class="container">
@@ -111,4 +131,3 @@
       background-color: #732fcc;
     }
   </style>
-  
