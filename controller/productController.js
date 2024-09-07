@@ -116,7 +116,7 @@ module.exports = {
     
         try {
             if (req.method === 'GET') {
-                const productId = req.params.id; // Correctly extract productId
+                const productId = req.params.id; 
                 const product = await Product.findById(productId);
     
                 if (!product) {
@@ -143,12 +143,12 @@ module.exports = {
             } else if (req.method === 'POST') {
                 console.log('Request Body:', req.body);
     
-                const productId = req.params.productId; // Correctly extract productId
+                const productId = req.params.productId; 
                 const { name, brand, description, price, category, color } = req.body;
-                const sizes = req.body.sizes; // Ensure this matches the field name in the request body
+                const sizes = req.body.sizes; 
                 const categories = await Category.find();
     
-                // Convert price to number
+                
                 const parsedPrice = parseFloat(price);
                 if (isNaN(parsedPrice)) {
                     return res.render('admin/product-edit', {
@@ -159,9 +159,9 @@ module.exports = {
                     });
                 }
     
-                // Convert sizes to correct format and validate
+                
                 const productSizes = sizes.map(sizeEntry => {
-                    // Convert stock to number
+                    
                     const parsedStock = parseInt(sizeEntry.stock);
                     if (isNaN(parsedStock) || !validSizes.includes(sizeEntry.size)) {
                         throw new Error(`Invalid size or stock value`);
@@ -174,7 +174,7 @@ module.exports = {
     
                 const images = req.files ? req.files.map(file => ({ url: file.filename })) : [];
     
-                // Update product with new data
+                
                 await Product.findByIdAndUpdate(productId, {
                     name,
                     brand,
@@ -188,6 +188,7 @@ module.exports = {
     
                 res.redirect('/admin/products');
             }
+        
         } catch (error) {
             console.error('Error editing product:', error);
             res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -198,12 +199,12 @@ module.exports = {
 
     updateProduct : async (req, res) => {
         try {
-            const { id } = req.params; // Extract product ID from request parameters
-            const { name, brand, description, price, category, sizes } = req.body; // Extract product details from request body
-            const files = req.files || []; // Handle file uploads
-            const images = files.map(file => ({ url: file.filename })); // Map files to image URLs
+            const { id } = req.params; 
+            const { name, brand, description, price, category, sizes } = req.body; 
+            const files = req.files || []; 
+            const images = files.map(file => ({ url: file.filename })); 
     
-            // Construct the update data object
+            
             const updateData = {
                 name,
                 brand,
@@ -211,21 +212,21 @@ module.exports = {
                 price,
                 category,
                 sizes,
-                images: images.length ? images : undefined // Include images only if there are any
+                images: images.length ? images : undefined 
             };
     
-            // Find the product by ID and update it with the new data
+           
             const updatedProduct = await Product.findByIdAndUpdate(id, { $set: updateData }, { new: true });
     
             if (!updatedProduct) {
-                return res.status(404).send('Product not found'); // Handle case where product is not found
+                return res.status(404).send('Product not found'); 
             }
     
-            // Redirect to the products list page
+           
             res.redirect('/admin/products');
         } catch (error) {
-            console.error('Error updating product:', error.message); // Log error details
-            res.status(500).send('Internal Server Error'); // Send error response
+            console.error('Error updating product:', error.message); 
+            res.status(500).send('Internal Server Error'); 
         }
     },
     

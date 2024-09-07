@@ -33,15 +33,15 @@ module.exports = {
                 return res.render('admin/category-add', {
                     layout: adminLayout,
                     admin: user,
-                    errors, // Pass the actual errors object here
-                    name,  // Keep the previously entered name value
-                    description // Keep the previously entered description value
+                    errors, 
+                    name,  
+                    description 
                 });
             }
     
             const normalizedName = name.toLowerCase(); 
     
-            // Check for existing category with case-insensitive name
+         
             const existingCategory = await Category.findOne({ name: normalizedName }).collation({ locale: 'en', strength: 2 });
             if (existingCategory) {
                 const user = await User.findById(req.session.User_id);
@@ -49,13 +49,13 @@ module.exports = {
                     layout: adminLayout,
                     admin: user,
                     message: 'Category with this name already exists.',
-                    errors: {}, // No validation errors in this case
-                    name, // Keep the previously entered name
-                    description // Keep the previously entered description
+                    errors: {}, 
+                    name, 
+                    description 
                 });
             }
     
-            // Save the new category if validation passes
+            
             const newCategory = new Category({ name: normalizedName, description });
             await newCategory.save();
     
@@ -68,8 +68,8 @@ module.exports = {
                 layout: adminLayout,
                 admin: user,
                 message: 'An error occurred while adding the category.',
-                errors: {}, // No validation errors
-                name: req.body.name || '', // Refill the form with submitted values
+                errors: {}, 
+                name: req.body.name || '', 
                 description: req.body.description || ''
             });
         }

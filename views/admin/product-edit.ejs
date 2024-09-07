@@ -103,25 +103,36 @@
                   <label for="price" class="form-label">Price</label>
                   <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
                 </div>
-
-                <!-- Images -->
-                <div class="mb-4">
-                  <label class="form-label">Images</label>
-                  <input class="form-control" type="file" name="images[]" accept="image/png, image/jpeg, image/jpg" multiple>
-
-                  <span id="image-error" style="font-size: 14px; margin-top: -20px"></span>
-                  <% product.images.forEach((pic, index) => { %>
-                    <button class="btn btn-link" id="dropdown-trigger<%= index + 1 %>" type="button" onclick="togglePreview(<%= index + 1 %>)">Click Here to Preview Image <%= index + 1 %></button>
-                    <div id="image-preview-container<%= index + 1 %>" class="image-preview mb-2" style="display:none;">
-                      <div id="image-preview<%= index + 1 %>" class="image-preview mb-2">
-                        <img src="/uploads/<%= pic.url %>" alt="Product Image <%= index + 1 %>" style="width: 100px; height: auto; margin-right: 10px;">
+                <div class="mb-3">
+                  <!-- Display Existing Images -->
+                  <label class="form-label">Existing Images</label>
+                  <div class="mb-4">
+                    <% product.images.forEach((pic, index) => { %>
+                      <div class="existing-image mb-2" style="display: inline-block; position: relative; margin-right: 10px;">
+                        <img src="/uploads/<%= pic.url %>" alt="Product Image-<%= index + 1 %>" style="width: 100px; height: auto;">
+                        <!-- Optionally, add a button or icon to remove existing images -->
+                        <i class="fas fa-trash-alt remove-icon" onclick="removeExistingImage('<%= pic.url %>')"></i>
                       </div>
-                      <button class="btn btn-secondary mt-2" id="crop-button<%= index + 1 %>" style="display: none;" type="button" onclick="cropImage(<%= index + 1 %>)">Crop</button>
-                      <i class="fas fa-sync-alt remove-icon" id="remove-icon<%= index + 1 %>" onclick="removeImage(<%= index + 1 %>)"></i>
+                    <% }); %>
+                  </div>
+                
+                  <!-- Input for New Images -->
+                  <% [1, 2, 3].forEach(id => { %>
+                    <div class="mb-4">
+                      <label class="form-label">Image-<%= id %></label>
+                      <input class="form-control" id="product_image<%= id %>" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, <%= id %>)">
+                      <span id="image<%= id %>-error" style="font-size: 14px; margin-top: -20px"></span>
+                      <button class="btn btn-link" id="dropdown-trigger<%= id %>" type="button" onclick="togglePreview(<%= id %>)">Click Here to Preview</button>
+                      <div id="image-preview-container<%= id %>" class="image-preview mb-2" style="display:none;">
+                        <div id="image-preview<%= id %>" class="image-preview mb-2"></div>
+                        <button class="btn btn-secondary mt-2" id="crop-button<%= id %>" style="display: none;" type="button" onclick="cropImage(<%= id %>)">Crop</button>
+                        <i class="fas fa-sync-alt remove-icon" id="remove-icon<%= id %>" onclick="removeImage(<%= id %>)"></i>
+                      </div>
                     </div>
                   <% }) %>
                 </div>
-
+                
+                
                 <button type="submit" class="btn btn-primary">Update Product</button>
               </form>
             </div>
@@ -221,8 +232,8 @@
    
   </script>
   <script>
-    // Dynamic Indexing
-    let sizeIndex = <%= product.sizes.length %>; // Start with the number of existing sizes
+    
+    let sizeIndex = <%= product.sizes.length %>;
 
     $(document).ready(function() {
         // Add Size/Stock

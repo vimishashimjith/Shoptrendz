@@ -97,20 +97,20 @@ const loadRegister = async (req, res) => {
 
 const loadProduct = async (req, res) => {
     try {
-        // Fetch all products
+        
         const products = await Product.find();
 
-        // Fetch user data from session
+        
         const userId = req.session.user_id;
         const user = await User.findById(userId);
 
-        // Define breadcrumbs
+        
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' }
         ];
 
-        // Render the view with product data, user data, and breadcrumbs
+        
         res.render('user/product', { products, user, breadcrumbs });
     } catch (error) {
         console.log(error.message);
@@ -632,14 +632,13 @@ const updateCartQuantity = async (req, res) => {
             return res.status(401).json({ message: 'User not logged in' });
         }
 
-        // Find the user's cart
+       
         const cart = await Cart.findOne({ userId });
 
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }
 
-        // Find the product in the cart
         const productIndex = cart.products.findIndex(p => p.productId.equals(productId) && p.size === size);
 
         if (productIndex === -1) {
@@ -653,34 +652,33 @@ const updateCartQuantity = async (req, res) => {
             return res.status(400).json({ message: 'Quantity cannot be less than 1' });
         }
 
-        // Fetch product details from the database
+      
         const productDetails = await Product.findById(productId);
 
         if (!productDetails) {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Find the stock for the specific size
         const sizeDetails = productDetails.sizes.find(s => s.size === size);
 
         if (!sizeDetails) {
             return res.status(404).json({ message: 'Size not found' });
         }
 
-        // Check if the new quantity exceeds the available stock
+        
         if (newQuantity > sizeDetails.stock) {
             return res.status(400).json({ message: `Only ${sizeDetails.stock} units available for size ${size}` });
         }
 
-        // Check if the new quantity exceeds the maximum allowed per user
+        
         if (newQuantity > MAX_QUANTITY_PER_USER) {
             return res.status(400).json({ message: `Cannot add more than ${MAX_QUANTITY_PER_USER} units` });
         }
 
-        // Update quantity in cart
+       
         cart.products[productIndex].quantity = newQuantity;
 
-        // Save cart
+      
         await cart.save();
 
         res.json({ success: true, message: 'Quantity updated successfully' });
@@ -735,7 +733,7 @@ const viewCart = async (req, res) => {
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'product', url: '/product' },
-            { name: 'Cart', url: '/cart' }  // This should be the current page
+            { name: 'Cart', url: '/cart' }  
         ];
         res.render('user/cart', { cart,user,breadcrumbs });
     } catch (error) {
@@ -1099,7 +1097,7 @@ const changePassword = async (req, res) => {
     }
 };
 const generateOrderId = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit number
+    return Math.floor(100000 + Math.random() * 900000).toString(); 
 };
 
 const placeOrder = async (req, res) => {
@@ -1111,26 +1109,27 @@ const placeOrder = async (req, res) => {
             return res.status(400).send('Invalid input');
         }
 
-        // Find the active cart for the user
+        
         const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
-        if (!cart) {
-            return res.status(404).send('Cart not found');
+        if (!cart || cart.products.length === 0) {
+            return res.status(404).send('Cart is empty or not found');
         }
 
-        // Calculate the total amount
+      
         const totalAmount = cart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
 
-        // Generate a unique 6-digit order ID
+       
         const orderId = generateOrderId();
 
-        // Create a new order
+        
         const newOrder = new Order({
             orderId,
             userId,
             addressId,
             products: cart.products.map(item => ({
                 productId: item.productId._id,
-                quantity: item.quantity
+                quantity: item.quantity,
+                size: item.size, 
             })),
             totalAmount,
             paymentMethod,
@@ -1139,11 +1138,12 @@ const placeOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // Mark the cart as inactive and delete it
+     
         cart.active = false;
         await cart.save();
         await Cart.deleteOne({ _id: cart._id });
 
+        
         res.redirect('/orders');
     } catch (error) {
         console.error('Error placing order:', error.message);
@@ -1173,7 +1173,7 @@ const orderLoad = async (req, res) => {
         let orders;
 
         if (req.params.id) {
-            orders = await Order.find({ userId, orderId: req.params.id }) // Use orderId instead of _id
+            orders = await Order.find({ userId, orderId: req.params.id }) 
                 .populate('addressId', 'street city pincode')
                 .populate('products.productId','name')
                 .exec();
@@ -1242,12 +1242,12 @@ const searchProduct= async (req, res) => {
         const searchQuery = req.query.search || '';
         const sortOption = req.query.sort || '';
 
-        // Build the query object
+       
         const query = {
-            name: { $regex: searchQuery, $options: 'i' } // Case-insensitive search
+            name: { $regex: searchQuery, $options: 'i' } 
         };
 
-        // Determine sorting
+       
         let sort = {};
         switch (sortOption) {
             case 'popularity':
@@ -1275,17 +1275,17 @@ const searchProduct= async (req, res) => {
                 sort = { name: -1 };
                 break;
             default:
-                sort = { name: 1 }; // Default sorting
+                sort = { name: 1 }; 
         }
 
-        // Query the database
+  
         const products = await Product.find(query).sort(sort);
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' },
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
-        // Render the results (replace 'searchResults' with your view template)
+       
         res.render('user/searchProduct', { products,breadcrumbs });
     } catch (err) {
         console.error(err);

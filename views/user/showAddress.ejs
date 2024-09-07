@@ -23,7 +23,7 @@
                 <th>State</th>
                 <th>Country</th>
                 <th>ZIP Code</th>
-                <th>Actions</th> <!-- Added header for actions -->
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -38,9 +38,9 @@
                         <td><%= address.country %></td>
                         <td><%= address.pincode %></td>
                         <td>
-                            <!-- Edit button -->
+                            
                             <a href="/edit-address/<%= address._id %>" class="btn btn-warning btn-sm">Edit</a>
-                            <!-- Delete button with SweetAlert -->
+                           
                             <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= address._id%>')">Delete</button>
                             <form id="delete-form-<%= address._id %>" action="/delete-address/<%=address._id %>" method="POST" style="display:none;"></form>
                         </td>

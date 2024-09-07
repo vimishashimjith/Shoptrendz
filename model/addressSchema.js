@@ -4,49 +4,49 @@ const addressSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true, // Corrected spelling
+        required: true, 
     },
     fullname: {
         type: String,
-        required: true // Corrected spelling
+        required: true 
     },
     mobile: {
         type: Number,
-        required: true, // Corrected spelling
+        required: true, 
         validate: {
             validator: function(v) {
-                return /^[0-9]{10}$/.test(v); // Example: Mobile number validation for 10 digits
+                return /^[0-9]{10}$/.test(v); 
             },
             message: props => `${props.value} is not a valid mobile number!`
         }
     },
     pincode: {
         type: Number,
-        required: true, // Corrected spelling
+        required: true, 
         validate: {
             validator: function(v) {
-                return /^[0-9]{5,6}$/.test(v); // Example: Pincode validation for 5 or 6 digits
+                return /^[0-9]{5,6}$/.test(v); 
             },
             message: props => `${props.value} is not a valid pincode!`
         }
     },
     street: {
         type: String,
-        required: true // Corrected spelling
+        required: true 
     },
     city: {
         type: String,
-        required: true // Corrected spelling
+        required: true 
     },
     state: {
         type: String,
-        required: true // Corrected spelling
+        required: true 
     },
     country: {
         type: String,
-        required: true, // Corrected spelling
-        default: 'India' // Assuming default country is India
+        required: true, 
+        default: 'India' 
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Address', addressSchema); // Model name in PascalCase
+module.exports = mongoose.model('Address', addressSchema); 

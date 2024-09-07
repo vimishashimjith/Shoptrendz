@@ -20,7 +20,7 @@ router.use(passport.session());
 router.use(bodyparser.urlencoded({ extended: true }));
 router.use(bodyparser.json());
 
-// Public Routes
+
 router.get('/signup', auth.isLogout, loadRegister);
 router.post('/signup', insertUser);
 router.get('/login', auth.isLogout, loginLoad);
@@ -37,7 +37,7 @@ router.get('/product', loadProduct);
 router.get('/productdetail/:id', loadProductdetail);
 router.get('/logout', auth.isAuthenticated, userLogout);
 
-// Protected Routes
+
 router.get('/searchProduct',searchProduct)
 router.get('/add-address', auth.isAuthenticated, addAddressLoad);
 router.post('/add-address', auth.isAuthenticated, addAddress);

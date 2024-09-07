@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt');
 const User = require('../model/userSchema'); 
 const Order = require('../model/orderSchema');
+const Product = require('../model/productSchema');
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
+const mongoose = require('mongoose');
 
 module.exports = {
     getAdminLogin: async (req, res) => {
@@ -187,34 +189,69 @@ module.exports = {
         }
     },
 
-    updateOrderStatus: async (req, res) => {
+   updateOrderStatus : async (req, res) => {
         try {
-            if (!req.session.adminId) {
-                return res.redirect('/admin/login');
-            }
-
-            const { orderId, status } = req.body;
-            const validStatuses = ['Shipped', 'Out-For-Delivery', 'Delivered', 'Cancelled'];
-
-            if (!validStatuses.includes(status)) {
-                return res.status(400).json({ success: false, message: 'Invalid status' });
-            }
-
-            const order = await Order.findById(orderId);
-            if (!order) {
-                return res.status(404).json({ success: false, message: 'Order not found' });
-            }
-
-            order.status = status;
-            await order.save();
-
-            res.json({ success: true, message: 'Order status updated successfully' });
+          if (!req.session.adminId) {
+            return res.redirect('/admin/login');
+          }
+      
+          const { orderId, status } = req.body;
+          const validStatuses = ['Shipped', 'Out-For-Delivery', 'Delivered', 'Cancelled'];
+      
+          if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+          }
+      
+         
+          const order = await Order.findById(orderId).populate('products.productId'); 
+          if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+          }
+      
+          order.status = status;
+          await order.save();
+      
+          
+          if (status === 'Delivered') {
+            for (const item of order.products) {
+                const product = item.productId;
+              
+                if (product) {
+                  console.log(`Product found: ${product.name}`);
+              
+                 
+                  const sizeObj = product.sizes.find(s => s.size === item.size); 
+              
+                  if (sizeObj) {
+                    console.log(`Size found: ${sizeObj.size}, Current stock: ${sizeObj.stock}, Ordered quantity: ${item.quantity}`);
+              
+                  
+                    if (sizeObj.stock >= item.quantity) {
+                      sizeObj.stock -= item.quantity; 
+                      await product.save(); 
+              
+                      console.log(`Stock after update for size ${sizeObj.size}: ${sizeObj.stock}`);
+                    } else {
+                      console.error(`Not enough stock for Product: ${product.name}, Size: ${item.size}`);
+                      return res.status(400).json({ success: false, message: `Not enough stock for ${product.name} (Size: ${item.size})` });
+                    }
+                  } else {
+                    console.error(`Size ${item.size} not found for Product: ${product.name}`);
+                    return res.status(400).json({ success: false, message: `Size ${item.size} not found for ${product.name}` });
+                  }
+                } else {
+                  console.error(`Product not found for ID: ${item.productId}`);
+                  return res.status(404).json({ success: false, message: 'Product not found' });
+                }
+            }}
+              
+          res.json({ success: true, message: 'Order status updated and stock decremented successfully' });
         } catch (error) {
-            console.error('Error in updateOrderStatus:', error.message);
-            res.status(500).json({ success: false, message: 'Server error' });
+          console.error('Error in updateOrderStatus:', error.message);
+          res.status(500).json({ success: false, message: 'Server error' });
         }
-    },
-
+      },
+      
     cancelOrders: async (req, res) => {
         try {
             if (!req.session.adminId) {
@@ -239,6 +276,5 @@ module.exports = {
         }
     },
 
-   
+    
 };
-
