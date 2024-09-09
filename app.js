@@ -14,6 +14,8 @@ const dotenv = require('dotenv').config();
 const usersRouter = require('./routes/users');
 const adminsRouter = require('./routes/admins');
 const { isAuthenticated } = require('./middleware/auth');
+const cartCount=require('./middleware/cartCount')
+
 
 const app = express();
 
@@ -62,6 +64,8 @@ app.use((req, res, next) => {
 
 
 app.use(isAuthenticated);
+app.use(cartCount)
+
 
 
 app.use('/', usersRouter);

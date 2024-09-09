@@ -1,3 +1,4 @@
+
 const isLogin = async (req, res, next) => {
     try {
         if (req.session.user_id) {
@@ -38,10 +39,20 @@ const isAuthenticated = (req, res, next) => {
 
 
 
+
+
+
+
+
+
+
+
 module.exports={
     isLogin,
     isLogout,
-    isAuthenticated,
+    isAuthenticated
+ 
+
   
     
 }

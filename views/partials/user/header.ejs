@@ -30,7 +30,7 @@
                     <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
                         <div class="navbar-nav mr-auto py-0">
                             <a href="/" class="nav-item nav-link active">Home</a>
-                            <a href="product" class="nav-item nav-link">Shop</a>
+                            <a href="/product" class="nav-item nav-link">Shop</a>
                         </div>
                         <div class="navbar-nav ml-auto py-0 d-none d-lg-block" style="position: relative;">
                             <% if (isAuthenticated) { %> <!-- Ensure isAuthenticated is defined in your backend -->
@@ -79,13 +79,44 @@
                             <i class="fas fa-heart text-primary"></i>
                             <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">0</span>
                         </a>
-                        <a href="cart" class="btn px-0 ml-3">
+                        <a href="/cart" class="btn px-0 ml-3">
                             <i class="fas fa-shopping-cart text-primary"></i>
-                            <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">0</span>
+                            <span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">
+                                <%= cartCount %> 
+                            </span>
                         </a>
+                        
                     </div>
                 </nav>
             </div>
         </div>
     </div>
 </header>
+    <script>
+        $(document).ready(function() {
+    
+    $('.add-to-cart-button').click(function() {
+        const productId = $(this).data('product-id');
+        const size = $(this).data('size');
+        const quantity = $(this).data('quantity');
+    
+        $.ajax({
+            url: `/cart/${productId}`,
+            method: 'POST',
+            data: { size, quantity },
+            success: function(response) {
+                if (response.cartItemCount !== undefined) {
+                   
+                    $('#cart-count').text(response.cartItemCount);
+                }
+                alert('Product added to cart successfully!');
+            },
+            error: function(xhr) {
+                alert('Error adding product to cart');
+            }
+        });
+    });
+});
+
+    </script>
+

@@ -12,6 +12,7 @@ const Address=require('../model/addressSchema')
 const Order=require('../model/orderSchema')
 
 
+
 const securePassword = async (password) => {
     try {
         const passwordHash = await bcrypt.hash(password, 10);
@@ -208,11 +209,7 @@ const addAddress = async (req, res, next) => {
         });
         await address.save();
         
-        const breadcrumbs = [
-            { name: "Home", url: "/" },
-            { name: "Profile", url: "/userDetails" },
-            { name: "Address", url: "/add-address" },
-          ];
+      
         res.redirect('/showAddress',breadcrumbs);
 
     } catch (error) {
@@ -543,9 +540,9 @@ const loadProductdetail = async (req, res) => {
         console.log('Product found:', product);
         res.render('user/productdetail',{product,user,breadcrumbs});
     } catch (error) {
-        console.error('Error loading product details:', error.message);
-        res.status(500).send('Server Error');
+        console.log(error.message);
     }
+    
 };
 
 
@@ -611,13 +608,17 @@ const addToCart = async (req, res) => {
         }
 
         await cart.save();
-      
-        res.status(200).json({ message: 'Product added to cart', cart });
+
+        
+        const cartItemCount = cart.products.reduce((total, product) => total + product.quantity, 0);
+
+        res.status(200).json({ message: 'Product added to cart', cartItemCount });
     } catch (error) {
         console.error('Error adding product to cart:', error.message);
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
+
 
 
 const updateCartQuantity = async (req, res) => {
