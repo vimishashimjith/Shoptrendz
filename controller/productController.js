@@ -230,7 +230,7 @@ module.exports = {
         }
     },
     
-     productList:async(req,res)=>{
+    productList: async (req, res) => {
         try {
             const productId = req.params.id;
             const product = await Product.findById(productId);
@@ -239,14 +239,13 @@ module.exports = {
                 return res.status(404).send("Product not found");
             }
     
-            
-            await product.save();
-            res.redirect('/admin/products');
+            res.render('admin/products', { product });
         } catch (error) {
-            console.error('Error listing product:', error.message);
+            console.error('Error retrieving product:', error.message);
             res.status(500).send("Internal Server Error");
         }
     }
+    
      ,
 
 

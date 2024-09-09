@@ -43,7 +43,7 @@
                     <div class="product-item bg-light border rounded shadow-sm">
                         <img class="img-fluid w-100" src="/uploads/<%= product.images[0].url %>" alt="<%= product.name %>">
                         <div class="text-center py-3">
-                            <h5 class="text-truncate"><%= product.name %></h5>
+                            <a class="h6 text-decoration-none text-truncate" href="productdetail/<%= product._id %>"><%= product.name %></a><br>
                             <p class="price">₹<%= product.price.toFixed(2) %></p>
                         </div>
                     </div>

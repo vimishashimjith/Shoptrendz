@@ -210,7 +210,7 @@ const addAddress = async (req, res, next) => {
         await address.save();
         
       
-        res.redirect('/showAddress',breadcrumbs);
+        res.redirect('/showAddress');
 
     } catch (error) {
         console.error(error.message);
@@ -1157,7 +1157,6 @@ const placeOrder = async (req, res) => {
 
 
 
-
 const orderLoad = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1174,9 +1173,9 @@ const orderLoad = async (req, res) => {
         let orders;
 
         if (req.params.id) {
-            orders = await Order.find({ userId, orderId: req.params.id }) 
+            orders = await Order.find({ userId, orderId: req.params.id })
                 .populate('addressId', 'street city pincode')
-                .populate('products.productId','name')
+                .populate('products.productId', 'name')
                 .exec();
 
             if (!orders || orders.length === 0) {
@@ -1194,7 +1193,14 @@ const orderLoad = async (req, res) => {
 
         console.log('Fetched Orders:', orders);
 
-        res.render('user/orders', { orders, user });
+        // Define breadcrumbs
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "Orders", url: "/orders" }
+        ];
+
+        res.render('user/orders', { orders, user, breadcrumbs });
 
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -1252,7 +1258,7 @@ const searchProduct= async (req, res) => {
         let sort = {};
         switch (sortOption) {
             case 'popularity':
-                sort = { popularity:1 };
+                sort = {popularity :1 };
                 break;
             case 'price_low_high':
                 sort = { price: 1 };
@@ -1281,13 +1287,14 @@ const searchProduct= async (req, res) => {
 
   
         const products = await Product.find(query).sort(sort);
+       
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' },
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
        
-        res.render('user/searchProduct', { products,breadcrumbs });
+        res.render('user/searchProduct', { products,orders,breadcrumbs });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

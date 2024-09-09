@@ -80,7 +80,18 @@
         }
     }
 </style>
-
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <% breadcrumbs.forEach((breadcrumb, index) => { %>
+        <% if (index === breadcrumbs.length - 1) { %>
+          <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
+        <% } else { %>
+          <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
+        <% } %>
+      <% }); %>
+    </ol>
+  </nav>
+  
 <div class="container">
     <h2>Order Management</h2>
     
@@ -93,7 +104,7 @@
                     <div class="order-details">
                         <div class="order-detail-item"><strong>Order ID:</strong> <%= order.orderId %></div>
                         <div class="order-detail-item"><strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %></div>
-                        <div class="order-detail-item"><strong>Total Amount:</strong> ₹<%= order.totalAmount %></div>
+                        <div class="order-detail-item"><strong>Total Amount:</strong> <%= order.totalAmount %></div>
                         <div class="order-detail-item"><strong>Payment Method:</strong> <%= order.paymentMethod %></div>
                         <div class="order-detail-item"><strong>Status:</strong> <%= order.status %></div>
                         
