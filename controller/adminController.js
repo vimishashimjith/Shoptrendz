@@ -142,26 +142,44 @@ module.exports = {
         }
     },
 
-    loadOrderManagementPage: async (req, res) => {
+  loadOrderManagementPage : async (req, res) => {
         try {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-
+    
+            
+            const page = parseInt(req.query.page, 8) || 1;
+            const limit = 8; 
+            const skip = (page - 1) * limit; 
+    
+            
+            const totalOrders = await Order.countDocuments();
+    
+           
             const orders = await Order.find()
                 .populate('userId', 'username email')
-                .populate('addressId', 'street city zipcode');
-
+                .populate('addressId', 'street city zipcode')
+                .skip(skip)
+                .limit(limit);
+    
+          
+            const totalPages = Math.ceil(totalOrders / limit);
+    
+            
             res.render('admin/orderManagement', { 
                 title: 'Order Management', 
                 layout: adminLayout, 
-                orders 
+                orders,
+                currentPage: page,          
+                totalPages: totalPages       
             });
         } catch (error) {
             console.error('Error in loadOrderManagementPage:', error.message);
             res.status(500).send("Internal Server Error");
         }
     },
+    
 
     getOrderDetails: async (req, res) => {
         try {

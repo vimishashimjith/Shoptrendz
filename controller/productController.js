@@ -5,22 +5,48 @@ const adminLayout = './layouts/auth/admin/authLayout.ejs';
 const  validationResult  = require('express-validator')
 
 module.exports = {
-    showProduct: async (req, res) => {
+    showProduct : async (req, res) => {
         try {
-            const products = await Product.find()
-            .populate('category', 'name') 
-            .exec();
-            res.render('admin/products', { 
+            let page = parseInt(req.query.page) || 1; 
+            const limit = 5; 
+            let search = req.query.search || ''; 
+    
+           
+            let query = {};
+            if (search) {
+                query = {
+                    $or: [
+                        { name: { $regex: search, $options: 'i' } },
+                        { brand: { $regex: search, $options: 'i' } }
+                    ]
+                };
+            }
+    
+            const totalProducts = await Product.countDocuments(query);
+            const products = await Product.find(query)
+                .populate('category', 'name')
+                .limit(limit)
+                .skip((page - 1) * limit)
+                .exec();
+    
+            const totalPages = Math.ceil(totalProducts / limit);
+    
+            res.render('admin/products', {
                 title: 'Products',
                 layout: adminLayout,
-                products
+                products,
+                currentPage: page,
+                totalPages,
+                search 
             });
-            console.log(products)
+    
         } catch (error) {
             console.error(error.message);
             res.status(500).send("Internal Server Error");
         }
     },
+    
+    
     addProduct: async (req, res) => {
         const validSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     
@@ -229,24 +255,6 @@ module.exports = {
             res.status(500).send('Internal Server Error'); 
         }
     },
-    
-    productList: async (req, res) => {
-        try {
-            const productId = req.params.id;
-            const product = await Product.findById(productId);
-    
-            if (!product) {
-                return res.status(404).send("Product not found");
-            }
-    
-            res.render('admin/products', { product });
-        } catch (error) {
-            console.error('Error retrieving product:', error.message);
-            res.status(500).send("Internal Server Error");
-        }
-    }
-    
-     ,
 
 
       softDeleteProduct : async (req, res) => {

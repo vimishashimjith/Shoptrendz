@@ -99,7 +99,7 @@ const loadRegister = async (req, res) => {
 const loadProduct = async (req, res) => {
     try {
         
-        const products = await Product.find();
+        const products = await Product.find({softDelete:false});
 
         
         const userId = req.session.user_id;
@@ -508,18 +508,25 @@ const verifyLogin = async (req, res) => {
 
 const loadHome = async (req, res) => {
     try {
-        
-        const product= await Product.find()
-        const user = await User.findById(req.session.user_id); 
-        res.render('user/index',{product:product,user:user
-            
-        });
       
-        console.log(product)
+        const products = await Product.find({ softDelete: false }).limit(8);
+
+      
+        const user = await User.findById(req.session.user_id); 
+        
+       
+        res.render('user/index', {
+            product: products,
+            user: user
+        });
+        
+      
+        console.log(products);
     } catch (error) {
         console.log(error.message);
     }
 };
+
 const loadProductdetail = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1012,7 +1019,11 @@ const editProfile = async (req, res, next) => {
             mobileno,
         }, { new: true }); 
 
-       
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "EditProfile", url: "/editProfile" },
+          ];
         res.redirect('/userDetails');
     } catch (error) {
         console.error('Error updating user profile:', error.message);
@@ -1251,8 +1262,12 @@ const searchProduct= async (req, res) => {
 
        
         const query = {
-            name: { $regex: searchQuery, $options: 'i' } 
+            $or: [
+                { name: { $regex: searchQuery, $options: 'i' } },
+                { color: { $regex: searchQuery, $options: 'i' } }
+            ]
         };
+        
 
        
         let sort = {};
@@ -1294,7 +1309,7 @@ const searchProduct= async (req, res) => {
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
        
-        res.render('user/searchProduct', { products,orders,breadcrumbs });
+        res.render('user/searchProduct', { products,breadcrumbs });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
