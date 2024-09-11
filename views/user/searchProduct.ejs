@@ -18,9 +18,12 @@
             font-size: 1.25rem;
             font-weight: bold;
         }
+   
+
     </style>
 </head>
 <body>
+    <div class="container-fluid">
     <div class="container mt-4">
         <div class="col-12">
             <nav aria-label="breadcrumb">
@@ -35,7 +38,33 @@
                 </ol>
             </nav>
         </div>
-        <h2 class="mb-4">Search Results</h2>
+        <div class="col-lg-12 m-3">
+            <form id="searchForm" action="/searchProduct" method="get">
+                <div class="container">
+                    <div class="row justify-content-center align-items-center d-flex">
+                        <div class="col-md-4 mb-2">
+                            <input type="search" name="search" class="form-control" placeholder="Search Product...">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <select name="sort" class="form-control">
+                                <option value="">Sort By</option>
+                                <option value="popularity">Popularity</option>
+                                <option value="price_low_high">Price: Low to High</option>
+                                <option value="price_high_low">Price: High to Low</option>
+                                <option value="average_ratings">Average Ratings</option>
+                                <option value="featured">Featured</option>
+                                <option value="new_arrivals">New Arrivals</option>
+                                <option value="a_to_z">A - Z</option>
+                                <option value="z_to_a">Z - A</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <button class="btn btn-primary w-100" type="submit">Search</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
         <div class="row">
             <% products.forEach(product => { %>
                 <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
@@ -51,9 +80,21 @@
             <% }) %>
         </div>
     </div>
-
+</div>
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Include Bootstrap JavaScript -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>

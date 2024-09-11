@@ -1,149 +1,176 @@
-<style>
-    /* General Container Styling */
-    .container {
-        width: 90%;
-        margin: auto;
-        padding: 20px;
-        font-family: 'Arial', sans-serif;
-        color: #a84df1;
-    }
 
-    /* Order Card Styling */
-    .order-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        border: 1px solid #ddd;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        background-color: #ffffff;
-        box-shadow: 0 4px 8px rgba(21, 145, 124, 0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
 
-    .order-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Order Information Styling */
-    .order-info {
-        margin-bottom: 15px;
-    }
-
-    .order-details {
-        margin-bottom: 15px;
-        font-size: 15px;
-        line-height: 1.5;
-    }
-
-    .order-detail-item {
-        margin-bottom: 8px;
-    }
-
-    /* Header Styling */
-    h2, h3 {
-        color: #2c3e50;
-    }
-
-    /* Order Action Button Styling */
-    .order-actions {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .cancel-button {
-        background-color: #d9534f;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-    }
-
-    .cancel-button:hover {
-        background-color: #c9302c;
-    }
-
-    /* Media Query for Responsive Design */
-    @media (max-width: 768px) {
-        .order-card {
-            padding: 15px;
-        }
-
-        .cancel-button {
-            width: 100%;
-            padding: 10px;
-        }
-    }
-</style>
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <% breadcrumbs.forEach((breadcrumb, index) => { %>
-        <% if (index === breadcrumbs.length - 1) { %>
-          <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
-        <% } else { %>
-          <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
-        <% } %>
-      <% }); %>
-    </ol>
-  </nav>
-  
-<div class="container">
-    <h2>Order Management</h2>
-    
-    <!-- Order History Section -->
-    <div class="order-history">
-        <h3>Your Orders</h3>
-        <% orders.forEach(order => { %>
-            <div class="order-card">
-                <div class="order-info">
-                    <div class="order-details">
-                        <div class="order-detail-item"><strong>Order ID:</strong> <%= order.orderId %></div>
-                        <div class="order-detail-item"><strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %></div>
-                        <div class="order-detail-item"><strong>Total Amount:</strong> <%= order.totalAmount %></div>
-                        <div class="order-detail-item"><strong>Payment Method:</strong> <%= order.paymentMethod %></div>
-                        <div class="order-detail-item"><strong>Status:</strong> <%= order.status %></div>
-                        
-                        <!-- Product Names Section -->
-                        <div class="order-detail-item">
-                            <div class="order-detail-item">
-                                <strong>Products:</strong>
-                                <ul>
-                                    <% order.products.forEach(product => { %>
-                                        <li><%= product.productId.name %> - Quantity: <%= product.quantity %></li>
-            
-                                    <% }) %>
-                                </ul>
-                            </div>
-                        </div>
+  <ol class="breadcrumb">
+    <% breadcrumbs.forEach((breadcrumb, index) => { %>
+      <% if (index === breadcrumbs.length - 1) { %>
+        <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
+      <% } else { %>
+        <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
+      <% } %>
+    <% }); %>
+  </ol>
+</nav>
 
-                        <div class="order-detail-item">
-                            <strong>Shipping Address:</strong>
+<div class="container">
+    <!-- Order History Section -->
+    <div class="tab-content profile-content">
+        <div class="tab-pane fade show active" id="profile">
+            <div class="order-grid">
+                
+                
+                <% orders.forEach(order => { %>
+                    <div class="order-item">
+                        <!-- Order Information -->
+                        <div class="order-info">
+                            <strong>Order ID:</strong> <%= order.orderId %> <br>
+                            <strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %> <br>
+                            <strong>Total Amount:</strong> <%= order.totalAmount %> <br>
+                            <strong>Payment Method:</strong> <%= order.paymentMethod %>
+                        </div>
+                        
+                        <!-- Product Information -->
+                        <div class="order-products">
+                            <strong>Products:</strong>
+                            <ul>
+                                <% order.products.forEach(product => { %>
+                                    <li class="product-item">
+                                        <% if (product.productId.images && product.productId.images.length > 0) { %>
+                                            <img src="/uploads/<%= product.productId.images[0].url %>" class="product-image" alt="<%= product.productId.name %>">
+                                        <% } else { %>
+                                            <img src="/uploads/default-placeholder.png" class="product-image" alt="Image not available">
+                                        <% } %>
+                                        <span><%= product.productId.name %> - Quantity: <%= product.quantity %></span>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                        
+                        <!-- Shipping Address -->
+                        <div class="order-address">
+                            <strong>Shipping Address:</strong> 
                             <% if (order.addressId) { %>
                                 <p><%= order.addressId.street %>, <%= order.addressId.city %>, <%= order.addressId.pincode %></p>
                             <% } else { %>
                                 <p>No shipping address provided</p>
                             <% } %>
                         </div>
+
+                        <!-- Order Status and Actions -->
+                        <div class="order-status">
+                            <strong>Status:</strong> <%= order.status %> <br>
+                            <% if (order.status === 'Processing' || order.status === 'Pending') { %>
+                                <button onclick="cancelOrder('<%= order._id %>')" class="cancel-button">Cancel Order</button>
+                            <% } %>
+                        </div>
                     </div>
-                </div>
-                <div class="order-actions">
-                    <% if (order.status === 'Processing' || order.status === 'Pending') { %>
-                        <!-- Order Cancellation Option -->
-                        <button onclick="cancelOrder('<%= order._id %>')" class="cancel-button">Cancel Order</button>
-                    <% } else { %>
-                        <p><%= order.status %></p>
-                    <% } %>
-                </div>
+                <% }) %>
             </div>
-        <% }) %>
+        </div>
     </div>
 </div>
 
+<!-- CSS for grid layout -->
+<style>
+    .order-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+
+    .order-item {
+        background-color: #fff;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .order-info, .order-products, .order-address, .order-status {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .order-status {
+        border-bottom: none;
+    }
+
+    .order-products ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .product-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .product-image {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .cancel-button {
+        padding: 5px 10px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .cancel-button:hover {
+        background-color: #c82333;
+    }
+
+    h2 {
+        grid-column: span 2;
+        margin-bottom: 20px;
+    }
+    .pagination {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    list-style: none;
+}
+
+
+    @media (max-width: 768px) {
+        .order-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<nav>
+    <ul class="pagination justify-content-center">
+        <% if (currentPage > 1) { %>
+            <li class="page-item">
+                <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+            </li>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+                <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+            </li>
+        <% } %>
+    </ul>
+</nav>
 
 <script>
     // Function to show the cancellation modal using SweetAlert
@@ -220,3 +247,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<br><br><br><br><br><br><br><br><br><br>

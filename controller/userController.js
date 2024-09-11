@@ -799,7 +799,7 @@ const checkoutLoad = async (req, res) => {
         const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
 
        
-        const shippingCost = 10; 
+        const shippingCost = 50; 
 
       
         const total = subtotal + shippingCost;
@@ -1167,7 +1167,6 @@ const placeOrder = async (req, res) => {
 
 
 
-
 const orderLoad = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1181,9 +1180,16 @@ const orderLoad = async (req, res) => {
             });
         }
 
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1; // Current page, default to 1 if not provided
+        const limit = parseInt(req.query.limit) || 3; // Orders per page, default to 5
+        const skip = (page - 1) * limit; // Calculate how many records to skip
+
         let orders;
+        let totalOrders = 0;
 
         if (req.params.id) {
+            // Fetch a single order by ID
             orders = await Order.find({ userId, orderId: req.params.id })
                 .populate('addressId', 'street city pincode')
                 .populate('products.productId', 'name')
@@ -1196,11 +1202,22 @@ const orderLoad = async (req, res) => {
                     count: 0
                 });
             }
+
+            totalOrders = orders.length; // Only 1 order in this case
         } else {
+            // Fetch all orders with pagination
+            totalOrders = await Order.countDocuments({ userId }); // Get total count of orders
+
             orders = await Order.find({ userId })
                 .populate('products.productId')
-                .populate('addressId');
+                .populate('addressId')
+                .skip(skip)
+                .limit(limit)
+                .exec();
         }
+
+        // Calculate total pages
+        const totalPages = Math.ceil(totalOrders / limit);
 
         console.log('Fetched Orders:', orders);
 
@@ -1211,7 +1228,15 @@ const orderLoad = async (req, res) => {
             { name: "Orders", url: "/orders" }
         ];
 
-        res.render('user/orders', { orders, user, breadcrumbs });
+        // Render orders view with pagination data
+        res.render('user/orders', {
+            orders,
+            user,
+            breadcrumbs,
+            currentPage: page,
+            totalPages: totalPages,
+            
+        });
 
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -1222,8 +1247,6 @@ const orderLoad = async (req, res) => {
         });
     }
 };
-
-
 
 
 const cancelOrder= async (req, res) => {
@@ -1257,6 +1280,9 @@ const cancelOrder= async (req, res) => {
 
 const searchProduct= async (req, res) => {
     try {
+const userId=req.session.user_id;
+const user= await User.findById(userId) 
+
         const searchQuery = req.query.search || '';
         const sortOption = req.query.sort || '';
 
@@ -1309,7 +1335,7 @@ const searchProduct= async (req, res) => {
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
        
-        res.render('user/searchProduct', { products,breadcrumbs });
+        res.render('user/searchProduct', { products,breadcrumbs,user });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

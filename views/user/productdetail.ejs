@@ -13,19 +13,6 @@
 
 <div class="container-fluid pb-5">
     <div class="row px-xl-5">
-         <div class="col-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <% breadcrumbs.forEach((crumb, index) => { %>
-                            <% if (index < breadcrumbs.length - 1) { %>
-                                <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
-                            <% } else { %>
-                                <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
-                            <% } %>
-                        <% }) %>
-                    </ol>
-                </nav>
-            </div>
         <!-- Product Images Section -->
         <div class="col-lg-5 mb-30">
             <div class="bg-light p-3 zoom-container">
@@ -48,7 +35,11 @@
         <h3><%= product.name %></h3>
         <h3 class="font-weight-semi-bold mb-4">₹<%= product.price %></h3>
         <p class="mb-4"><%= product.description %></p>
-       
+        <% if (product.sizes.some(size => size.stock > 0)) { %>
+            <p>Stocks Available</p>
+        <% } else { %>
+            <p class="text-danger">Out of Stock</p>
+        <% } %>
         <!-- Size Selection -->
         <div id="sizes-container" class="mb-3">
             <label for="size">Size:</label>
