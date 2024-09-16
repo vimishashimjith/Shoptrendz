@@ -1165,8 +1165,6 @@ const placeOrder = async (req, res) => {
 
 
 
-
-
 const orderLoad = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1381,8 +1379,7 @@ module.exports = {
     placeOrder,
     orderLoad,
     cancelOrder,
-    searchProduct
-
-    
+    searchProduct,
+ 
 
 };

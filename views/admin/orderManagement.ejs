@@ -212,7 +212,8 @@ function cancelOrders() {
                         </td>
                         <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                         <td>
-                          <button class="btn btn-info"><a href="/admin/orderDetails?id=<%= order._id %>" class="text-light">Details</a></button>
+                          <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">View Details</a>
+                          </button>
                         </td>
                       </tr>
                     <% }) %>

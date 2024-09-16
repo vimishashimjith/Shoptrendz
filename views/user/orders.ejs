@@ -55,16 +55,19 @@
                                 <p>No shipping address provided</p>
                             <% } %>
                         </div>
-
+                      
                         <!-- Order Status and Actions -->
                         <div class="order-status">
                             <strong>Status:</strong> <%= order.status %> <br>
                             <% if (order.status === 'Processing' || order.status === 'Pending') { %>
                                 <button onclick="cancelOrder('<%= order._id %>')" class="cancel-button">Cancel Order</button>
                             <% } %>
+                        
                         </div>
-                    </div>
+                        </div>
+                        
                 <% }) %>
+                
             </div>
         </div>
     </div>

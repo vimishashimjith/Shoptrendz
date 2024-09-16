@@ -53,6 +53,7 @@ router.get('/checkout', auth.isAuthenticated, checkoutLoad);
 router.post('/checkout', auth.isAuthenticated, placeOrder);
 router.get('/orders', auth.isAuthenticated, orderLoad);
 router.post('/cancelOrder', auth.isAuthenticated, cancelOrder);
+
 router.get('/success', successGoogleLogin);
 router.get('/failure', errorlogin);
 router.get('/userDetails', auth.isAuthenticated, getUserDetails);

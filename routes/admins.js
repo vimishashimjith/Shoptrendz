@@ -58,7 +58,8 @@ router.get('/block/:id', adminAuth.isLogin, adminController.blockUser);
 
 router.get('/orderManagement', adminAuth.isLogin, adminController.loadOrderManagementPage);
 
-router.get('/order-details/:orderId', adminAuth.isLogin, adminController.getOrderDetails);
+router.get('/orderDetails/:orderId', adminController.getOrderDetails);
+
 router.post('/updateStatus', adminAuth.isLogin, adminController.updateOrderStatus);
 router.post('/cancelOrders', adminAuth.isLogin, adminController.cancelOrders);
 

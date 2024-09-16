@@ -179,33 +179,43 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
     },
-    
-
     getOrderDetails: async (req, res) => {
         try {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-
+    
             const orderId = req.params.orderId;
             const order = await Order.findById(orderId)
                 .populate('userId', 'username email')
-                .populate('addressId', 'street city zipcode');
-
+                .populate({
+                    path: 'products.productId',
+                    select: 'name price' 
+                })
+                .populate('addressId', 'street city pincode');
+    
             if (!order) {
                 return res.status(404).send("Order not found");
             }
-
-            res.render('admin/order-details', { 
-                title: 'Order Details', 
-                layout: adminLayout, 
-                order 
+    
+            
+            order.products = order.products || [];
+    
+            res.render('admin/orderDetails', {
+                order,
+                title: 'Order Details',
+                layout: adminLayout,
             });
         } catch (error) {
             console.error('Error in getOrderDetails:', error.message);
             res.status(500).send("Internal Server Error");
         }
     },
+    
+    
+    
+    
+   
 
    updateOrderStatus : async (req, res) => {
         try {
