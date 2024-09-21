@@ -111,7 +111,8 @@ module.exports = {
             res.render('admin/admin-users', { 
                 title: 'Admin Users',
                 layout: adminLayout,
-                users: usersData
+                users: usersData,
+                search: search
             });
         } catch (error) {
             console.error('Error in adminDashboard:', error.message);
