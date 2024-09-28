@@ -63,8 +63,13 @@ router.get('/orderDetails/:orderId', adminController.getOrderDetails);
 
 router.post('/updateStatus', adminAuth.isLogin, adminController.updateOrderStatus);
 router.post('/cancelOrders', adminAuth.isLogin, adminController.cancelOrders);
+router.get('/coupon', adminAuth.isLogin, adminController.getCouponCodes);
+router.get('/addCoupon', adminAuth.isLogin, adminController.addCouponLoad);
 
+router.post('/addCoupon', adminAuth.isLogin, adminController.addCoupon);
 
 router.get('/logout', adminAuth.isLogin, adminController.logout);
+router.post('/removeCoupon/:id',adminAuth.isLogin,adminController.removeCoupon);
+
 
 module.exports = router;

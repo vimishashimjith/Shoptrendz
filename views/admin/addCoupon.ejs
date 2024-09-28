@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Add Coupon</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa; /* Light background for the page */
+    }
+    .container-fluid {
+      margin-top: 30px; /* Add margin at the top */
+    }
+    .bg-light {
+      border-radius: 10px; /* Rounded corners for the form */
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    }
+    .form-label {
+      font-weight: bold; /* Bold labels for better readability */
+    }
+    .btn-primary {
+      background-color: #007bff; /* Primary color for the button */
+      border: none;
+      transition: background-color 0.3s; /* Smooth transition */
+    }
+    .btn-primary:hover {
+      background-color: #0056b3; /* Darker shade on hover */
+    }
+    .card-title {
+      font-size: 1.5rem; /* Larger title font size */
+      color: #343a40; /* Dark color for contrast */
+    }
+    .form-control {
+      border-radius: 5px; /* Rounded corners for input fields */
+      border: 1px solid #ced4da; /* Custom border color */
+    }
+    .form-control:focus {
+      border-color: #80bdff; /* Border color on focus */
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Shadow on focus */
+    }
+    .footer {
+      margin-top: 20px; /* Margin for footer */
+      text-align: center; /* Centered footer text */
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    
+    <%- include('../partials/admin/sidebar.ejs') %>
+
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs') %>
+
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title">Add New Coupon</h6>
+                <div class="bg-light p-4">
+                  <form action="" method="post">
+                    <div class="mb-3">
+                      <label for="code" class="form-label">Coupon Code</label>
+                      <input type="text" class="form-control" id="code" name="code" required>
+                    </div>
+                    <div class="mb-3">
+                      <label for="type" class="form-label">Coupon Type</label>
+                      <input type="text" class="form-control" id="type" name="type" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discount" class="form-label">Max Discount</label>
+                        <input type="number" class="form-control" id="maxDiscount" name="maxDiscount" required> <!-- Changed name to maxDiscount -->
+                      </div>
+                      
+                    <div class="mb-3">
+                      <label for="description" class="form-label">Description</label>
+                      <input type="text" class="form-control" id="description" name="description" required>
+                    </div>
+                    <div class="mb-3">
+                      <label for="limit" class="form-label">Limit</label>
+                      <input type="number" class="form-control" id="limit" name="limit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expired" class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" id="expiryDate" name="expiryDate" required> <!-- Changed name to expiryDate -->
+                      </div>
+                      
+                    <button type="submit" class="btn btn-primary">Add Coupon</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <p>&copy; 2024 Shoptrendz. All Rights Reserved.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Admin/assets/js/sidebarmenu.js"></script>
+  <script src="../Admin/assets/js/app.min.js"></script>
+  <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+</body>
+</html>

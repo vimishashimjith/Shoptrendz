@@ -235,12 +235,12 @@ module.exports = {
                 return res.status(404).send('Product not found');
             }
     
-            // Handle existing image deletion
+            
             const deletedImages = req.body.deletedImages ? req.body.deletedImages.split(',') : [];
     
             if (deletedImages.length > 0) {
                 deletedImages.forEach(imageUrl => {
-                    // Remove image file from the server (or cloud storage)
+                    
                     const filePath = path.join(__dirname, '../public/uploads', imageUrl);
                     fs.unlink(filePath, err => {
                         if (err) {
@@ -248,12 +248,12 @@ module.exports = {
                         }
                     });
     
-                    // Remove image from product's images array
+                  
                     product.images = product.images.filter(img => img.url !== imageUrl);
                 });
             }
     
-            // Update product details
+           
             product.name = req.body.name;
             product.brand = req.body.brand;
             product.description = req.body.description;
@@ -264,17 +264,17 @@ module.exports = {
             }));
             product.price = req.body.price;
     
-            // Handle new image uploads (if any)
+          
             if (req.files && req.files.length > 0) {
                 req.files.forEach(file => {
                     product.images.push({ url: file.filename });
                 });
             }
     
-            // Save the updated product
+       
             await product.save();
     
-            // Redirect to product listing or detail page
+            
             res.redirect('/admin/products');
         } catch (err) {
             console.error(err);

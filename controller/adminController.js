@@ -4,6 +4,8 @@ const Order = require('../model/orderSchema');
 const Product = require('../model/productSchema');
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
 const mongoose = require('mongoose');
+const Coupon = require('../model/couponSchema'); 
+
 
 module.exports = {
     getAdminLogin: async (req, res) => {
@@ -316,6 +318,93 @@ module.exports = {
             res.status(500).json({ success: false, message: 'Server error' });
         }
     },
+    getCouponCodes: async (req, res) => {
+        try {
+            if (!req.session.adminId) {
+                return res.redirect('/admin/login');
+            }
 
-    
+            const page = parseInt(req.query.page, 1) || 1;
+            const limit = 10; 
+            const skip = (page - 1) * limit;
+
+            const couponCodes = await Coupon.find()
+                .skip(skip)
+                .limit(limit);
+
+            const totalCoupons = await Coupon.countDocuments();
+
+            const totalPages = Math.ceil(totalCoupons / limit);
+
+            res.render('admin/coupon', {
+                title: 'Coupon Codes',
+                layout: adminLayout,
+                coupons: couponCodes,
+                currentPage: page,
+                totalPages: totalPages,
+            });
+        } catch (error) {
+            console.error('Error in getCouponCodes:', error.message);
+            res.status(500).send("Internal Server Error");
+        }
+    },
+    addCouponLoad: (req, res) => {
+        // Render the add coupon page
+        if (!req.session.adminId) {
+            return res.redirect('/admin/login');
+        }
+        res.render('admin/addCoupon', {
+            title: 'Add New Coupon',
+            layout:adminLayout
+            
+        });
+    },
+
+    addCoupon: async (req, res) => {
+        try {
+            const { code, type, maxDiscount, description, limit, expiryDate } = req.body;
+
+            const newCoupon = new Coupon({
+                code,
+                type,
+                maxDiscount,
+                description,
+                limit,
+                expirityDate: expiryDate
+            });
+
+            await newCoupon.save();
+
+            req.flash('success', 'Coupon added successfully!');
+            res.redirect('/admin/coupon'); // Redirect to the coupon list after adding
+        } catch (error) {
+            console.error('Error adding coupon:', error.message);
+            req.flash('error', 'Failed to add coupon. Please try again.');
+            res.redirect('/admin/addCoupon'); // Redirect back to the add coupon page
+        }
+    },
+    removeCoupon: async (req, res) => {
+        try {
+          if (!req.session.adminId) {
+            return res.redirect('/admin/login');
+          }
+      
+          const couponId = req.params.id; // Get coupon ID from request parameters
+          const coupon = await Coupon.findById(couponId);
+      
+          if (!coupon) {
+            return res.status(404).redirect('/admin/coupons'); // Redirect to coupons page if not found
+          }
+      
+          await Coupon.findByIdAndDelete(couponId); // Delete the coupon
+      
+          // Redirect to the coupons management page after deletion
+          res.redirect('/admin/coupon');
+        } catch (error) {
+          console.error('Error in removeCoupon:', error.message);
+          res.status(500).redirect('/admin/coupons'); // Redirect to coupons page on error
+        }
+      },
+      
+  
 };
