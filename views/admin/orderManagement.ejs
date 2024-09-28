@@ -14,47 +14,47 @@
           margin: 20px 0;
       }
       .btn-details {
-          background-color: #007bff; /* Bootstrap primary color */
+          background-color: #007bff; 
           color: white;
-          padding: 6px 12px; /* Reduced padding */
+          padding: 6px 12px;
           text-decoration: none;
-          border-radius: 4px; /* Slightly smaller border radius */
+          border-radius: 4px; 
           border: none;
           cursor: pointer;
-          font-size: 12px; /* Smaller font size */
+          font-size: 12px;
       }
       .btn-details:hover {
-          background-color: #0056b3; /* Darker shade for hover effect */
+          background-color: #0056b3; 
       }
       .badge {
-          padding: 4px 8px; /* Reduced padding */
-          font-size: 10px; /* Smaller font size */
-          border-radius: 4px; /* Slightly smaller border radius */
+          padding: 4px 8px; 
+          font-size: 10px; 
+          border-radius: 4px; 
           color: #fff;
       }
       .badge-success {
-          background-color: #28a745; /* Success color */
+          background-color: #28a745; 
       }
       .badge-warning {
-          background-color: #ffc107; /* Warning color */
+          background-color: #ffc107;
       }
       .table-responsive {
-          max-width: 100%; /* Ensure table fits within the container */
-          overflow-x: auto; /* Add horizontal scroll if needed */
+          max-width: 100%; 
+          overflow-x: auto; 
       }
       table {
-          width: 100%; /* Set table to full width of the container */
+          width: 100%; 
       }
       th, td {
-          padding: 8px; /* Padding for cells */
-          vertical-align: middle; /* Center-align text vertically */
+          padding: 8px; 
+          vertical-align: middle;
       }
       th {
-          background-color: #f8f9fa; /* Light background for header */
+          background-color: #f8f9fa; 
       }
       .custom-container {
-          max-width: 2000px; /* Adjust to desired width */
-          margin: 0 auto; /* Center the container */
+          max-width: 2000px; 
+          margin: 0 auto; 
       }
   </style>
   <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
@@ -162,6 +162,7 @@ function cancelOrders() {
           <div class="bg-light rounded h-100 p-4">
             <button class="btn btn-danger mb-3" onclick="cancelOrders()">Cancel Selected Orders</button>
             <div class="table-responsive">
+             
               <table class="table table-bordered text-center">
                 <thead class="text-black">
                   <tr>
@@ -212,7 +213,7 @@ function cancelOrders() {
                         </td>
                         <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                         <td>
-                          <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">View Details</a>
+                          <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">Details</a>
                           </button>
                         </td>
                       </tr>

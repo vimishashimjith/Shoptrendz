@@ -112,6 +112,13 @@
                           <% } %>
                         </tbody>
                       </table>
+                      <ul class="pagination">
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                            <a class="page-link" href="/admin/admin-users?page=<%= i %>&search=<%= search %>"><%= i %></a>
+                        </li>
+                        <% } %>
+                    </ul>
                     </div>
                   </div>
                 </div>
@@ -122,7 +129,8 @@
       </div>
     </div>
   </div>
-  
+ 
+
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../Admin/assets/js/sidebarmenu.js"></script>

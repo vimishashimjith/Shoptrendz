@@ -4,6 +4,9 @@ const Product = require('../model/productSchema');
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
 const  validationResult  = require('express-validator')
 
+const path = require('path');
+const fs = require('fs');  
+
 module.exports = {
     showProduct : async (req, res) => {
         try {
@@ -225,38 +228,63 @@ module.exports = {
 
     updateProduct : async (req, res) => {
         try {
-            const { id } = req.params; 
-            const { name, brand, description, price, category, sizes } = req.body; 
-            const files = req.files || []; 
-            const images = files.map(file => ({ url: file.filename })); 
+            const productId = req.params.id;
+            const product = await Product.findById(productId);
     
-            
-            const updateData = {
-                name,
-                brand,
-                description,
-                price,
-                category,
-                sizes,
-                images: images.length ? images : undefined 
-            };
-    
-           
-            const updatedProduct = await Product.findByIdAndUpdate(id, { $set: updateData }, { new: true });
-    
-            if (!updatedProduct) {
-                return res.status(404).send('Product not found'); 
+            if (!product) {
+                return res.status(404).send('Product not found');
             }
     
-           
+            // Handle existing image deletion
+            const deletedImages = req.body.deletedImages ? req.body.deletedImages.split(',') : [];
+    
+            if (deletedImages.length > 0) {
+                deletedImages.forEach(imageUrl => {
+                    // Remove image file from the server (or cloud storage)
+                    const filePath = path.join(__dirname, '../public/uploads', imageUrl);
+                    fs.unlink(filePath, err => {
+                        if (err) {
+                            console.error(`Failed to delete image: ${imageUrl}`, err);
+                        }
+                    });
+    
+                    // Remove image from product's images array
+                    product.images = product.images.filter(img => img.url !== imageUrl);
+                });
+            }
+    
+            // Update product details
+            product.name = req.body.name;
+            product.brand = req.body.brand;
+            product.description = req.body.description;
+            product.category = req.body.category;
+            product.sizes = req.body.sizes.map(sizeData => ({
+                size: sizeData.size,
+                stock: sizeData.stock
+            }));
+            product.price = req.body.price;
+    
+            // Handle new image uploads (if any)
+            if (req.files && req.files.length > 0) {
+                req.files.forEach(file => {
+                    product.images.push({ url: file.filename });
+                });
+            }
+    
+            // Save the updated product
+            await product.save();
+    
+            // Redirect to product listing or detail page
             res.redirect('/admin/products');
-        } catch (error) {
-            console.error('Error updating product:', error.message); 
-            res.status(500).send('Internal Server Error'); 
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Server Error');
         }
     },
 
 
+  
+  
       softDeleteProduct : async (req, res) => {
         try {
             const id = req.query.id;

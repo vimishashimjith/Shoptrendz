@@ -9,14 +9,16 @@
   <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css" />
   <style>
-    .image-preview {
-        width: 679px;
-        height: 679px;
+  .image-preview {
+        width: 679px; /* Adjust as needed */
+        height: 679px; /* Adjust as needed */
         margin-top: 10px;
         position: relative;
         z-index: 10;
     }
+
 
     .img-thumbnail {
         max-width: 50%;
@@ -24,7 +26,6 @@
     }
 
     .remove-icon {
-        display: none;
         font-size: 24px;
         color: red;
         cursor: pointer;
@@ -32,6 +33,10 @@
         top: 10px;
         right: 10px;
         z-index: 20;
+    }
+
+    .existing-image:hover .remove-icon {
+        display: block;
     }
   </style>
 </head>
@@ -41,101 +46,97 @@
     <div class="body-wrapper">
       <%- include('../partials/admin/header.ejs') %>
       <br><br>
-      <div class="page-wrapper">
-        <div class="container-fluid">
-          <div class="card">
-            <div class="card-body">
-              <h1 class="card-title">Edit Product</h1>
+      <div class="container-fluid">
+        <div class="card">
+          <div class="card-body">
+            <h1 class="card-title">Edit Product</h1>
 
-              <% if (message) { %>
-                <div class="alert alert-info"><%= message %></div>
-              <% } %>
+            <form id="image-form" action="/admin/product-edit/<%= product._id %>" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+              <!-- Product Details -->
+              <div class="mb-3">
+                <label for="name" class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
+              </div>
 
-              <form id="image-form" action="/admin/product-edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
-                <!-- Product Details -->
-                <div class="mb-3">
-                  <label for="name" class="form-label">Product Name</label>
-                  <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
-                </div>
+              <div class="mb-3">
+                <label for="brand" class="form-label">Brand</label>
+                <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
+              </div>
 
-                <div class="mb-3">
-                  <label for="brand" class="form-label">Brand</label>
-                  <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
-                </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required><%= product.description %></textarea>
+              </div>
 
-                <div class="mb-3">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea class="form-control" id="description" name="description" rows="3" required><%= product.description %></textarea>
-                </div>
+              <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-control" id="category" name="category" required>
+                  <% categories.forEach(cat => { %>
+                    <option value="<%= cat._id %>" <%= cat._id.equals(product.category) ? 'selected' : '' %>><%= cat.name %></option>
+                  <% }) %>
+                </select>
+              </div>
 
-                <div class="mb-3">
-                  <label for="category" class="form-label">Category</label>
-                  <select class="form-control" id="category" name="category" required>
-                    <% categories.forEach(cat => { %>
-                      <option value="<%= cat._id %>" <%= cat._id.equals(product.category) ? 'selected' : '' %>><%= cat.name %></option>
-                    <% }) %>
-                  </select>
-                </div>
-
-                <!-- Sizes and Stocks -->
-                <div class="mb-3">
-                  <label class="form-label">Sizes and Stocks</label>
-                  <div id="size-stock-container">
-                    <% product.sizes.forEach((size, index) => { %>
-                      <div class="input-group mb-3 size-stock-item">
-                        <select class="form-control size-select" name="sizes[<%= index %>][size]" required>
-                          <% validSizes.forEach(validSize => { %>
-                            <option value="<%= validSize %>" <%= size.size === validSize ? 'selected' : '' %>><%= validSize %></option>
-                          <% }) %>
-                        </select>
-                        <input type="number" class="form-control stock-input" name="sizes[<%= index %>][stock]" value="<%= size.stock %>" placeholder="Stock" required>
-                        <div class="input-group-append">
-                          <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
-                        </div>
-                      </div>
-                    <% }) %>
-                  </div>
-                  <button type="button" id="add-size-stock" class="btn btn-secondary">Add Size/Stock</button>
-                </div>
-
-                <!-- Price -->
-                <div class="mb-3">
-                  <label for="price" class="form-label">Price</label>
-                  <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
-                </div>
-                <div class="mb-3">
-                  <!-- Display Existing Images -->
-                  <label class="form-label">Existing Images</label>
-                  <div class="mb-4">
-                    <% product.images.forEach((pic, index) => { %>
-                      <div class="existing-image mb-2" style="display: inline-block; position: relative; margin-right: 10px;">
-                        <img src="/uploads/<%= pic.url %>" alt="Product Image-<%= index + 1 %>" style="width: 100px; height: auto;">
-                        <!-- Optionally, add a button or icon to remove existing images -->
-                        <i class="fas fa-trash-alt remove-icon" onclick="removeExistingImage('<%= pic.url %>')"></i>
-                      </div>
-                    <% }); %>
-                  </div>
-                
-                  <!-- Input for New Images -->
-                  <% [1, 2, 3].forEach(id => { %>
-                    <div class="mb-4">
-                      <label class="form-label">Image-<%= id %></label>
-                      <input class="form-control" id="product_image<%= id %>" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, <%= id %>)">
-                      <span id="image<%= id %>-error" style="font-size: 14px; margin-top: -20px"></span>
-                      <button class="btn btn-link" id="dropdown-trigger<%= id %>" type="button" onclick="togglePreview(<%= id %>)">Click Here to Preview</button>
-                      <div id="image-preview-container<%= id %>" class="image-preview mb-2" style="display:none;">
-                        <div id="image-preview<%= id %>" class="image-preview mb-2"></div>
-                        <button class="btn btn-secondary mt-2" id="crop-button<%= id %>" style="display: none;" type="button" onclick="cropImage(<%= id %>)">Crop</button>
-                        <i class="fas fa-sync-alt remove-icon" id="remove-icon<%= id %>" onclick="removeImage(<%= id %>)"></i>
+              <!-- Sizes and Stocks -->
+              <div class="mb-3">
+                <label class="form-label">Sizes and Stocks</label>
+                <div id="size-stock-container">
+                  <% product.sizes.forEach((size, index) => { %>
+                    <div class="input-group mb-3 size-stock-item">
+                      <select class="form-control size-select" name="sizes[<%= index %>][size]" required>
+                        <% validSizes.forEach(validSize => { %>
+                          <option value="<%= validSize %>" <%= size.size === validSize ? 'selected' : '' %>><%= validSize %></option>
+                        <% }) %>
+                      </select>
+                      <input type="number" class="form-control stock-input" name="sizes[<%= index %>][stock]" value="<%= size.stock %>" placeholder="Stock" required>
+                      <div class="input-group-append">
+                        <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
                       </div>
                     </div>
                   <% }) %>
                 </div>
-                
-                
-                <button type="submit" class="btn btn-primary">Update Product</button>
-              </form>
-            </div>
+                <button type="button" id="add-size-stock" class="btn btn-secondary">Add Size/Stock</button>
+              </div>
+
+              <!-- Price -->
+              <div class="mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
+              </div>
+
+              <!-- Display Existing Images -->
+              <input type="hidden" id="deletedImages" name="deletedImages" value="">
+
+              <div class="mb-3">
+                <label class="form-label">Existing Images</label>
+                <div class="mb-4">
+                  <% product.images.forEach((pic, index) => { %>
+                    <div class="existing-image mb-2" style="display: inline-block; position: relative; margin-right: 10px;">
+                      <img src="/uploads/<%= pic.url %>" alt="Product Image-<%= index + 1 %>" style="width: 100px; height: auto;">
+                      <i class="fas fa-trash-alt remove-icon" onclick="confirmRemoveImage('<%= pic.url %>', <%= index %>)"></i>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+
+              <!-- Input for New Images -->
+              <% [1, 2, 3].forEach(id => { %>
+                <div class="mb-4">
+                  <label class="form-label">Image-<%= id %></label>
+                  <input class="form-control" id="product_image<%= id %>" type="file" name="images" accept="image/png, image/jpeg, image/jpg" onchange="previewAndCropImage(event, <%= id %>)">
+                  <span id="image<%= id %>-error" style="font-size: 14px; margin-top: -20px"></span>
+                  <button class="btn btn-link" id="dropdown-trigger<%= id %>" type="button" onclick="togglePreview(<%= id %>)">Click Here to Preview</button>
+                  <div id="image-preview-container<%= id %>" class="image-preview mb-2" style="display:none;">
+                    <div id="image-preview<%= id %>" class="image-preview mb-2"></div>
+                    <button class="btn btn-secondary mt-2" id="crop-button<%= id %>" style="display: none;" type="button" onclick="cropImage(<%= id %>)">Crop</button>
+                    <i class="fas fa-sync-alt remove-icon" id="remove-icon<%= id %>" onclick="removeExistingImage(null, <%= id %>)"></i>
+                  </div>
+                </div>
+              <% }) %>
+              <br>
+              <br>
+              <button type="submit" class="btn btn-primary">Update Product</button>
+            </form>
           </div>
         </div>
       </div>
@@ -143,9 +144,12 @@
   </div>
 
   <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+  
   <script>
     const croppers = {};
 
@@ -157,121 +161,129 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const previewContainer = document.getElementById(`image-preview${id}`);
-                previewContainer.innerHTML = `<img id="image-to-crop${id}" src="${e.target.result}" class="img-fluid"/>`;
-
+                previewContainer.innerHTML = `<img id="image-to-crop${id}" src="${e.target.result}" class="img-thumbnail" />`;
+                previewContainer.style.display = 'block';
+                
                 const cropButton = document.getElementById(`crop-button${id}`);
-                cropButton.style.display = 'inline-block';
+                cropButton.style.display = 'block';
 
-                const removeIcon = document.getElementById(`remove-icon${id}`);
-                removeIcon.style.display = 'inline-block';
-
+                // Initialize cropper
                 const image = document.getElementById(`image-to-crop${id}`);
-
                 if (croppers[id]) {
-                    croppers[id].destroy();
+                    croppers[id].destroy(); // Destroy previous instance
                 }
-
                 croppers[id] = new Cropper(image, {
                     aspectRatio: 1,
-                    viewMode: 3,
-                    autoCropArea: 1,
-                    responsive: true,
-                    scalable: true,
-                    zoomable: true,
-                    background: false,
-                    minContainerWidth: 679,
-                    minContainerHeight: 679
+                    viewMode: 1,
                 });
             };
             reader.readAsDataURL(file);
         }
     }
 
-    function cropImage(id) {
-        const previewContainer = document.getElementById(`image-preview${id}`);
-        const croppedCanvas = croppers[id].getCroppedCanvas({
-            width: 679,
-            height: 679
-        });
-        const croppedImage = document.createElement('img');
-        croppedImage.src = croppedCanvas.toDataURL('image/png');
-        previewContainer.innerHTML = '';
-        previewContainer.appendChild(croppedImage);
+    function togglePreview(id) {
+        const dropdownTrigger = document.getElementById(`dropdown-trigger${id}`);
+        const imagePreviewContainer = document.getElementById(`image-preview-container${id}`);
 
-        croppedCanvas.toBlob(blob => {
-            const fileInput = document.querySelector(`input[name="images[]"]`);
-            const dataTransfer = new DataTransfer();
-            const file = new File([blob], fileInput.files[0].name, { type: 'image/png' });
-            dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
-        }, 'image/png');
-    }
-
-    function removeImage(id) {
-        const input = document.querySelector(`input[name="images[]"]`);
-        const previewContainer = document.getElementById(`image-preview${id}`);
-        const cropButton = document.getElementById(`crop-button${id}`);
-        const removeIcon = document.getElementById(`remove-icon${id}`);
-       
-        input.value = '';
-        previewContainer.innerHTML = '';
-        cropButton.style.display = "none";
-        removeIcon.style.display = "none";
-
-        if (croppers[id]) {
-            croppers[id].destroy();
-            delete croppers[id];
+        if (imagePreviewContainer.style.display === "none") {
+            imagePreviewContainer.style.display = "block";
+            dropdownTrigger.textContent = "Hide Image Preview";
+        } else {
+            imagePreviewContainer.style.display = "none";
+            dropdownTrigger.textContent = "Click Here to Preview";
         }
     }
 
-    function togglePreview(id) {
-      const previewContainer = document.getElementById(`image-preview-container${id}`);
-      previewContainer.style.display = previewContainer.style.display === 'none' ? 'block' : 'none';
+    function cropImage(id) {
+        const cropper = croppers[id];
+        const canvas = cropper.getCroppedCanvas();
+        const dataURL = canvas.toDataURL('image/png');
+
+        const imagePreviewContainer = document.getElementById(`image-preview-container${id}`);
+        const imagePreview = document.getElementById(`image-preview${id}`);
+        imagePreview.innerHTML = `<img src="${dataURL}" class="img-thumbnail" />`;
+        imagePreviewContainer.style.display = 'block';
+      
+
+        // You can also store the cropped image dataURL if you want to submit it
     }
 
-   
-  </script>
-  <script>
-    
-    let sizeIndex = <%= product.sizes.length %>;
+    function confirmRemoveImage(imageUrl, index) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Add imageUrl to the hidden input for deletion
+                const deletedImagesInput = document.getElementById('deletedImages');
+                deletedImagesInput.value += imageUrl + ',';
 
-    $(document).ready(function() {
-        // Add Size/Stock
-        $('#add-size-stock').click(function() {
-            const sizeStockHtml = `
-              <div class="input-group mb-3 size-stock-item" data-index="${sizeIndex}">
-                <select class="form-control size-select" name="sizes[${sizeIndex}][size]" required>
-                  <% validSizes.forEach(size => { %>
-                    <option value="<%= size %>"><%= size %></option>
-                  <% }) %>
-                </select>
-                <input type="number" class="form-control stock-input" name="sizes[${sizeIndex}][stock]" placeholder="Stock" required>
-                <div class="input-group-append">
-                  <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
-                </div>
-              </div>
-            `;
-            $('#size-stock-container').append(sizeStockHtml);
-            sizeIndex++; // Increment the index for the next size/stock entry
+                // Remove the image element from the DOM
+                const existingImage = document.querySelector(`img[src="/uploads/${imageUrl}"]`).parentElement;
+                existingImage.remove();
+            }
         });
+    }
 
-        // Remove Size/Stock
-        $(document).on('click', '.remove-size-stock', function() {
-            $(this).closest('.size-stock-item').remove();
-            updateSizeIndexes(); // Update the index for remaining size/stock inputs
-        });
+    function removeExistingImage(imageUrl, id) {
+        // If there's a URL, use confirmRemoveImage, otherwise just hide the preview
+        if (imageUrl) {
+            confirmRemoveImage(imageUrl);
+        } else {
+            document.getElementById(`image-preview-container${id}`).style.display = 'none';
+            document.getElementById(`product_image${id}`).value = ''; // Clear file input
+        }
+    }
+
+  
+    // Add event listener for adding new sizes/stocks
+    document.getElementById('add-size-stock').addEventListener('click', function() {
+        const container = document.getElementById('size-stock-container');
+        const sizeStockItem = document.createElement('div');
+        sizeStockItem.classList.add('input-group', 'mb-3', 'size-stock-item');
+        sizeStockItem.innerHTML = `
+            <select class="form-control size-select" name="sizes[][size]" required>
+                <% validSizes.forEach(validSize => { %>
+                    <option value="<%= validSize %>"><%= validSize %></option>
+                <% }) %>
+            </select>
+            <input type="number" class="form-control stock-input" name="sizes[][stock]" placeholder="Stock" required>
+            <div class="input-group-append">
+                <button type="button" class="btn btn-danger remove-size-stock">Remove</button>
+            </div>
+        `;
+        container.appendChild(sizeStockItem);
     });
 
-    // Function to update index in name attributes after removal
-    function updateSizeIndexes() {
-        $('#size-stock-container .size-stock-item').each(function(index) {
-            $(this).attr('data-index', index);
-            $(this).find('.size-select').attr('name', `sizes[${index}][size]`);
-            $(this).find('.stock-input').attr('name', `sizes[${index}][stock]`);
-        });
-        sizeIndex = $('#size-stock-container .size-stock-item').length; // Update global index count
-    }
-</script>
+    // Event delegation for removing sizes/stocks
+    document.getElementById('size-stock-container').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-size-stock')) {
+            e.target.closest('.size-stock-item').remove();
+        }
+    });
+    function validateForm() {
+    const existingImages = document.querySelectorAll('.existing-image img');
+    const newImages = Array.from(document.querySelectorAll('input[type="file"]')).filter(input => input.files.length > 0);
+    const totalImages = existingImages.length + newImages.length;
 
+    if (totalImages === 0) {
+        Swal.fire({
+            title: 'No Images Uploaded',
+            text: 'Please upload at least one image.',
+            icon: 'warning',
+            confirmButtonText: 'Okay'
+        });
+        return false;
+    }
+
+    return true;
+}
+
+  </script>
 </body>
 </html>

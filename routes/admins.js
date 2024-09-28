@@ -49,6 +49,7 @@ router.get('/product-edit/:id', adminAuth.isLogin, productController.editProduct
 router.post('/product-edit/:id', adminAuth.isLogin, upload.array('images', 10), productController.updateProduct);
 
 
+
 router.get('/products/softdeleteproduct', adminAuth.isLogin, productController.softDeleteProduct);
 router.get('/products/removeSoftDeleteProduct', adminAuth.isLogin, productController.removeSoftDeleteProduct);
 

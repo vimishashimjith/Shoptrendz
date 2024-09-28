@@ -88,38 +88,50 @@ module.exports = {
     },
 
 
-
     adminDashboard: async (req, res) => {
         try {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-
-            let search = '';
-            if (req.query.search) {
-                search = req.query.search;
-            }
-
+    
+            let search = req.query.search || '';
+            const page = parseInt(req.query.page, 5) || 1;
+            const limit = 5; 
+            const skip = (page - 1) * limit; 
+    
             const usersData = await User.find({
                 isAdmin: false,
                 $or: [
                     { name: { $regex: '.*' + search + '.*', $options: 'i' } },
                     { email: { $regex: '.*' + search + '.*', $options: 'i' } }
                 ]
+            })
+            .skip(skip) 
+            .limit(limit); 
+            const totalUsers = await User.countDocuments({
+                isAdmin: false,
+                $or: [
+                    { name: { $regex: '.*' + search + '.*', $options: 'i' } },
+                    { email: { $regex: '.*' + search + '.*', $options: 'i' } }
+                ]
             });
-
+    
+            const totalPages = Math.ceil(totalUsers / limit);
+    
             res.render('admin/admin-users', { 
                 title: 'Admin Users',
                 layout: adminLayout,
                 users: usersData,
-                search: search
+                search: search,
+                currentPage: page,
+                totalPages: totalPages
             });
         } catch (error) {
             console.error('Error in adminDashboard:', error.message);
             res.status(500).send("Internal Server Error");
         }
     },
-
+    
     blockUser: async (req, res) => {
         try {
             if (!req.session.adminId) {
@@ -148,7 +160,7 @@ module.exports = {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-    
+              
             
             const page = parseInt(req.query.page, 8) || 1;
             const limit = 8; 
@@ -173,7 +185,7 @@ module.exports = {
                 layout: adminLayout, 
                 orders,
                 currentPage: page,          
-                totalPages: totalPages       
+                totalPages: totalPages   
             });
         } catch (error) {
             console.error('Error in loadOrderManagementPage:', error.message);

@@ -107,22 +107,39 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
     },
-
+    
     updateCategory: async (req, res) => {
         try {
             const categoryId = req.params.id;
             const { name, description } = req.body;
-            const updatedCategory = await Category.findByIdAndUpdate(categoryId, { name, description }, { new: true });
+    
+            // Ensure the category name is unique excluding the current category
+            const normalizedName = name.toLowerCase();
+            const existingCategory = await Category.findOne({ name: normalizedName, _id: { $ne: categoryId } }).collation({ locale: 'en', strength: 2 });
+    
+            if (existingCategory) {
+                const category = await Category.findById(categoryId);
+                return res.render('admin/category-edit', { 
+                    title: 'Edit Category',
+                    layout: adminLayout,
+                    category,
+                    message: 'Category with this name already exists.',  // Error message for uniqueness check
+                });
+            }
+    
+            // Update the category if the name is unique
+            const updatedCategory = await Category.findByIdAndUpdate(categoryId, { name: normalizedName, description }, { new: true });
             if (!updatedCategory) {
                 return res.status(404).send("Category not found");
             }
+    
             res.redirect('/admin/categories');
         } catch (error) {
             console.error(error.message);
             res.status(500).send("Internal Server Error");
         }
     },
-
+    
   /* deleteCategory: async (req, res) => {
         try {
             const categoryId = req.params.id;

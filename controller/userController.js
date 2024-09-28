@@ -1178,16 +1178,16 @@ const orderLoad = async (req, res) => {
             });
         }
 
-        // Pagination parameters
-        const page = parseInt(req.query.page) || 1; // Current page, default to 1 if not provided
-        const limit = parseInt(req.query.limit) || 3; // Orders per page, default to 5
-        const skip = (page - 1) * limit; // Calculate how many records to skip
+      
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 3; 
+        const skip = (page - 1) * limit; 
 
         let orders;
         let totalOrders = 0;
 
         if (req.params.id) {
-            // Fetch a single order by ID
+           
             orders = await Order.find({ userId, orderId: req.params.id })
                 .populate('addressId', 'street city pincode')
                 .populate('products.productId', 'name')
@@ -1201,10 +1201,10 @@ const orderLoad = async (req, res) => {
                 });
             }
 
-            totalOrders = orders.length; // Only 1 order in this case
+            totalOrders = orders.length; 
         } else {
-            // Fetch all orders with pagination
-            totalOrders = await Order.countDocuments({ userId }); // Get total count of orders
+          
+            totalOrders = await Order.countDocuments({ userId }); 
 
             orders = await Order.find({ userId })
                 .populate('products.productId')
@@ -1214,19 +1214,19 @@ const orderLoad = async (req, res) => {
                 .exec();
         }
 
-        // Calculate total pages
+        
         const totalPages = Math.ceil(totalOrders / limit);
 
         console.log('Fetched Orders:', orders);
 
-        // Define breadcrumbs
+       
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
             { name: "Orders", url: "/orders" }
         ];
 
-        // Render orders view with pagination data
+      
         res.render('user/orders', {
             orders,
             user,
