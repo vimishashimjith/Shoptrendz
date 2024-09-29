@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Product Offer</title>
+  <link rel="stylesheet" href="/Admin/assets/css/styles.min.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h2>Add Product Offer</h2>
+    <form id="offerForm" onsubmit="submitOffer(event)">
+      <input type="hidden" id="productId" name="productId" value="<%= productId %>" /> <!-- Pass the productId from server -->
+      <label for="offer">Offer Percentage:</label>
+      <input type="number" id="offer" name="offer" min="0" max="100" required />
+      <label for="offerStart">Offer Start Date:</label>
+      <input type="date" id="offerStart" name="offerStart" required />
+      <label for="offerEnd">Offer End Date:</label>
+      <input type="date" id="offerEnd" name="offerEnd" required />
+      <button type="submit" class="btn btn-primary mt-3">Submit</button>
+    </form>
+    <div id="responseMessage" style="margin-top: 10px;"></div>
+  </div>
+
+  <script src="/Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="/Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    async function submitOffer(event) {
+      event.preventDefault();
+      const form = document.getElementById('offerForm');
+      const formData = new FormData(form);
+      const productId = formData.get('productId');
+      const offer = formData.get('offer');
+      const offerStart = formData.get('offerStart');
+      const offerEnd = formData.get('offerEnd');
+
+      try {
+        const response = await fetch(`/productOffer/${productId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ offer, offerStart, offerEnd }),
+        });
+        const result = await response.json();
+        document.getElementById('responseMessage').textContent = result.message;
+
+        if (result.success) {
+          form.reset(); // Reset the form after successful submission
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('responseMessage').textContent = 'Error adding offer';
+      }
+    }
+  </script>
+</body>
+
+</html>

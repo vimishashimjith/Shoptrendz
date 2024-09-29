@@ -7,7 +7,7 @@ const {
     viewCart, addToCart, checkoutLoad, addAddress, addAddressLoad, successGoogleLogin, errorlogin, updateCartQuantity, removeFromCart,
     showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails, editProfileLoad, editProfile, getChangePasswordPage,
     changePassword, placeOrder, orderLoad, cancelOrder, resendOTP,
-    searchProduct
+    searchProduct, paymentProcess
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -51,8 +51,13 @@ router.post('/cart/update-quantity/:productId', auth.isAuthenticated, updateCart
 router.post('/cart/remove/:productId', auth.isAuthenticated, removeFromCart);
 router.get('/checkout', auth.isAuthenticated, checkoutLoad);
 router.post('/checkout', auth.isAuthenticated, placeOrder);
+
 router.get('/orders', auth.isAuthenticated, orderLoad);
 router.post('/cancelOrder', auth.isAuthenticated, cancelOrder);
+
+router.post('/paymentProcess',auth.isAuthenticated,paymentProcess)
+
+
 
 router.get('/success', successGoogleLogin);
 router.get('/failure', errorlogin);

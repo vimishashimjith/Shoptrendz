@@ -1,90 +1,90 @@
 
-    <style>
-        .product-item {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .product-item:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .product-item img {
-            height: 400px;
-            object-fit: cover;
-        }
-        .product-item .text-center {
-            padding: 15px;
-        }
-        .product-item .price {
-            font-size: 1.25rem;
-            font-weight: bold;
-        }
-   
+<style>
+    .product-item {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .product-item:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .product-item img {
+        height: 400px;
+        object-fit: cover;
+    }
+    .product-item .text-center {
+        padding: 15px;
+    }
+    .product-item .price {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
 
-    </style>
+
+</style>
 </head>
 <body>
-    <div class="container-fluid">
-    <div class="container mt-4">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <% breadcrumbs.forEach((crumb, index) => { %>
-                        <% if (index < breadcrumbs.length - 1) { %>
-                            <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
-                        <% } else { %>
-                            <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
-                        <% } %>
-                    <% }) %>
-                </ol>
-            </nav>
-        </div>
-        <div class="col-lg-12 m-3">
-            <form id="searchForm" action="/searchProduct" method="get">
-                <div class="container">
-                    <div class="row justify-content-center align-items-center d-flex">
-                        <div class="col-md-4 mb-2">
-                            <input type="search" name="search" class="form-control" placeholder="Search Product...">
-                        </div>
-                        <div class="col-md-2 mb-2">
-                            <select name="sort" class="form-control">
-                                <option value="">Sort By</option>
-                                <option value="popularity">Popularity</option>
-                                <option value="price_low_high">Price: Low to High</option>
-                                <option value="price_high_low">Price: High to Low</option>
-                                <option value="average_ratings">Average Ratings</option>
-                                <option value="featured">Featured</option>
-                                <option value="new_arrivals">New Arrivals</option>
-                                <option value="a_to_z">A - Z</option>
-                                <option value="z_to_a">Z - A</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 mb-2">
-                            <button class="btn btn-primary w-100" type="submit">Search</button>
-                        </div>
+<div class="container-fluid">
+<div class="container mt-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <% breadcrumbs.forEach((crumb, index) => { %>
+                    <% if (index < breadcrumbs.length - 1) { %>
+                        <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                    <% } else { %>
+                        <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                    <% } %>
+                <% }) %>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-lg-12 m-3">
+        <form id="searchForm" action="/searchProduct" method="get">
+            <div class="container">
+                <div class="row justify-content-center align-items-center d-flex">
+                    <div class="col-md-4 mb-2">
+                        <input type="search" name="search" class="form-control" placeholder="Search Product...">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <select name="sort" class="form-control">
+                            <option value="">Sort By</option>
+                            <option value="popularity">Popularity</option>
+                            <option value="price_low_high">Price: Low to High</option>
+                            <option value="price_high_low">Price: High to Low</option>
+                            <option value="average_ratings">Average Ratings</option>
+                            <option value="featured">Featured</option>
+                            <option value="new_arrivals">New Arrivals</option>
+                            <option value="a_to_z">A - Z</option>
+                            <option value="z_to_a">Z - A</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-primary w-100" type="submit">Search</button>
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="row">
-            <% products.forEach(product => { %>
-                <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                    
-                    <div class="product-item bg-light border rounded shadow-sm">
-                        <img class="img-fluid w-100" src="/uploads/<%= product.images[0].url %>" alt="<%= product.name %>">
-                        <div class="text-center py-3">
-                            <a class="h6 text-decoration-none text-truncate" href="productdetail/<%= product._id %>"><%= product.name %></a><br>
-                            <p class="price">₹<%= product.price.toFixed(2) %></p>
-                        </div>
+            </div>
+        </form>
+    </div>
+    <div class="row">
+        <% products.forEach(product => { %>
+            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                
+                <div class="product-item bg-light border rounded shadow-sm">
+                    <img class="img-fluid w-100" src="/uploads/<%= product.images[0].url %>" alt="<%= product.name %>">
+                    <div class="text-center py-3">
+                        <a class="h6 text-decoration-none text-truncate" href="productdetail/<%= product._id %>"><%= product.name %></a><br>
+                        <p class="price">₹<%= product.price.toFixed(2) %></p>
                     </div>
                 </div>
-            <% }) %>
-        </div>
+            </div>
+        <% }) %>
     </div>
 </div>
-    <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Include Bootstrap JavaScript -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</div>
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include Bootstrap JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
 <br>
 <br>

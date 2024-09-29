@@ -3,6 +3,7 @@ const Category = require('../model/categorySchema');
 const Product = require('../model/productSchema'); 
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
 const  validationResult  = require('express-validator')
+const User=require('../model/userSchema')
 
 const path = require('path');
 const fs = require('fs');  
@@ -319,5 +320,66 @@ module.exports = {
             console.error('Error in removing soft delete from product:', error.message);
             res.status(500).send("Internal Server Error");
         }
+},
+// Load offer page with product details
+// Load offer page with product details
+offerPageLoad: async (req, res) => {
+    try {
+        const productId = req.query.id;
+        const userId = req.session.user_id;
+        
+        const user = await User.findById(userId);
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).send({ success: false, message: 'Product not found' });
+        }
+
+        console.log(product);
+        res.render('admin/productOffer', { product, layout: adminLayout });
+    } catch (error) {
+        console.error('Server error:', error.message);
+        res.status(500).send({ success: false, message: 'Server error', error: error.message });
+    }
+},
+productOffer: async (req, res) => {
+    const productId = req.params.id;
+    const { offer, offerStart, offerEnd } = req.body;
+
+    // Validate input data
+    if (!offer || !offerStart || !offerEnd) {
+        return res.status(400).json({ success: false, message: 'Offer details are required' });
+    }
+
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { offer, offerStart, offerEnd },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        res.json({ success: true, message: 'Offer added successfully', product: updatedProduct });
+    } catch (error) {
+        console.error('Error updating offer:', error);
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+},
+
+removeOffer : async(req,res)=>{
+    try{
+        const productId = req.query.id;
+        console.log(productId,'id')
+        await Product.findByIdAndUpdate(productId,{offer:null,offerStart:null,offerEnd:null});
+         
+        res.redirect(`/product/offers?id=${productId}`)
+        
+
+    }catch(error){
+        res.status(500).send('server Error');
+    }
 }
 }

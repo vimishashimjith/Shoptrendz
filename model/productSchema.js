@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const sizeSchema = new mongoose.Schema({
   size: { type: String, required: true },
   stock: {
@@ -8,6 +9,7 @@ const sizeSchema = new mongoose.Schema({
     max: 200
   }
 });
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -31,11 +33,13 @@ const productSchema = new mongoose.Schema({
   },
   sizes: [sizeSchema],  
   color: {
-     type: String, 
-     required: true },
+    type: String, 
+    required: true
+  },
   price: {
     type: Number,
-    default: 1
+    default: 1,
+    min: [0, 'Price must be a positive number']
   },
   images: [{
     url: {
@@ -46,7 +50,20 @@ const productSchema = new mongoose.Schema({
   softDelete: {
     type: Boolean,
     default: false
+  },
+  offer: {
+    type: Number,
+    default: 0,
+    min: [0, 'Offer must be a non-negative number'],
+    max: [100, 'Offer cannot exceed 100%']
+  },
+  offerStart: {
+    type: Date
+  },
+  offerEnd: {
+    type: Date
   }
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('Product', productSchema);
