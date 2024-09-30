@@ -295,13 +295,11 @@
 
 
 
-
-    // Function to handle address editing
     function editAddress(addressId) {
         window.location.href = `/edit-address/${addressId}`;
     }
 
-    // Function to place the order
+   
     function placeOrder() {
     const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
 
@@ -333,17 +331,17 @@
         success: function(response) {
             if (response.success) {
                 if (paymentMethod === 'Bank Transfer') {
-                    // Initiate Razorpay payment
+                    
                     var options = {
-                        key: 'YOUR_RAZORPAY_KEY', // Your Razorpay key
-                        amount: response.amount * 100, // Amount in paise
+                        key: 'RAZORPAY_KEY_ID',
+                        amount: response.amount * 100,
                         currency: response.currency,
                         name: 'Your Company',
                         description: 'Order ID: ' + response.orderId,
                         image: 'https://your-logo-url.com',
                         order_id: response.orderId,
                         handler: function (paymentResponse) {
-                            // Handle payment success
+                          
                             Swal.fire('Payment Successful!', 'Your order has been placed.', 'success').then(() => {
                                 window.location.href = '/orders';
                             });
@@ -360,13 +358,13 @@
                     var razorpay = new Razorpay(options);
                     razorpay.open();
                 } else {
-                    // For COD
+                    
                     Swal.fire(
                         'Order Placed!',
                         response.message || 'Your order has been placed successfully.',
                         'success'
                     ).then(() => {
-                        window.location.href = '/orders'; // Redirect to orders page
+                        window.location.href = '/orders'; 
                     });
                 }
             }

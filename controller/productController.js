@@ -321,13 +321,12 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
 },
-// Load offer page with product details
-// Load offer page with product details
+
 offerPageLoad: async (req, res) => {
     try {
         const productId = req.query.id;
         const userId = req.session.user_id;
-        
+
         const user = await User.findById(userId);
         const product = await Product.findById(productId);
 
@@ -336,17 +335,18 @@ offerPageLoad: async (req, res) => {
         }
 
         console.log(product);
+        // Pass the product object to the EJS template
         res.render('admin/productOffer', { product, layout: adminLayout });
     } catch (error) {
         console.error('Server error:', error.message);
         res.status(500).send({ success: false, message: 'Server error', error: error.message });
     }
 },
+
 productOffer: async (req, res) => {
-    const productId = req.params.id;
+    const productId = req.params.productId; // Make sure you use params.productId here
     const { offer, offerStart, offerEnd } = req.body;
 
-    // Validate input data
     if (!offer || !offerStart || !offerEnd) {
         return res.status(400).json({ success: false, message: 'Offer details are required' });
     }
@@ -355,7 +355,7 @@ productOffer: async (req, res) => {
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             { offer, offerStart, offerEnd },
-            { new: true } // Return the updated document
+            { new: true } 
         );
 
         if (!updatedProduct) {
@@ -369,13 +369,14 @@ productOffer: async (req, res) => {
     }
 },
 
+
 removeOffer : async(req,res)=>{
     try{
         const productId = req.query.id;
         console.log(productId,'id')
         await Product.findByIdAndUpdate(productId,{offer:null,offerStart:null,offerEnd:null});
          
-        res.redirect(`/product/offers?id=${productId}`)
+        res.redirect(`/productOffer?id=${productId}`)
         
 
     }catch(error){

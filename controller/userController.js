@@ -12,6 +12,7 @@ const Address=require('../model/addressSchema')
 const Order=require('../model/orderSchema')
 const Payment=require('../model/paymentSchema')
 const Category=require('../model/categorySchema')
+const WishList=require('../model/wishlistSchema')
 
 const { getTestError } = require("razorpay/dist/utils/razorpay-utils");
 const Razorpay = require("razorpay");
@@ -1139,27 +1140,27 @@ const paymentProcess = async(req,res)=>{
   };
   
 
-const placeOrder = async (req, res) => {
+  const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user_id;
+        const user = await User.findById(userId);
+
         const { addressId, paymentMethod } = req.body;
 
-        // Validate input
+       
         if (!userId || !addressId || !paymentMethod) {
             return res.status(400).send('Invalid input');
         }
 
-        // Fetch user's cart
         const cart = await Cart.findOne({ userId, active: true }).populate('products.productId');
         if (!cart || cart.products.length === 0) {
             return res.status(404).send('Cart is empty or not found');
         }
 
-        // Calculate total amount
         const totalAmount = cart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
-        const orderId = generateOrderId(); // Unique order ID
+        const orderId = generateOrderId(); 
 
-        // Create a new order
+       
         const newOrder = new Order({
             orderId,
             userId,
@@ -1174,15 +1175,15 @@ const placeOrder = async (req, res) => {
             status: 'Pending'
         });
 
-        // Save order to the database
+        
         await newOrder.save();
         
-        // Mark cart as inactive
+     
         cart.active = false;
         await cart.save();
         await Cart.deleteOne({ _id: cart._id });
 
-        // Handle Cash on Delivery (COD) payment
+       
         if (paymentMethod === 'COD') {
             return res.json({
                 success: true,
@@ -1190,19 +1191,19 @@ const placeOrder = async (req, res) => {
                 orderId: newOrder.orderId
             });
         } else {
-            // Handle online payment through Razorpay
+            
             const razorpayOrder = await razorpayInstance.orders.create({
-                amount: totalAmount * 100, // Amount in paise (₹1 = 100 paise)
+                amount: totalAmount * 100, 
                 currency: 'INR',
                 receipt: orderId,
-                payment_capture: 1 // Auto capture after payment success
+                payment_capture: 1 
             });
 
             if (!razorpayOrder) {
                 return res.status(500).send('Error creating Razorpay order');
             }
 
-            // Return Razorpay order details to the frontend
+            
             return res.json({
                 success: true,
                 razorpayOrderId: razorpayOrder.id,
@@ -1216,40 +1217,7 @@ const placeOrder = async (req, res) => {
         return res.status(500).send('Internal Server Error');
     }
 };
-const shippingCharges = {
-    // Define your specific state charges here
-    'kerala':50,
-    'tamilnadu':100,
-    // Default shipping charge
-    'Default': 50
-};
 
-const shippingCharge = async (req, res) => {
-    try {
-      const { addressId } = req.query;
-      
-      // Validate the addressId format (add your own validation logic)
-      if (!mongoose.Types.ObjectId.isValid(addressId)) {
-        return res.status(400).json({ error: 'Invalid address ID format.' });
-      }
-  
-      const address = await Address.findById(addressId);
-      if (!address) {
-        return res.status(404).json({ error: 'Address not found.' });
-      }
-  
-      const state = address.state;
-      const shippingCharge = shippingCharges[state] || shippingCharges['Default'];
-  
-      res.json({ shippingCharge });
-      console.log('Pass the shipping charge:', shippingCharge);
-  
-    } catch (error) {
-      console.error('Server Error:', error.message);
-      res.status(500).json({ error: 'Server Error' });
-    }
-  };
-  
 
 
 const orderLoad = async (req, res) => {
@@ -1363,7 +1331,19 @@ const cancelOrder= async (req, res) => {
     }
 };
 
+const wishlistLoad = async (req, res) => {
+    const userId = req.user_id; 
+    try {
+     
+        const wishList = await WishList.findOne({ userId }).populate('products.productId');
 
+      
+        res.render('user/wishlist', { wishList,userId });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('Server Error'); 
+    }
+};
 
 const searchProduct= async (req, res) => {
     try {
@@ -1429,6 +1409,62 @@ const user= await User.findById(userId)
     }
 };
 
+
+
+const addTowishlist= async (req, res) => {
+    const { userId, productId } = req.body; 
+
+    try {
+      
+        let wishList = await WishList.findOne({ userId });
+
+        if (!wishList) {
+            wishList = new WishList({ userId, products: [] });
+        }
+
+      
+        const existingProduct = wishList.products.find(item => item.productId.toString() === productId);
+
+        if (existingProduct) {
+            return res.status(400).json({ message: 'Product already in wishlist.' });
+        }
+
+        
+        wishList.products.push({ productId });
+        await wishList.save();
+        
+        res.status(201).json({ message: 'Product added to wishlist!', wishList });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+
+const removeWishlist= async (req, res) => {
+    const { userId, productId } = req.body; 
+
+    try {
+        const wishList = await WishList.findOne({ userId });
+
+        if (!wishList) {
+            return res.status(404).json({ message: 'Wishlist not found.' });
+        }
+
+       
+        wishList.products = wishList.products.filter(item => item.productId.toString() !== productId);
+        await wishList.save();
+
+        res.status(200).json({ message: 'Product removed from wishlist!', wishList });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+
+
+
 module.exports = {
     loadRegister,
     insertUser,
@@ -1468,7 +1504,10 @@ module.exports = {
     orderLoad,
     cancelOrder,
     paymentProcess,
-    searchProduct
+    searchProduct,
+    addTowishlist,
+    removeWishlist,
+    wishlistLoad
  
 
 };

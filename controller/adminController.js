@@ -376,35 +376,75 @@ module.exports = {
             await newCoupon.save();
 
             req.flash('success', 'Coupon added successfully!');
-            res.redirect('/admin/coupon'); // Redirect to the coupon list after adding
+            res.redirect('/admin/coupon'); 
         } catch (error) {
             console.error('Error adding coupon:', error.message);
             req.flash('error', 'Failed to add coupon. Please try again.');
-            res.redirect('/admin/addCoupon'); // Redirect back to the add coupon page
-        }
-    },
+            res.redirect('/admin/addCoupon'); 
+    }
+},
     removeCoupon: async (req, res) => {
         try {
           if (!req.session.adminId) {
             return res.redirect('/admin/login');
           }
       
-          const couponId = req.params.id; // Get coupon ID from request parameters
+          const couponId = req.params.id; 
           const coupon = await Coupon.findById(couponId);
       
           if (!coupon) {
-            return res.status(404).redirect('/admin/coupons'); // Redirect to coupons page if not found
+            return res.status(404).redirect('/admin/coupons');
           }
       
-          await Coupon.findByIdAndDelete(couponId); // Delete the coupon
+          await Coupon.findByIdAndDelete(couponId); 
       
-          // Redirect to the coupons management page after deletion
+         
           res.redirect('/admin/coupon');
         } catch (error) {
           console.error('Error in removeCoupon:', error.message);
-          res.status(500).redirect('/admin/coupons'); // Redirect to coupons page on error
+          res.status(500).redirect('/admin/coupons');
         }
       },
       
-  
-};
+      SalesReport: async (req, res) => {
+        try {
+            const page = parseInt(req.query.page) || 1; 
+            const limit = parseInt(req.query.limit) || 10; 
+            const skip = (page - 1) * limit; 
+            const search = req.query.search || ''; 
+    
+          
+            const searchFilter = search ? {
+                $or: [
+                    { 'userId.username': { $regex: search, $options: 'i' } },
+                    { 'products.productName': { $regex: search, $options: 'i' } },
+                ],
+            } : {};
+    
+         
+            const orders = await Order.find(searchFilter)
+                .populate('userId', 'username') 
+                .populate('products.productId', 'name price') 
+                .skip(skip) 
+                .limit(limit); 
+    
+           
+            const totalOrders = await Order.countDocuments(searchFilter); 
+            const totalPages = Math.ceil(totalOrders / limit); 
+    
+            res.render('admin/salesReport', {
+                order: orders,
+                admin: req.admin,
+                layout: adminLayout,
+                currentPage: page,
+                totalPages: totalPages, 
+                search: search,
+                limit: limit, 
+            });
+        } catch (error) {
+            console.error('Error fetching sales report:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+    
+}
