@@ -1334,10 +1334,10 @@ const cancelOrder= async (req, res) => {
 const wishlistLoad = async (req, res) => {
     const userId = req.user_id; 
     try {
-     
+        
         const wishList = await WishList.findOne({ userId }).populate('products.productId');
 
-      
+       
         res.render('user/wishlist', { wishList,userId });
     } catch (error) {
         console.log(error.message);
@@ -1415,21 +1415,21 @@ const addTowishlist= async (req, res) => {
     const { userId, productId } = req.body; 
 
     try {
-      
+        
         let wishList = await WishList.findOne({ userId });
 
         if (!wishList) {
             wishList = new WishList({ userId, products: [] });
         }
 
-      
+        
         const existingProduct = wishList.products.find(item => item.productId.toString() === productId);
 
         if (existingProduct) {
             return res.status(400).json({ message: 'Product already in wishlist.' });
         }
 
-        
+    
         wishList.products.push({ productId });
         await wishList.save();
         
@@ -1441,26 +1441,6 @@ const addTowishlist= async (req, res) => {
 };
 
 
-const removeWishlist= async (req, res) => {
-    const { userId, productId } = req.body; 
-
-    try {
-        const wishList = await WishList.findOne({ userId });
-
-        if (!wishList) {
-            return res.status(404).json({ message: 'Wishlist not found.' });
-        }
-
-       
-        wishList.products = wishList.products.filter(item => item.productId.toString() !== productId);
-        await wishList.save();
-
-        res.status(200).json({ message: 'Product removed from wishlist!', wishList });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error.' });
-    }
-};
 
 
 
@@ -1506,7 +1486,6 @@ module.exports = {
     paymentProcess,
     searchProduct,
     addTowishlist,
-    removeWishlist,
     wishlistLoad
  
 

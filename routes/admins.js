@@ -74,7 +74,7 @@ router.post('/removeCoupon/:id',adminAuth.isLogin,adminController.removeCoupon);
 router.get('/productOffer', adminAuth.isLogin, productController.offerPageLoad);
 router.post('/:productId/productOffer', adminAuth.isLogin, productController.productOffer);
 
-router.get('/removeOffer', adminAuth.isLogin, productController.removeOffer);
+
 router.get('/salesReport', adminAuth.isLogin,adminController.SalesReport)
 
 

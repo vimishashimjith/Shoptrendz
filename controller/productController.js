@@ -11,6 +11,7 @@ const fs = require('fs');
 module.exports = {
     showProduct : async (req, res) => {
         try {
+            const userId = req.user ? req.user._id : null;
             let page = parseInt(req.query.page) || 1; 
             const limit = 5; 
             let search = req.query.search || ''; 
@@ -34,14 +35,16 @@ module.exports = {
                 .exec();
     
             const totalPages = Math.ceil(totalProducts / limit);
-    
+            
             res.render('admin/products', {
                 title: 'Products',
                 layout: adminLayout,
                 products,
                 currentPage: page,
                 totalPages,
-                search 
+                search,
+                userId
+             
             });
     
         } catch (error) {
@@ -335,7 +338,7 @@ offerPageLoad: async (req, res) => {
         }
 
         console.log(product);
-        // Pass the product object to the EJS template
+       
         res.render('admin/productOffer', { product, layout: adminLayout });
     } catch (error) {
         console.error('Server error:', error.message);
@@ -344,7 +347,7 @@ offerPageLoad: async (req, res) => {
 },
 
 productOffer: async (req, res) => {
-    const productId = req.params.productId; // Make sure you use params.productId here
+    const productId = req.params.productId; 
     const { offer, offerStart, offerEnd } = req.body;
 
     if (!offer || !offerStart || !offerEnd) {
@@ -370,17 +373,4 @@ productOffer: async (req, res) => {
 },
 
 
-removeOffer : async(req,res)=>{
-    try{
-        const productId = req.query.id;
-        console.log(productId,'id')
-        await Product.findByIdAndUpdate(productId,{offer:null,offerStart:null,offerEnd:null});
-         
-        res.redirect(`/productOffer?id=${productId}`)
-        
-
-    }catch(error){
-        res.status(500).send('server Error');
-    }
-}
 }

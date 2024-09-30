@@ -55,10 +55,9 @@ router.post('/cart/remove/:productId', auth.isAuthenticated, removeFromCart);
 router.get('/checkout', auth.isAuthenticated, checkoutLoad);
 router.post('/checkout', auth.isAuthenticated, placeOrder);
 router.post('/addTowishlist',auth.isAuthenticated, addTowishlist);
-router.get('/wishlist',wishlistLoad)
+router.get('/wishlist',auth.isAuthenticated,wishlistLoad)
 
 
-router.delete('/removeWishlist', auth.isAuthenticated,removeWishlist);
 
 router.get('/orders', auth.isAuthenticated, orderLoad);
 router.post('/cancelOrder', auth.isAuthenticated, cancelOrder);

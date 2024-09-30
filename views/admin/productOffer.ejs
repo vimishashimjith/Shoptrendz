@@ -24,7 +24,7 @@
                       <th scope="col">Offer Percentage</th>
                       <th scope="col">Offer Start Date</th>
                       <th scope="col">Offer End Date</th>
-                      <th scope="col">Actions</th>
+                    
                     </tr>
                   </thead>
                   <tbody>
@@ -32,11 +32,7 @@
                       <td><%= product.offer %>%</td>
                       <td><%= new Date(product.offerStart).toLocaleDateString() %></td>
                       <td><%= new Date(product.offerEnd).toLocaleDateString() %></td>
-                      <td>
-                        <button type="button" class="btn btn-danger">
-                          <a href="/product/offerRemove?id=<%= product._id %>" class="text-light">Delete</a>
-                        </button>
-                      </td>
+                      
                     </tr>
                   </tbody>
                 </table>
@@ -81,12 +77,12 @@
       
       try {
         const response = await fetch(`/admin/${productId}/productOffer`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ offer, offerStart, offerEnd })
-});
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ offer, offerStart, offerEnd })
+        });
         const result = await response.json();
         if (result.success) {
           alert('Offer added successfully');

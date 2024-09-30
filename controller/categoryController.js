@@ -113,7 +113,7 @@ module.exports = {
             const categoryId = req.params.id;
             const { name, description } = req.body;
     
-            // Ensure the category name is unique excluding the current category
+            
             const normalizedName = name.toLowerCase();
             const existingCategory = await Category.findOne({ name: normalizedName, _id: { $ne: categoryId } }).collation({ locale: 'en', strength: 2 });
     
@@ -123,11 +123,11 @@ module.exports = {
                     title: 'Edit Category',
                     layout: adminLayout,
                     category,
-                    message: 'Category with this name already exists.',  // Error message for uniqueness check
+                    message: 'Category with this name already exists.', 
                 });
             }
     
-            // Update the category if the name is unique
+            
             const updatedCategory = await Category.findByIdAndUpdate(categoryId, { name: normalizedName, description }, { new: true });
             if (!updatedCategory) {
                 return res.status(404).send("Category not found");
