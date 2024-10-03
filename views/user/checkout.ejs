@@ -142,29 +142,28 @@
             <h5 class="section-title position-relative text-uppercase mb-3">
                 <span class="bg-secondary pr-3">Billing Address</span>
             </h5>
-           <!-- Address Selection -->
-<div class="bg-light p-30 mb-5">
-    <% if (addresses.length > 0) { %>
-        <h6 class="mb-3">Select Existing Address</h6>
-        <% addresses.forEach(function(address) { %>
-            <div class="address-option">
-                <input type="radio" name="address" id="address-<%= address._id %>" value="<%= address._id %>" onclick="selectAddress('<%= address._id %>')">
-               <br>
-                <label for="address-<%= address._id %>">
-                    <p><%= address.fullname %></p>
-                    <p><%= address.street %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
-                    <p><%= address.country %></p>
-                    <p>Mobile No: <%= address.mobile %></p>
-                </label>
-                <button class="edit-btn" onclick="editAddress('<%= address._id %>')">Edit</button>
+            <!-- Address Selection -->
+            <div class="bg-light p-30 mb-5">
+                <% if (addresses.length > 0) { %>
+                    <h6 class="mb-3">Select Existing Address</h6>
+                    <% addresses.forEach(function(address) { %>
+                        <div class="address-option mb-3">
+                            <input type="radio" name="address" id="address-<%= address._id %>" value="<%= address._id %>" onclick="selectAddress('<%= address._id %>')">
+                            <label for="address-<%= address._id %>">
+                                <p><strong><%= address.fullname %></strong></p>
+                                <p><%= address.street %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
+                                <p><%= address.country %></p>
+                                <p>Mobile No: <%= address.mobile %></p>
+                            </label>
+                            <button class="edit-btn btn btn-secondary mt-2" onclick="editAddress('<%= address._id %>')">Edit</button>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No addresses found. Please add a new address.</p>
+                <% } %>
+                <button class="btn btn-primary add-address-btn mt-3" onclick="window.location.href='/add-address'">Add New Address</button>
             </div>
-        <% }) %>
-    <% } else { %>
-        <p>No addresses found. Please add a new address.</p>
-    <% } %>
-    <button class="btn btn-primary add-address-btn" onclick="window.location.href='/add-address'">Add New Address</button>
-</div>
- </div>
+        </div>
 
         <div class="col-lg-4">
             <h5 class="section-title position-relative text-uppercase mb-3">
@@ -172,11 +171,11 @@
             </h5>
             <!-- Order Total Section -->
             <div class="order-total">
-                <div class="border-bottom">
+                <div class="border-bottom pb-3">
                     <h6 class="mb-3">Products</h6>
                     <% if (cart && cart.products.length > 0) { %>
                         <% cart.products.forEach(item => { %>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mb-2">
                                 <p><%= item.productId.name %></p>
                                 <p>₹<%= (item.productId.price * item.quantity).toFixed(2) %></p>
                             </div>
@@ -185,16 +184,21 @@
                         <div class="text-center">Your cart is empty.</div>
                     <% } %>
                 </div>
+                
                 <div class="border-bottom pt-3 pb-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h6>Subtotal</h6>
                         <h6>₹<%= subtotal.toFixed(2) %></h6>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <h6 class="font-weight-medium">Shipping</h6>
-                        <h6 class="font-weight-medium">₹<%= shippingCost.toFixed(2) %></h6>
+                </div>
+
+                <div id="shippingChargeRow" style="display: none;">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6>Shipping Charge</h6>
+                        <h6 id="shippingChargeAmount">₹0.00</h6>
                     </div>
                 </div>
+
                 <div class="pt-2">
                     <div class="d-flex justify-content-between mt-2">
                         <h5>Total</h5>
@@ -203,6 +207,7 @@
                 </div>
             </div>
 
+            <!-- Payment Method Section -->
             <div class="payment-method">
                 <h5 class="section-title position-relative text-uppercase mb-3">
                     <span class="bg-secondary pr-3">Payment</span>
@@ -216,7 +221,7 @@
                     </div>
                     <div class="form-group mb-4">
                         <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="banktransfer" value="Bank Transfer">
+                            <input type="radio" class="custom-control-input" name="payment" id="banktransfer" value="Razorpay">
                             <label class="custom-control-label" for="banktransfer">Razorpay</label>
                         </div>
                     </div>
@@ -226,6 +231,7 @@
         </div>
     </div>
 </div>
+
 <!-- Checkout End -->
 
 <!-- SweetAlert CSS and JS -->
@@ -238,66 +244,65 @@
 <!-- Updated JavaScript for Address Management -->
 <script>
     let selectedAddressId = null;
+// Modified selectAddress function to not remove other addresses
+function selectAddress(addressId, index) {
+    document.querySelectorAll('.address-card').forEach((card, idx) => {
+        if (idx === index) {
+            card.classList.add('selected-address');
+            const selectButton = card.querySelector('.select-button');
+            selectButton.textContent = 'Selected';
+            selectButton.disabled = true;
+        } else {
+            card.classList.remove('selected-address');
+            const selectButton = card.querySelector('.select-button');
+            selectButton.textContent = 'Select';
+            selectButton.disabled = false;
+        }
+    });
+
+    selectedAddressId = addressId;
+    fetchShippingCharge(addressId);
+}
 
     // Function to handle address selection
-    function selectAddress(addressId, index) {
-				document.querySelectorAll('.address-card').forEach((card, idx) => {
-					if (idx !== index) {
-					card.remove();
-					} else {
-					card.classList.add('selected-address');
-					card.querySelector('.select-button').textContent = 'Selected';
-					card.querySelector('.select-button').disabled = true;
-					}
-				});
+    async function fetchShippingCharge(addressId) {
+    try {
+        const response = await fetch(`/shippingCharge?addressId=${addressId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch shipping charge');
+        }
+        const data = await response.json();
+        const shippingCharge = parseFloat(data.shippingCharge);
 
-				selectedAddressId = addressId;
-				fetchShippingCharge(addressId);
-				}
-				async function fetchShippingCharge(addressId){
-					try{
-						const response = await fetch(`/shippingCharge?addressId=${addressId}`);
-						if(!response.ok){
-							throw new Error('Failed to fetch shipping charge');
-						}
-						const data = await response.json();
-						const shippingcharge = parseFloat(data.shippingCharge); //shipping charge
-						console.log(shippingcharge,'shipping charge');
-						let total = parseFloat($('#finalTotal').val()); // current total
-						console.log(total,'current total');
-						if (isNaN(total)) {
-							console.error('Current total amount is not a number');
-							swal("Error", "Invalid current total amount.", "error");
-							return;
-						}
-						if (isNaN(shippingcharge)) {
-							console.error('Discount amount is not a number');
-							swal("Error", "Invalid discount amount received.", "error");
-							return;
-						}
-						const newTotal = Math.max(total + shippingcharge,0);
+        let total = parseFloat($('#finalTotal').val()); // current total
+        if (isNaN(total)) {
+            console.error('Current total amount is not a number');
+            swal("Error", "Invalid current total amount.", "error");
+            return;
+        }
+        if (isNaN(shippingCharge)) {
+            console.error('Shipping charge is not a number');
+            swal("Error", "Invalid shipping charge received.", "error");
+            return;
+        }
 
-						//update current values
-						$('#orderTotal').text(newTotal.toFixed(2));
-						$('#finalTotal').val(newTotal.toFixed(2));
-						//discount row show
-						$('#shippingChargeRow').show();
-						$('#shippingChargeAmount').html(`<i class="bi bi-currency-rupee"></i>${shippingcharge.toFixed(2)}`);
-						swal("Shipping Charge Added", `shipping chare${shippingcharge.toFixed(2)} added`, "success");
+        const newTotal = Math.max(total + shippingCharge, 0);
 
+        // Update current values
+        $('#orderTotal').text(newTotal.toFixed(2));
+        $('#finalTotal').val(newTotal.toFixed(2));
+        
+        // Display the shipping charge row
+        $('#shippingChargeRow').show();
+        $('#shippingChargeAmount').html(`<i class="bi bi-currency-rupee"></i>${shippingCharge.toFixed(2)}`);
+        swal("Shipping Charge Added", `Shipping charge ₹${shippingCharge.toFixed(2)} added`, "success");
 
-					}catch(error){
-						console.error('Error fetching shipping charge:',error.message);
-						swal("Error", "An error occurred while adding shipping charge. Please try again later.", "error");
-					}
-				}
-
-
-
-
-    function editAddress(addressId) {
-        window.location.href = `/edit-address/${addressId}`;
+    } catch (error) {
+        console.error('Error fetching shipping charge:', error.message);
+        swal("Error", "An error occurred while adding shipping charge. Please try again later.", "error");
     }
+}
+
 
    
     function placeOrder() {
@@ -321,56 +326,69 @@
         return;
     }
 
-   $.ajax({
-    url: '/checkout',
-    type: 'POST',
-    data: {
-        addressId: selectedAddressId,
-        paymentMethod: paymentMethod
-    },
+    $.ajax({
+        url: '/checkout',
+        type: 'POST',
+        data: {
+            addressId: selectedAddressId,
+            paymentMethod: paymentMethod
+        },
         success: function(response) {
             if (response.success) {
-                if (paymentMethod === 'Bank Transfer') {
-                    
+                if (paymentMethod === 'Razorpay') {
                     var options = {
-                        key: 'RAZORPAY_KEY_ID',
-                        amount: response.amount * 100,
+                        key: response.razorpayKeyId, // Razorpay Key ID from backend
+                        amount: response.amount * 100, // Amount in paise (multiply by 100 for INR)
                         currency: response.currency,
                         name: 'Your Company',
                         description: 'Order ID: ' + response.orderId,
-                        image: 'https://your-logo-url.com',
-                        order_id: response.orderId,
+                        image: 'https://your-logo-url.com', // Optional logo URL
+                        order_id: response.orderId, // Razorpay Order ID
                         handler: function (paymentResponse) {
-                          
-                            Swal.fire('Payment Successful!', 'Your order has been placed.', 'success').then(() => {
-                                window.location.href = '/orders';
+                            $.ajax({
+                                url: '/paymentProcess', // Backend route to verify the payment
+                                type: 'POST',
+                                data: {
+                                    razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                                    razorpayOrderId: paymentResponse.razorpay_order_id,
+                                    razorpaySignature: paymentResponse.razorpay_signature
+                                },
+                                success: function(verifyResponse) {
+                                    if (verifyResponse.success) {
+                                        Swal.fire('Payment Successful!', 'Your order has been placed.', 'success').then(() => {
+                                            window.location.href = '/orders';
+                                        });
+                                    } else {
+                                        Swal.fire('Payment Verification Failed!', 'Please try again.', 'error');
+                                    }
+                                },
+                                error: function() {
+                                    Swal.fire('Error!', 'Payment could not be verified.', 'error');
+                                }
                             });
                         },
                         prefill: {
-                            name: '',
-                            email: '',
-                            contact: ''
+                            name: response.customerName,
+                            email: response.customerEmail,
+                            contact: response.customerPhone
                         },
                         theme: {
-                            color: '#6f42c1'
+                            color: '#6f42c1' // Customize the Razorpay checkout button color
                         }
                     };
-                    var razorpay = new Razorpay(options);
-                    razorpay.open();
+                    var rzp = new Razorpay(options);
+                    rzp.open();
                 } else {
-                    
-                    Swal.fire(
-                        'Order Placed!',
-                        response.message || 'Your order has been placed successfully.',
-                        'success'
-                    ).then(() => {
-                        window.location.href = '/orders'; 
+                    Swal.fire('Order Placed!', 'Your order has been successfully placed.', 'success').then(() => {
+                        window.location.href = '/orders';
                     });
                 }
+            } else {
+                Swal.fire('Error!', response.message || 'An error occurred while placing your order.', 'error');
             }
         },
         error: function() {
-            Swal.fire('Error!', 'There was an error creating your order.', 'error');
+            Swal.fire('Error!', 'Unable to place the order. Please try again later.', 'error');
         }
     });
 }

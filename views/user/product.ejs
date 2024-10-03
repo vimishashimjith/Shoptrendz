@@ -97,11 +97,15 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
     $(document).on('click', '.addTowishlist', function() {
-        const productId = $(this).data('product-id'); // Get the product ID from the button's data attribute
-        const userId = '<%= user.id %>'; // Make sure userId is defined in your EJS context
+        const productId = $(this).data('product-id'); // Get product ID from button
+        const userId = '<%= user ? user.id : "" %>'; // Ensure user ID is passed properly from the EJS context
  
         if (!userId) {
-            alert('You must be logged in to add products to your wishlist.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Oops...',
+                text: 'You must be logged in to add products to your wishlist.',
+            });
             return;
         }
  
@@ -111,13 +115,27 @@
             contentType: 'application/json',
             data: JSON.stringify({ userId, productId }),
             success: function(response) {
-                alert(response.message); // Notify user of success
-                location.reload(); // Reload the page to see changes
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: response.message, // Notify user on success
+                }).then(() => {
+                    location.reload(); // Reload the page to reflect changes
+                });
             },
             error: function(error) {
-                console.error('Error adding product:', error);
-                alert('Failed to add product to wishlist.'); // Notify user of error
+                console.error('Error adding product to wishlist:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: error.responseJSON?.message || 'Failed to add product to wishlist.', // Handle the error response
+                });
             }
         });
     });
  </script>
+ 
+ <!-- Include SweetAlert CSS and JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+

@@ -1,3 +1,16 @@
+<style>
+    .card-img-top {
+        width: 100%; 
+        height: auto; /* Let the height adjust to keep the aspect ratio */
+        max-height: 495px; /* Optional max-height to control image size */
+        object-fit: cover; 
+    }
+</style>
+
+<!-- Add SweetAlert CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+
 <div class="container mt-5">
     <h2 class="mb-4">Your Wishlist</h2>
     <div class="row">
@@ -9,6 +22,15 @@
                         <div class="card-body">
                             <h5 class="card-title"><%= item.productId.name %></h5>
                             <p class="card-text">Price: ₹<%= item.productId.price.toFixed(2) %></p>
+                           
+                            <!-- Add Remove Button -->
+                            <button class="btn btn-danger remove-from-wishlist" data-product-id="<%= item.productId._id %>" aria-label="Remove <%= item.productId.name %> from wishlist">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                            <a  href="productdetail/<%=  item.productId._id %>"class="btn btn-primary add-to-cart" aria-label="Add <%= item.productId.name %> to cart">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </a>
+                          
                            
                         </div>
                     </div>
@@ -24,26 +46,64 @@
     </div>
 </div>
 
-<script>
-  
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+$(document).ready(function() {
+    // Handle click event for removing a product from wishlist
     $(document).on('click', '.remove-from-wishlist', function() {
         const productId = $(this).data('product-id');
-        const userId = '<%= userId %>'; // Assuming userId is available in your EJS context
+        const userId = '<%= user ? user.id : "" %>'; // Ensure userId is available in your EJS context
 
-        $.ajax({
-            url: '/removeWishlist', // Adjust the URL to match your route
-            type: 'DELETE',
-            contentType: 'application/json',
-            data: JSON.stringify({ userId, productId }),
-            success: function(response) {
-                alert(response.message); // Optional: Notify the user of success
-                location.reload(); // Reload the page to see changes
-            },
-            error: function(error) {
-                console.error('Error removing product:', error);
-                alert('Failed to remove product from wishlist.'); // Optional: Notify user of error
+        if (!userId) {
+            Swal.fire('Error', 'You must be logged in to remove products from your wishlist.', 'error');
+            return;
+        }
+
+        // SweetAlert confirmation before removal
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'No, cancel!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const $btn = $(this);
+                $btn.prop('disabled', true).text('Removing...'); // Disable button
+
+                $.ajax({
+                    url: `/removeFromwishlist/${productId}`, // Pass productId in URL
+                    type: 'POST', // Make sure to use the correct method
+                    success: function(response) {
+                        Swal.fire(
+                            'Removed!',
+                            response.message,
+                            'success'
+                        );
+                        // Remove the card element without reloading
+                        $btn.closest('.col-md-4').remove();
+                    },
+                    error: function(error) {
+                        console.error('Error removing product:', error);
+                        Swal.fire(
+                            'Failed!',
+                            'Failed to remove product from wishlist.',
+                            'error'
+                        ); // Show error message
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).text('Remove'); // Re-enable button
+                    }
+                });
             }
         });
     });
+});
 </script>
