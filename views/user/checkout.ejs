@@ -176,7 +176,7 @@
                     <% if (cart && cart.products.length > 0) { %>
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
-                                <p><%= item.productId.name %></p>
+                                <p class="product-name"><%= item.productId.name %></p>
                                 <p>₹<%= (item.productId.price * item.quantity).toFixed(2) %></p>
                             </div>
                         <% }) %>
@@ -190,23 +190,21 @@
                         <h6>Subtotal</h6>
                         <h6>₹<%= subtotal.toFixed(2) %></h6>
                     </div>
-                </div>
-
-                <div id="shippingChargeRow" style="display: none;">
-                    <div class="d-flex justify-content-between mb-3">
+                
+                    <div class="d-flex justify-content-between mb-3" id="shippingChargeRow" style="display: none;">
                         <h6>Shipping Charge</h6>
-                        <h6 id="shippingChargeAmount">₹0.00</h6>
+                        <h6 class="text-black" id="shippingChargeAmount">₹<%= shippingCharge.toFixed(2) %></h6>
+                    </div>
+                    
+                
+                    <div class="pt-2">
+                        <div class="d-flex justify-content-between mt-2" id="finalTotal">
+                            <h5>Total</h5>
+                            <h5>₹<%= total.toFixed(2) %></h5>
+                        </div>
                     </div>
                 </div>
-
-                <div class="pt-2">
-                    <div class="d-flex justify-content-between mt-2">
-                        <h5>Total</h5>
-                        <h5>₹<%= total.toFixed(2) %></h5>
-                    </div>
-                </div>
-            </div>
-
+                
             <!-- Payment Method Section -->
             <div class="payment-method">
                 <h5 class="section-title position-relative text-uppercase mb-3">
@@ -221,8 +219,8 @@
                     </div>
                     <div class="form-group mb-4">
                         <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="banktransfer" value="Razorpay">
-                            <label class="custom-control-label" for="banktransfer">Razorpay</label>
+                            <input type="radio" class="custom-control-input" name="payment" id="razorpay" value="Razorpay">
+                            <label class="custom-control-label" for="razorpay">Razorpay</label>
                         </div>
                     </div>
                     <button class="btn btn-block btn-primary font-weight-bold py-3" onclick="placeOrder()">Place Order</button>
@@ -243,157 +241,155 @@
 <!-- JavaScript for Handling Address Management -->
 <!-- Updated JavaScript for Address Management -->
 <script>
-    let selectedAddressId = null;
-// Modified selectAddress function to not remove other addresses
-function selectAddress(addressId, index) {
-    document.querySelectorAll('.address-card').forEach((card, idx) => {
-        if (idx === index) {
-            card.classList.add('selected-address');
-            const selectButton = card.querySelector('.select-button');
-            selectButton.textContent = 'Selected';
-            selectButton.disabled = true;
-        } else {
-            card.classList.remove('selected-address');
-            const selectButton = card.querySelector('.select-button');
-            selectButton.textContent = 'Select';
-            selectButton.disabled = false;
-        }
-    });
+    let selectedAddressId;
 
-    selectedAddressId = addressId;
-    fetchShippingCharge(addressId);
-}
+    // Function to select an address
+    function selectAddress(addressId) {
+        // Remove the 'selected' class from all address options
+        document.querySelectorAll('.address-option').forEach(option => {
+            option.classList.remove('selected');
+        });
 
-    // Function to handle address selection
-    async function fetchShippingCharge(addressId) {
-    try {
-        const response = await fetch(`/shippingCharge?addressId=${addressId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch shipping charge');
-        }
-        const data = await response.json();
-        const shippingCharge = parseFloat(data.shippingCharge);
+        // Add the 'selected' class to the currently selected address option
+        const selectedOption = document.getElementById(`address-${addressId}`);
+        selectedOption.classList.add('selected');
+        selectedAddressId = addressId; // Update the global selected address ID
+    }
 
-        let total = parseFloat($('#finalTotal').val()); // current total
-        if (isNaN(total)) {
-            console.error('Current total amount is not a number');
-            swal("Error", "Invalid current total amount.", "error");
-            return;
-        }
-        if (isNaN(shippingCharge)) {
-            console.error('Shipping charge is not a number');
-            swal("Error", "Invalid shipping charge received.", "error");
+    // Function to place the order
+    async function placeOrder() {
+        // Get the selected payment method
+        const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
+
+        // Get the final total amount
+        const finalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
+
+        // Get the product names
+        const productNames = Array.from(document.querySelectorAll('.product-name')).map(p => p.innerText.trim());
+
+        // Validate the selected address
+        if (!selectedAddressId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select an address!'
+            });
             return;
         }
 
-        const newTotal = Math.max(total + shippingCharge, 0);
+        // Validate the selected payment method
+        if (!paymentMethod) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select a payment method!'
+            });
+            return;
+        }
 
-        // Update current values
-        $('#orderTotal').text(newTotal.toFixed(2));
-        $('#finalTotal').val(newTotal.toFixed(2));
-        
-        // Display the shipping charge row
-        $('#shippingChargeRow').show();
-        $('#shippingChargeAmount').html(`<i class="bi bi-currency-rupee"></i>${shippingCharge.toFixed(2)}`);
-        swal("Shipping Charge Added", `Shipping charge ₹${shippingCharge.toFixed(2)} added`, "success");
+        try {
+            // Make the fetch request to the server
+            const response = await fetch('/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    addressId: selectedAddressId,
+                    paymentMethod: paymentMethod,
+                    total: finalTotal,
+                    productName: productNames
+                })
+            });
 
-    } catch (error) {
-        console.error('Error fetching shipping charge:', error.message);
-        swal("Error", "An error occurred while adding shipping charge. Please try again later.", "error");
-    }
-}
+            // Parse the response
+            const res = await response.json();
 
-
-   
-    function placeOrder() {
-    const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
-
-    if (!selectedAddressId) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Please select an address!'
-        });
-        return;
-    }
-
-    if (!paymentMethod) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Please select a payment method!'
-        });
-        return;
-    }
-
-    $.ajax({
-        url: '/checkout',
-        type: 'POST',
-        data: {
-            addressId: selectedAddressId,
-            paymentMethod: paymentMethod
-        },
-        success: function(response) {
-            if (response.success) {
-                if (paymentMethod === 'Razorpay') {
-                    var options = {
-                        key: response.razorpayKeyId, // Razorpay Key ID from backend
-                        amount: response.amount * 100, // Amount in paise (multiply by 100 for INR)
-                        currency: response.currency,
-                        name: 'Your Company',
-                        description: 'Order ID: ' + response.orderId,
-                        image: 'https://your-logo-url.com', // Optional logo URL
-                        order_id: response.orderId, // Razorpay Order ID
-                        handler: function (paymentResponse) {
-                            $.ajax({
-                                url: '/paymentProcess', // Backend route to verify the payment
-                                type: 'POST',
-                                data: {
-                                    razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                                    razorpayOrderId: paymentResponse.razorpay_order_id,
-                                    razorpaySignature: paymentResponse.razorpay_signature
-                                },
-                                success: function(verifyResponse) {
-                                    if (verifyResponse.success) {
-                                        Swal.fire('Payment Successful!', 'Your order has been placed.', 'success').then(() => {
-                                            window.location.href = '/orders';
-                                        });
-                                    } else {
-                                        Swal.fire('Payment Verification Failed!', 'Please try again.', 'error');
-                                    }
-                                },
-                                error: function() {
-                                    Swal.fire('Error!', 'Payment could not be verified.', 'error');
-                                }
-                            });
+            // Check if the order was successful
+            if (res.success) {
+                if (paymentMethod === 'COD') {
+                    handleOrderSuccess("Your order has been successfully placed.", "/orders");
+                } else if (paymentMethod === 'Razorpay') {
+                    // Set up Razorpay options
+                    const options = {
+                        key: res.key_id,
+                        amount: res.amount,
+                        currency: "INR",
+                        name: res.product_name,
+                        order_id: res.order_id,
+                        handler: function(response) {
+                            handleRazorpaySuccess(response, res.db_order_id);
                         },
                         prefill: {
-                            name: response.customerName,
-                            email: response.customerEmail,
-                            contact: response.customerPhone
+                            name: res.name,
+                            email: res.email,
+                            contact: res.contact
+                        },
+                        notes: {
+                            address: res.product_name
                         },
                         theme: {
-                            color: '#6f42c1' // Customize the Razorpay checkout button color
+                            color: '#3399cc'
                         }
                     };
-                    var rzp = new Razorpay(options);
-                    rzp.open();
-                } else {
-                    Swal.fire('Order Placed!', 'Your order has been successfully placed.', 'success').then(() => {
-                        window.location.href = '/orders';
+
+                    const razorpayObject = new Razorpay(options);
+                    razorpayObject.on('payment.failed', function(response) {
+                        handleRazorpayFailure(response.error, res.db_order_id);
                     });
+
+                    razorpayObject.open();
                 }
             } else {
-                Swal.fire('Error!', response.message || 'An error occurred while placing your order.', 'error');
+                // Handle the case where the response indicates failure
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: res.message || 'Failed to place your order. Please try again later.'
+                });
             }
-        },
-        error: function() {
-            Swal.fire('Error!', 'Unable to place the order. Please try again later.', 'error');
+        } catch (error) {
+            console.error('Error placing order:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error placing order',
+                text: 'An error occurred while processing your order. Please try again later.'
+            });
         }
-    });
-}
+    }
 
+    // Function to handle order success
+    function handleOrderSuccess(message, redirectUrl) {
+        console.log('Order Success:', message); // Debug log
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+        }).then(() => {
+            window.location.href = redirectUrl; // Redirect to the orders page
+        });
+    }
+
+    // Function to handle Razorpay success
+    function handleRazorpaySuccess(response, orderId) {
+        console.log('Razorpay Payment Success:', response); // Debug log
+        // Handle Razorpay payment success logic here (e.g., update order status)
+        handleOrderSuccess("Payment successful, order placed.", "/orders");
+    }
+
+    // Function to handle Razorpay payment failure
+    function handleRazorpayFailure(error, orderId) {
+        console.error('Razorpay Payment Failure:', error); // Debug log
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed',
+            text: 'Your payment failed. Please try again.'
+        });
+        // Optionally handle payment failure (e.g., cancel the order in the database)
+    }
 </script>
+
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <br>

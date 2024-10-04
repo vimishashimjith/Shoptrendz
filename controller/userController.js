@@ -794,35 +794,14 @@ const forgetLoad = async (req, res) => {
     }
 };
 
-const shippingCharges = {
-    'Kerala' : 40,
-    'ThamilNadu':70,
-    'karnataka':100,
-    'Default':100
-    };
-    const shippingCharge = async (req,res)=>{
-      try{
-        const {addressId} = req.query;
-        console.log(addressId,'add id')
-        const address = await Address.findById(addressId);
-        if(!address){
-          return res.status(404).json({error:'Address not foundd'});
-        }
-        const state = address.state;
-        const shippingCharge = shippingCharges[state] || shippingCharge['Default'];
-        res.json ({shippingCharge});
-        console.log('pass the shipping charge',shippingCharge)
-    
-      }catch(error){
-        console.error('Server Error',error.message);
-        res.status(500).json({ error: 'Server Error' });
-      }
-    };
+
+
 const checkoutLoad = async (req, res) => {
     try {
-    
         const userId = req.session.user_id;
-        const user= await User.findById(userId)
+        const user = await User.findById(userId);
+        
+        // Check if user is logged in
         if (!userId) {
             return res.status(401).render('error', {
                 url: req.originalUrl,
@@ -831,9 +810,10 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-      
+        // Retrieve user cart
         let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
-
+        
+        // Check if cart exists
         if (!userCart) {
             return res.status(404).render('error', {
                 url: req.originalUrl,
@@ -842,32 +822,35 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-     
+        // Calculate subtotal
         const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
-
+        
+        // Define fixed shipping charge
+        const shippingCharge = 100;  // Fixed shipping charge
        
+        // Calculate total including shipping charge
+        const total = subtotal + shippingCharge;  // Include shipping charge in total
         
-
-      
-        const total = subtotal 
-
-      
-        
+        // Fetch user addresses
         const addresses = await Address.find({ user: userId });
+        
+        // Breadcrumbs for navigation
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Shop', url: '/shop' },
-            { name: 'Cart', url: '/cart' } ,
-            {name:'checkout',url:'/checkout'}
-
+            { name: 'Cart', url: '/cart' },
+            { name: 'Checkout', url: '/checkout' }
         ];
+
+        // Render the checkout page
         res.render('user/checkout', {
             cart: userCart,
-            subtotal,
-            shippingCharge,
             total,
-            addresses, 
-            user,breadcrumbs
+            addresses,
+            user,
+            breadcrumbs,
+            subtotal,
+            shippingCharge  // Pass shipping charge to the template
         });
 
         console.log('Cart data:', userCart);
@@ -876,6 +859,7 @@ const checkoutLoad = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 const forgetVerify = async (req, res) => {
     try {
         const email=req.body.email;
@@ -1178,132 +1162,125 @@ const paymentProcess = async(req,res)=>{
   
 
 
-
   const placeOrder = async (req, res) => {
     try {
-      const { addressId, paymentMethod, totalAmount, productName, shippingCharge } = req.body;
-  
-      // Check if user is logged in
-      if (!req.session.user_id) {
-        return res.status(401).json({ success: false, message: "User not logged in" });
-      }
-  
-      const userId = req.session.user_id; // Assuming this is a string
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).json({ success: false, message: "Invalid user ID format" });
-      }
-  
-      // Validate address
-      const address = await Address.findById(addressId);
-      if (!address) {
-        return res.status(404).render('404', { url: req.originalUrl, message: 'Address not valid', isLoggedIn: false, count: 0 });
-      }
-  
-      // Fetch user's cart
-      const userCart = await Cart.findOne({ userId: userId });
-      if (!userCart || !userCart.products || userCart.products.length === 0) {
-        return res.status(400).json({ success: false, message: "User cart is empty" });
-      }
-  
-      // Prepare product details for the order
-      const productsWithPricing = [];
-  
-      for (const item of userCart.products) {
-        const product = await Product.findById(item.productId);
-        if (product) {
-          const productPrice = product.price;
-          const discount = productPrice - item.price; // Adjusted logic for discount calculation
-  
-          productsWithPricing.push({
-            productId: item.productId,
-            quantity: item.quantity,
-            size: item.size,
-            discount: discount,
-            price: productPrice,
-          });
+        const { addressId, paymentMethod, total } = req.body;
+
+        if (!req.session.user_id) {
+            return res.status(401).json({ success: false, message: "User not logged in" });
         }
-      }
-  
-      // Save payment details
-      const payment = new Payment({
-        orderId: null,
-        paymentMethod: paymentMethod,
-        amount: totalAmount,
-        status: "pending",
-      });
-      await payment.save();
-  
-      // Generate a unique order ID (custom function assumed)
-      const orderId = generateOrderId();
-  
-      // Save order details
-      const order = new Order({
-        orderId: orderId,
-        userId: userId,
-        address: addressId,
-        products: productsWithPricing,
-        payment: payment._id,
-        totalAmount: totalAmount,
-        shippingCharge: shippingCharge,
-        status: "Ordered",
-      });
-      await order.save();
-  
-      // Update payment with the order ID
-      payment.orderId = order._id;
-      await payment.save();
-  
-      const codLimit = 1000;
-  
-      // Handle different payment methods
-      if (paymentMethod === "COD") {
-        if (totalAmount > codLimit) {
-          return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
-        } else {
-          await Cart.deleteOne({ userId: userId });
-          return res.json({ success: true, message: "Order placed successfully with COD" });
+
+        const userId = req.session.user_id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: "Invalid user ID format" });
         }
-      } else if (paymentMethod === "Razorpay") {
-        const options = {
-          amount: totalAmount * 100, // Convert to paise for Razorpay
-          currency: "INR",
-          receipt: payment._id.toString(), // Use payment ID for receipt
-          notes: {
-            productName: productName,
-          },
-        };
-  
-        // Create Razorpay order
-        razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
-          if (!err) {
-            await Cart.deleteOne({ userId: userId }); // Clear cart after successful Razorpay order
-            res.status(200).json({
-              success: true,
-              message: "Razorpay order created successfully",
-              order_id: razorpayOrder.id,
-              amount: options.amount / 100, // Convert back to rupees
-              key_id: RAZORPAY_ID_KEY,
-              product_name: productName,
-              contact: address.mobile,
-              name: address.fullname,
-              email: address.email,
-              db_order_id: order._id,
-            });
-          } else {
-            console.error("Error creating Razorpay order:", err);
-            res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
-          }
+
+        // Validate address
+        const address = await Address.findById(addressId);
+        if (!address) {
+            return res.status(404).render('404', { url: req.originalUrl, message: 'Address not valid', isLoggedIn: false, count: 0 });
+        }
+
+        // Fetch user's cart
+        const userCart = await Cart.findOne({ userId: userId });
+        if (!userCart || !userCart.products || userCart.products.length === 0) {
+            return res.status(400).json({ success: false, message: "User cart is empty" });
+        }
+
+        // Prepare product details for the order
+        const productsWithPricing = [];
+
+        for (const item of userCart.products) {
+            const product = await Product.findById(item.productId);
+            if (product) {
+                const productPrice = product.price;
+                const discount = productPrice - item.price; // Adjusted logic for discount calculation
+
+                productsWithPricing.push({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    size: item.size,
+                    discount: discount,
+                    price: productPrice,
+                });
+            }
+        }
+
+        // Generate a unique order ID
+        const orderId = generateOrderId();
+
+        // Save order details
+        const order = new Order({
+            orderId: orderId,
+            userId: userId,
+            addressId: addressId,
+            products: productsWithPricing,
+            totalAmount: total,
+            paymentMethod: paymentMethod,
+            status: "Ordered",
         });
-      } else {
-        res.status(400).json({ success: false, message: "Invalid payment method selected" });
-      }
+        await order.save();
+
+        // Save payment details after order is created
+        const payment = new Payment({
+            orderId: order._id, // Now this is accessible
+            paymentMethod: paymentMethod,
+            amount: total,
+            status: "pending",
+        });
+        await payment.save();
+
+        const codLimit = 1000;
+
+        // Handle different payment methods
+        if (paymentMethod === "COD") {
+            if (total > codLimit) {
+                return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
+            } else {
+                await Cart.deleteOne({ userId: userId });
+                return res.json({ success: true, message: "Order placed successfully with COD" });
+            }
+        } else if (paymentMethod === "Razorpay") {
+            const options = {
+                amount: total * 100, // Convert to paise for Razorpay
+                currency: "INR",
+                receipt: payment._id.toString(), // Use payment ID for receipt
+                notes: {
+                    orderId: orderId, // Include the generated order ID if needed
+                },
+            };
+
+            // Create Razorpay order
+            razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
+                if (!err) {
+                    await Cart.deleteOne({ userId: userId }); // Clear cart after successful Razorpay order
+                    res.status(200).json({
+                        success: true,
+                        message: "Razorpay order created successfully",
+                        order_id: razorpayOrder.id,
+                        amount: options.amount / 100, // Convert back to rupees
+                        key_id: RAZORPAY_ID_KEY,
+                        contact: address.mobile,
+                        name: address.fullname,
+                        email: address.email,
+                        db_order_id: order._id,
+                    });
+                } else {
+                    console.error("Error creating Razorpay order:", err);
+                    res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
+                }
+            });
+        } else {
+            res.status(400).json({ success: false, message: "Invalid payment method selected" });
+        }
     } catch (error) {
-      console.error("Error placing order:", error.message);
-      res.status(500).json({ success: false, message: "Internal server error" });
+        console.error("Error placing order:", error.message);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
-  };
-  
-  
+};
+
+
 
 const orderLoad = async (req, res) => {
     try {
@@ -1651,7 +1628,7 @@ module.exports = {
     searchProduct,
     addTowishlist,
     wishlistLoad,
-    shippingCharge,
+    
     removeFromWishlist
  
 

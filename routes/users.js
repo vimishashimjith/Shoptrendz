@@ -10,7 +10,6 @@ const {
     searchProduct, paymentProcess,
     addTowishlist,
     wishlistLoad,
-    shippingCharge,
     removeFromWishlist
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
@@ -60,7 +59,6 @@ router.post('/addTowishlist', auth.isAuthenticated, addTowishlist);
 router.get('/wishlist',auth.isAuthenticated,wishlistLoad)
 router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWishlist);
 
-router.get('/shippingCharge',shippingCharge)
 
 
 
