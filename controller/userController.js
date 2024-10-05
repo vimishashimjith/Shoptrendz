@@ -1426,29 +1426,45 @@ const wishlistLoad = async (req, res) => {
 };
 
 
-
-const searchProduct= async (req, res) => {
+const searchProduct = async (req, res) => {
     try {
-const userId=req.session.user_id;
-const user= await User.findById(userId) 
+        const userId = req.session.user_id;
+        const user = await User.findById(userId);
+
+        // Fetch categories from the database
+        const categories = await Category.find();
 
         const searchQuery = req.query.search || '';
         const sortOption = req.query.sort || '';
+        const category = req.query.category || '';
 
-       
+        // Build the query with search and category filters
         const query = {
-            $or: [
-                { name: { $regex: searchQuery, $options: 'i' } },
-                { color: { $regex: searchQuery, $options: 'i' } }
+            $and: [
+                {
+                    $or: [
+                        { name: { $regex: searchQuery, $options: 'i' } },
+                        { color: { $regex: searchQuery, $options: 'i' } }
+                    ]
+                },
+                { softDelete: false } // Ensure only active products are returned
             ]
         };
-        
 
-       
+        // If a category is provided, add it to the query
+        if (category) {
+            const categories = await Category.find({
+              name: { $in: category.split(",") },
+            });
+            const categoryIds = categories.map((cat) => cat._id);
+            query.category = { $in: categoryIds };
+          }
+
+        // Define sorting options based on the provided sort option
         let sort = {};
         switch (sortOption) {
             case 'popularity':
-                sort = {popularity :1 };
+                sort = { popularity: 1 };
                 break;
             case 'price_low_high':
                 sort = { price: 1 };
@@ -1472,24 +1488,27 @@ const user= await User.findById(userId)
                 sort = { name: -1 };
                 break;
             default:
-                sort = { name: 1 }; 
+                sort = { name: 1 };
         }
 
-  
-        const products = await Product.find(query).sort(sort);
-       
+        // Fetch products based on the query and sorting options
+        const products = await Product.find(query).sort(sort).populate('category');
+
+        // Define the breadcrumbs for navigation
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' },
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
-       
-        res.render('user/searchProduct', { products,breadcrumbs,user });
+
+        // Render the product search page with filtered products and categories
+        res.render('user/searchProduct', { products, breadcrumbs, user });
     } catch (err) {
-        console.error(err);
+        console.error("Error in searchProduct:", err);
         res.status(500).send('Server Error');
     }
 };
+
 
 
 
