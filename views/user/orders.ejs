@@ -251,7 +251,47 @@
           }
       });
   }
-  
+  function returnOrder(orderId) {
+    Swal.fire({
+        title: 'Return Order',
+        text: 'Please provide a reason for the return:',
+        input: 'text',
+        inputPlaceholder: 'Reason for return...',
+        showCancelButton: true,
+        confirmButtonText: 'Return',
+        cancelButtonText: 'Cancel',
+        preConfirm: (reason) => {
+            if (!reason) {
+                Swal.showValidationMessage('Please enter a return reason.');
+            }
+            return reason;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/returnOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reason: result.value, orderId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Returned!', 'Your order has been returned.', 'success')
+                        .then(() => window.location.reload());
+                } else {
+                    Swal.fire('Error!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'An error occurred while returning the order.', 'error');
+            });
+        }
+    });
+}
+
 </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

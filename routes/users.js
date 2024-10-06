@@ -11,7 +11,8 @@ const {
     addTowishlist,
     wishlistLoad,
     removeFromWishlist,
-    validateCoupon
+    validateCoupon,
+    returnOrder
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -65,6 +66,7 @@ router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWish
 
 router.get('/orders', auth.isAuthenticated, orderLoad);
 router.post('/cancelOrder', auth.isAuthenticated, cancelOrder);
+router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 
 router.post('/paymentProcess',auth.isAuthenticated,paymentProcess)
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);

@@ -365,7 +365,6 @@ const insertUser = async (req, res) => {
             errors.passwordRe = "Passwords do not match";
         }
 
-        // Check for errors
         if (Object.keys(errors).length > 0) {
             return res.render('user/signup', { errors, username, email, mobileno }); 
         }
@@ -391,16 +390,15 @@ const insertUser = async (req, res) => {
         const userData = await user.save();
         const userId = userData._id;
 
-        // Create wallet for the user
         const wallet = new Wallet({ userId: userData._id, amount: 0 });
         await wallet.save();
 
-        // Check for referral code
+       
         if (referralCode) {
             const refferee = await User.findOne({ referralCode });
             if (refferee) {
                 const refereeWallet = await Wallet.findOne({ userId: refferee._id });
-                refereeWallet.amount += 100; // Add referral bonus
+                refereeWallet.amount += 100; 
                 await refereeWallet.save();
             } else {
                 return res.render("user/signup", {
@@ -410,7 +408,6 @@ const insertUser = async (req, res) => {
             }
         }
 
-        // Send OTP
         const otp = generateOtp();
         const otpData = new OtpData({ userId, otp });
         await otpData.save(); 
@@ -659,15 +656,14 @@ const addToCart = async (req, res) => {
 
         await cart.save();
 
-        // Update cart item count
+      
         const cartItemCount = cart.products.reduce((total, product) => total + product.quantity, 0);
 
-        // Remove product from wishlist if it exists
         const wishList = await WishList.findOne({ userId });
         if (wishList) {
             const wishListIndex = wishList.products.findIndex(item => item.productId.toString() === productId);
             if (wishListIndex !== -1) {
-                // Remove the product from the wishlist
+            
                 wishList.products.splice(wishListIndex, 1);
                 await wishList.save();
             }
@@ -834,7 +830,7 @@ const checkoutLoad = async (req, res) => {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
         
-        // Check if user is logged in
+        
         if (!userId) {
             return res.status(401).render('error', {
                 url: req.originalUrl,
@@ -843,10 +839,10 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Retrieve user cart
+       
         let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
         
-        // Check if cart exists
+       
         if (!userCart) {
             return res.status(404).render('error', {
                 url: req.originalUrl,
@@ -855,19 +851,19 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Calculate subtotal
+      
         const subtotal = userCart.products.reduce((total, item) => total + (item.productId.price * item.quantity), 0);
         
-        // Define fixed shipping charge
-        const shippingCharge = 100;  // Fixed shipping charge
        
-        // Calculate total including shipping charge
-        const total = subtotal + shippingCharge;  // Include shipping charge in total
+        const shippingCharge = 100;  
+       
         
-        // Fetch user addresses
+        const total = subtotal + shippingCharge;  
+        
+       
         const addresses = await Address.find({ user: userId });
         
-        // Breadcrumbs for navigation
+        
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Shop', url: '/shop' },
@@ -875,7 +871,7 @@ const checkoutLoad = async (req, res) => {
             { name: 'Checkout', url: '/checkout' }
         ];
 
-        // Render the checkout page
+        
         res.render('user/checkout', {
             cart: userCart,
             total,
@@ -883,7 +879,7 @@ const checkoutLoad = async (req, res) => {
             user,
             breadcrumbs,
             subtotal,
-            shippingCharge  // Pass shipping charge to the template
+            shippingCharge  
         });
 
         console.log('Cart data:', userCart);
@@ -1005,17 +1001,17 @@ const getUserDetails = async (req, res, next) => {
             return res.redirect('/login');
         }
 
-        // Find or create a wallet for the user
+        
         let wallet = await Wallet.findOne({ userId: user._id });
         if (!wallet) {
             wallet = new Wallet({ userId: user._id, amount: 0 });
             await wallet.save();
         }
 
-        // Set amount from wallet
+        
         const amount = wallet.amount;
 
-        // Breadcrumb navigation
+        
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
@@ -1025,7 +1021,7 @@ const getUserDetails = async (req, res, next) => {
         
     } catch (error) {
         console.error('Error fetching user details:', error.message);
-        res.status(500).redirect('/login'); // Redirect to login on error
+        res.status(500).redirect('/login'); 
     }
 };
 
@@ -1217,7 +1213,7 @@ const paymentProcess = async(req,res)=>{
             return res.status(400).json({ success: false, message: "Invalid user ID format" });
         }
 
-        // Validate address
+      
         const address = await Address.findById(addressId);
         if (!address) {
             return res.status(404).render('404', { url: req.originalUrl, message: 'Address not valid', isLoggedIn: false, count: 0 });
@@ -1229,14 +1225,14 @@ const paymentProcess = async(req,res)=>{
             return res.status(400).json({ success: false, message: "User cart is empty" });
         }
 
-        // Prepare product details for the order
+       
         const productsWithPricing = [];
 
         for (const item of userCart.products) {
             const product = await Product.findById(item.productId);
             if (product) {
                 const productPrice = product.price;
-                const discount = productPrice - item.price; // Adjusted logic for discount calculation
+                const discount = productPrice - item.price; 
 
                 productsWithPricing.push({
                     productId: item.productId,
@@ -1248,10 +1244,10 @@ const paymentProcess = async(req,res)=>{
             }
         }
 
-        // Generate a unique order ID
+      
         const orderId = generateOrderId();
 
-        // Save order details
+        
         const order = new Order({
             orderId: orderId,
             userId: userId,
@@ -1263,9 +1259,9 @@ const paymentProcess = async(req,res)=>{
         });
         await order.save();
 
-        // Save payment details after order is created
+      
         const payment = new Payment({
-            orderId: order._id, // Now this is accessible
+            orderId: order._id,
             paymentMethod: paymentMethod,
             amount: total,
             status: "pending",
@@ -1274,7 +1270,7 @@ const paymentProcess = async(req,res)=>{
 
         const codLimit = 1000;
 
-        // Handle different payment methods
+        
         if (paymentMethod === "COD") {
             if (total > codLimit) {
                 return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
@@ -1284,23 +1280,23 @@ const paymentProcess = async(req,res)=>{
             }
         } else if (paymentMethod === "Razorpay") {
             const options = {
-                amount: total * 100, // Convert to paise for Razorpay
+                amount: total * 100,
                 currency: "INR",
-                receipt: payment._id.toString(), // Use payment ID for receipt
+                receipt: payment._id.toString(),
                 notes: {
-                    orderId: orderId, // Include the generated order ID if needed
+                    orderId: orderId, 
                 },
             };
 
-            // Create Razorpay order
+           
             razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
                 if (!err) {
-                    await Cart.deleteOne({ userId: userId }); // Clear cart after successful Razorpay order
+                    await Cart.deleteOne({ userId: userId }); 
                     res.status(200).json({
                         success: true,
                         message: "Razorpay order created successfully",
                         order_id: razorpayOrder.id,
-                        amount: options.amount / 100, // Convert back to rupees
+                        amount: options.amount / 100, 
                         key_id: RAZORPAY_ID_KEY,
                         contact: address.mobile,
                         name: address.fullname,
@@ -1407,39 +1403,38 @@ const cancelOrder = async (req, res) => {
     try {
         const { reason, orderId } = req.body;
 
-        // Validate input
+       
         if (!reason || !orderId) {
             return res.status(400).json({ success: false, message: 'Invalid input' });
         }
 
-        // Find the order
+        
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Check if the order is delivered
+        
         if (order.status === 'Delivered') {
             return res.status(400).json({ success: false, message: 'Cannot cancel a delivered order' });
         }
 
-        // Update order status to Cancelled
+        
         order.status = 'Cancelled';
 
-        // Credit to wallet if payment method is Razorpay
         if (order.paymentMethod === 'Razorpay') {
-            const user = await User.findById(order.userId); // Assuming you have a reference to the user in the order
+            const user = await User.findById(order.userId); 
 
-            // Create or update the user's wallet
+           
             const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
 
-            // Credit the amount to wallet
-            wallet.amount += order.totalAmount; // Update wallet amount
+            
+            wallet.amount += order.totalAmount; 
             await wallet.save();
             console.log(`Credited ${order.totalAmount} to wallet of user ${order.userId}`);
         }
 
-        // Save the updated order
+       
         await order.save();
 
         console.log(`Order ${orderId} cancelled for reason: ${reason}`);
@@ -1450,17 +1445,50 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const returnOrder = async (req, res) => {
+    try {
+        const { reason, orderId } = req.body;
+
+        if (!reason || !orderId) {
+            return res.status(400).json({ success: false, message: 'Invalid input' });
+        }
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({ success: false, message: 'Order cannot be returned' });
+        }
+
+        
+        order.status = 'Returned';
+        order.returnReason = reason; 
+
+       
+
+        await order.save();
+        console.log(`Order ${orderId} returned for reason: ${reason}`);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error returning order:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 const wishlistLoad = async (req, res) => {
     const userId = req.session.user_id;
 
     if (!userId) {
-        // Redirect to login page if user is not logged in
+      
         return res.redirect('/login?login_required=true');
     }
 
     try {
-        // Find the user's wishlist
+    
         const wishList = await WishList.findOne({ userId }).populate('products.productId');
 
         if (!wishList) {
@@ -1469,13 +1497,13 @@ const wishlistLoad = async (req, res) => {
             return res.render('user/wishlist', { wishList: [], user });
         }
 
-        // Retrieve user information
+        
         const user = await User.findById(userId);
         if (!user) {
             return res.status(401).send('Unauthorized: User not logged in');
         }
 
-        // Render the wishlist page with the user's wishlist and information
+      
         res.render('user/wishlist', { wishList, user });
     } catch (error) {
         console.log(error.message);
@@ -1489,14 +1517,13 @@ const searchProduct = async (req, res) => {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
 
-        // Fetch categories from the database
+        
         const categories = await Category.find();
 
         const searchQuery = req.query.search || '';
         const sortOption = req.query.sort || '';
         const category = req.query.category || '';
 
-        // Build the query with search and category filters
         const query = {
             $and: [
                 {
@@ -1505,11 +1532,11 @@ const searchProduct = async (req, res) => {
                         { color: { $regex: searchQuery, $options: 'i' } }
                     ]
                 },
-                { softDelete: false } // Ensure only active products are returned
+                { softDelete: false } 
             ]
         };
 
-        // If a category is provided, add it to the query
+        
         if (category) {
             const categories = await Category.find({
               name: { $in: category.split(",") },
@@ -1518,7 +1545,7 @@ const searchProduct = async (req, res) => {
             query.category = { $in: categoryIds };
           }
 
-        // Define sorting options based on the provided sort option
+        
         let sort = {};
         switch (sortOption) {
             case 'popularity':
@@ -1549,17 +1576,17 @@ const searchProduct = async (req, res) => {
                 sort = { name: 1 };
         }
 
-        // Fetch products based on the query and sorting options
+       
         const products = await Product.find(query).sort(sort).populate('category');
 
-        // Define the breadcrumbs for navigation
+       
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' },
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
 
-        // Render the product search page with filtered products and categories
+        
         res.render('user/searchProduct', { products, breadcrumbs, user });
     } catch (err) {
         console.error("Error in searchProduct:", err);
@@ -1572,40 +1599,39 @@ const searchProduct = async (req, res) => {
 
 const addTowishlist = async (req, res) => {
     try {
-        const userId = req.session.user_id; // Retrieve userId from session
-        const { productId } = req.body; // Get productId from the request body
-
-        // Check if productId is provided
+        const userId = req.session.user_id; 
+        const { productId } = req.body; 
+      
         if (!productId) {
             return res.status(400).json({ message: 'Product ID is required.' });
         }
 
-        // Validate if the product exists
+      
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
         }
 
-        // Find or create the wishlist for the user
+        
         let wishlist = await WishList.findOne({ userId });
         if (!wishlist) {
             wishlist = new WishList({ userId, products: [] });
         }
 
-        // Check if the product already exists in the wishlist
+        
         const existingProduct = wishlist.products.find(item => item.productId.toString() === productId);
         if (existingProduct) {
             return res.status(400).json({ message: 'Product already in wishlist.' });
         }
 
-        // Add the product to the wishlist
+        
         wishlist.products.push({ productId });
         await wishlist.save();
 
-        // Calculate the updated wishlist count
+       
         const wishlistCount = wishlist.products.length;
 
-        // Return a success message along with the updated wishlist and count
+      
         res.status(201).json({ 
             message: 'Product added to wishlist!', 
             wishlist, 
@@ -1619,36 +1645,36 @@ const addTowishlist = async (req, res) => {
 
 const removeFromWishlist = async (req, res) => {
     try {
-        const userId = req.session.user_id; // Retrieve userId from session
-        const { productId } = req.params; // Get productId from the request params
+        const userId = req.session.user_id;
+        const { productId } = req.params;
 
-        // Validate productId
+     
         if (!productId) {
             return res.status(400).json({ message: 'Product ID is required.' });
         }
 
-        // Find the user's wishlist
+       
         const wishList = await WishList.findOne({ userId });
         if (!wishList) {
             return res.status(404).json({ message: 'Wishlist not found.' });
         }
 
-        // Check if the product exists in the wishlist
+       
         const productIndex = wishList.products.findIndex(item => item.productId.toString() === productId);
         if (productIndex === -1) {
             return res.status(404).json({ message: 'Product not found in wishlist.' });
         }
 
-        // Check if the product is being added to the cart
-        const cart = await Cart.findOne({ userId }); // Assuming you have a Cart model
+        
+        const cart = await Cart.findOne({ userId }); 
         const productInCartIndex = cart.products.findIndex(item => item.productId.toString() === productId);
 
-        // If the product is being added to the cart, remove it from the wishlist
+        
         if (productInCartIndex === -1) {
-            // Remove the product from the wishlist
-            wishList.products.splice(productIndex, 1); // Remove the product at the found index
+            
+            wishList.products.splice(productIndex, 1); 
 
-            // Save the updated wishlist
+            
             await wishList.save();
 
             return res.status(200).json({ message: 'Product removed from wishlist successfully.' });
@@ -1729,7 +1755,7 @@ module.exports = {
     addTowishlist,
     wishlistLoad,
     removeFromWishlist,
-    validateCoupon
- 
+    validateCoupon,
+    returnOrder
 
 };
