@@ -42,6 +42,10 @@ const userSchema = new Schema({
     token:{
         type:String,
         default:''
+    },
+    referralCode: {
+        type: String,
+        unique: true
     }
 },{
     timestamps:true

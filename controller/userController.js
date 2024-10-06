@@ -14,6 +14,7 @@ const Category=require('../model/categorySchema')
 const WishList=require('../model/wishlistSchema')
 const Payment=require('../model/payment')
 const Coupon=require('../model/couponSchema')
+const Wallet=require('../model/walletSchema')
 const mongoose=require('mongoose')
 const { getTestError } = require("razorpay/dist/utils/razorpay-utils");
 const Razorpay = require("razorpay");
@@ -321,8 +322,10 @@ const deleteAddress = async (req, res, next) => {
    
 const insertUser = async (req, res) => {
     try {
-        const { username, email, mobileno, password, passwordRe } = req.body;
+        const { username, email, mobileno, password, passwordRe, referralCode } = req.body; // Added referralCode to destructuring
         const errors = {};
+
+        // Validation checks
         if (!username) {
             errors.username = "Username is required";
         } else {
@@ -331,6 +334,7 @@ const insertUser = async (req, res) => {
                 errors.username = "Username must contain only alphabets";
             }
         }
+
         if (!email) {
             errors.email = "Email is required";
         } else {
@@ -345,9 +349,10 @@ const insertUser = async (req, res) => {
         } else {
             const mobileRegex = /^[0-9]{10}$/;
             if (!mobileRegex.test(mobileno)) {
-                errors.mobileno = "Mobile number must contain number & be 10 digits";
+                errors.mobileno = "Mobile number must be 10 digits";
             }
         }
+
         if (!password) {
             errors.password = "Password is required";
         } else if (password.length < 5 || password.length > 8) {
@@ -356,61 +361,88 @@ const insertUser = async (req, res) => {
 
         if (!passwordRe) {
             errors.passwordRe = "Please confirm your password";
-        }
-
-        if (password && passwordRe && password !== passwordRe) {
+        } else if (password !== passwordRe) {
             errors.passwordRe = "Passwords do not match";
         }
+
+        // Check for errors
         if (Object.keys(errors).length > 0) {
             return res.render('user/signup', { errors, username, email, mobileno }); 
         }
 
-       
         const spassword = await securePassword(password);
-
+        const userReferal = generateRefferalCode();
         const userDatacheck = await User.findOne({ email });
+
         if (userDatacheck) {
-            return res.render('user/signup', { message: "That user already exists!!...Try Again" });
+            return res.render('user/signup', { message: "That user already exists! Try Again" });
         }
 
-        
         const user = new User({
             username,
             email,
             mobileno,
             password: spassword,
             isAdmin: false,
-            isVerified: false
+            isVerified: false,
+            referralCode: userReferal || null
         });
 
         const userData = await user.save();
         const userId = userData._id;
 
-        if (userData) {
-            const otp = generateOtp();
-            console.log(otp);
+        // Create wallet for the user
+        const wallet = new Wallet({ userId: userData._id, amount: 0 });
+        await wallet.save();
 
-            const otpData = new OtpData({
-                userId: userId,
-                otp: otp
-            });
-
-            await otpData.save(); 
-            sendOtpMail(userData.email, otp);
-
-            res.redirect(`/verify-otp?user_id=${userId}`); 
-        } else {
-            res.render('user/signup', { message: "Your registration has failed" });
+        // Check for referral code
+        if (referralCode) {
+            const refferee = await User.findOne({ referralCode });
+            if (refferee) {
+                const refereeWallet = await Wallet.findOne({ userId: refferee._id });
+                refereeWallet.amount += 100; // Add referral bonus
+                await refereeWallet.save();
+            } else {
+                return res.render("user/signup", {
+                    message: "Referral code not valid",
+                    count: 0,
+                });
+            }
         }
+
+        // Send OTP
+        const otp = generateOtp();
+        const otpData = new OtpData({ userId, otp });
+        await otpData.save(); 
+        sendOtpMail(userData.email, otp);
+
+        res.redirect(`/verify-otp?user_id=${userId}`); 
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
         res.render('user/signup', { message: "An error occurred during registration. Please try again." });
     }
 };
 
+const updateUsersWithReferralCode = async () => {
+    try {
+        await User.updateMany({}, { $set: { referralCode: null } });
+        console.log("Updated all users with referralCode field.");
+    } catch (error) {
+        console.error("Error updating users:", error);
+    }
+};
+
+updateUsersWithReferralCode();
 
 
-
+function generateRefferalCode (){
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    let result = '';
+      for (let i = 0; i < 6; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+  }
 const resendOTP = async (req, res) => {
     try {
         const { user_id } = req.query;
@@ -959,36 +991,41 @@ const errorlogin = async (req, res) => {
 
 const getUserDetails = async (req, res, next) => {
     try {
-        
         console.log('Session User ID:', req.session.user_id);
-        
-        
         const userId = req.session.user_id;
         
         if (!userId) {
-       
             console.log('User is not defined');
             return res.redirect('/login');
         }
 
         const user = await User.findById(userId); 
-
         if (!user) {
             console.log('User not found');
             return res.redirect('/login');
         }
+
+        // Create a wallet for the user
+        const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
+        await wallet.save();
+
+        // Set amount from wallet
+        let amount = wallet.amount;
+
+        // Breadcrumb navigation
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
-          ];
-    
-        res.render('user/userDetails', { user,breadcrumbs });
+        ];
+
+        res.render('user/userDetails', { user, breadcrumbs, amount });
         
     } catch (error) {
         console.error('Error fetching user details:', error.message);
         res.status(500).send('Server Error');
     }
 };
+
 
 
 const editProfileLoad = async (req, res, next) => {

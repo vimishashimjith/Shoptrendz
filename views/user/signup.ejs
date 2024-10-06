@@ -47,6 +47,9 @@
     <% if (typeof errors !== 'undefined' && errors.passwordRe) { %>
         <p class="error-message"><%= errors.passwordRe %></p>
     <% } %>
+    <label for="referralCode">Referral Code:</label>
+    <input type="text" id="referralCode" name="referralCode" placeholder="Referral Code (optional)">
+    
     <div class="input-field form-child button-div">
         <button id="submit-button">Submit</button>
     </div>
