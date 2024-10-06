@@ -1,258 +1,261 @@
 
 
 <nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <% breadcrumbs.forEach((breadcrumb, index) => { %>
-      <% if (index === breadcrumbs.length - 1) { %>
-        <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
-      <% } else { %>
-        <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
-      <% } %>
-    <% }); %>
-  </ol>
-</nav>
-
-<div class="container">
-    <!-- Order History Section -->
-    <h4 style="color: blueviolet;">My orders</h4>
-    <div class="tab-content profile-content">
-        <div class="tab-pane fade show active" id="profile">
-            <div class="order-grid">
-                
-               
-                <% orders.forEach(order => { %>
-                    <div class="order-item">
-                        <!-- Order Information -->
-                        <div class="order-info">
-                            <strong>Order ID:</strong> <%= order.orderId %> <br>
-                            <strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %> <br>
-                            <strong>Total Amount:</strong> <%= order.totalAmount %> <br>
-                            <strong>Payment Method:</strong> <%= order.paymentMethod %>
-                        </div>
+    <ol class="breadcrumb">
+      <% breadcrumbs.forEach((breadcrumb, index) => { %>
+        <% if (index === breadcrumbs.length - 1) { %>
+          <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
+        <% } else { %>
+          <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
+        <% } %>
+      <% }); %>
+    </ol>
+  </nav>
+  
+  <div class="container">
+      <!-- Order History Section -->
+      <h4 style="color: blueviolet;">My orders</h4>
+      <div class="tab-content profile-content">
+          <div class="tab-pane fade show active" id="profile">
+              <div class="order-grid">
+                  
+                 
+                  <% orders.forEach(order => { %>
+                      <div class="order-item">
+                          <!-- Order Information -->
+                          <div class="order-info">
+                              <strong>Order ID:</strong> <%= order.orderId %> <br>
+                              <strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %> <br>
+                              <strong>Total Amount:</strong> <%= order.totalAmount %> <br>
+                              <strong>Payment Method:</strong> <%= order.paymentMethod %>
+                          </div>
+                          
+                          <!-- Product Information -->
+                          <div class="order-products">
+                              <strong>Products:</strong>
+                              <ul>
+                                  <% order.products.forEach(product => { %>
+                                      <li class="product-item">
+                                          <% if (product.productId.images && product.productId.images.length > 0) { %>
+                                              <img src="/uploads/<%= product.productId.images[0].url %>" class="product-image" alt="<%= product.productId.name %>">
+                                          <% } else { %>
+                                              <img src="/uploads/default-placeholder.png" class="product-image" alt="Image not available">
+                                          <% } %>
+                                          <span><%= product.productId.name %> - Quantity: <%= product.quantity %></span>
+                                      </li>
+                                  <% }) %>
+                              </ul>
+                          </div>
+                          
+                          <!-- Shipping Address -->
+                          <div class="order-address">
+                              <strong>Shipping Address:</strong> 
+                              <% if (order.addressId) { %>
+                                  <p><%= order.addressId.street %>, <%= order.addressId.city %>, <%= order.addressId.pincode %></p>
+                              <% } else { %>
+                                  <p>No shipping address provided</p>
+                              <% } %>
+                          </div>
                         
-                        <!-- Product Information -->
-                        <div class="order-products">
-                            <strong>Products:</strong>
-                            <ul>
-                                <% order.products.forEach(product => { %>
-                                    <li class="product-item">
-                                        <% if (product.productId.images && product.productId.images.length > 0) { %>
-                                            <img src="/uploads/<%= product.productId.images[0].url %>" class="product-image" alt="<%= product.productId.name %>">
-                                        <% } else { %>
-                                            <img src="/uploads/default-placeholder.png" class="product-image" alt="Image not available">
-                                        <% } %>
-                                        <span><%= product.productId.name %> - Quantity: <%= product.quantity %></span>
-                                    </li>
-                                <% }) %>
-                            </ul>
-                        </div>
-                        
-                        <!-- Shipping Address -->
-                        <div class="order-address">
-                            <strong>Shipping Address:</strong> 
-                            <% if (order.addressId) { %>
-                                <p><%= order.addressId.street %>, <%= order.addressId.city %>, <%= order.addressId.pincode %></p>
-                            <% } else { %>
-                                <p>No shipping address provided</p>
-                            <% } %>
-                        </div>
-                      
-                        <!-- Order Status and Actions -->
-                        <div class="order-status">
+                          <!-- Order Status and Actions -->
+                          <div class="order-status">
                             <strong>Status:</strong> <%= order.status %> <br>
-                            <% if (order.status === 'Processing' || order.status === 'Pending') { %>
+                            <% if (order.status === 'Ordered' ) { %>
                                 <button onclick="cancelOrder('<%= order._id %>')" class="cancel-button">Cancel Order</button>
                             <% } %>
-                        
+                            <% if (order.status === 'Delivered') { %>
+                                <button onclick="returnOrder('<%= order._id %>')" class="return-button">Return Order</button>
+                            <% } %>
                         </div>
-                        </div>
-                        
+                    </div>
                 <% }) %>
-                
+    
             </div>
         </div>
     </div>
-</div>
-
-<!-- CSS for grid layout -->
-<style>
-    .order-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        padding: 20px;
-        background-color: #f8f9fa;
-    }
-
-    .order-item {
-        background-color: #fff;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .order-info, .order-products, .order-address, .order-status {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .order-status {
-        border-bottom: none;
-    }
-
-    .order-products ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .product-item {
-        display: flex;
-        align-items: center;
-    }
-
-    .product-image {
-        width: 50px;
-        height: 50px;
-        margin-right: 10px;
-        object-fit: cover;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .cancel-button {
-        padding: 5px 10px;
-        background-color: #dc3545;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .cancel-button:hover {
-        background-color: #c82333;
-    }
-
-    h2 {
-        grid-column: span 2;
-        margin-bottom: 20px;
-    }
-    .pagination {
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    list-style: none;
-}
-
-
-    @media (max-width: 768px) {
-        .order-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<nav>
-    <ul class="pagination justify-content-center">
-        <% if (currentPage > 1) { %>
-            <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
-            </li>
-        <% } %>
-
-        <% for (let i = 1; i <= totalPages; i++) { %>
-            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-            </li>
-        <% } %>
-
-        <% if (currentPage < totalPages) { %>
-            <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
-            </li>
-        <% } %>
-    </ul>
-</nav>
-
-<script>
-    // Function to show the cancellation modal using SweetAlert
-    function cancelOrder(orderId) {
-        Swal.fire({
-            title: 'Cancel Order',
-            text: 'Are you sure you want to cancel this order?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, cancel it!',
-            cancelButtonText: 'No, keep it'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Show another SweetAlert for providing cancellation reason
-                Swal.fire({
-                    title: 'Cancel Order',
-                    html: `
-                        <select id="cancelReason" class="swal2-input">
-                            <option value="Wrong item">Wrong item</option>
-                            <option value="Damaged item">Damaged item</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <input id="cancelReasonOther" class="swal2-input" placeholder="Please specify other reason" style="display: none;">
-                    `,
-                    focusConfirm: false,
-                    preConfirm: () => {
-                        const reasonSelect = document.getElementById('cancelReason');
-                        let cancelReason = reasonSelect.value;
-                        
-                        if (cancelReason === 'Other') {
-                            const otherReason = document.getElementById('cancelReasonOther').value.trim();
-                            if (otherReason) {
-                                cancelReason = otherReason;
-                            } else {
-                                Swal.showValidationMessage('Please specify the reason for cancellation.');
-                                return false;
-                            }
-                        }
-                        
-                        return {
-                            reason: cancelReason,
-                            orderId: orderId
-                        };
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('/cancelOrder', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(result.value),
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success')
-                                    .then(() => window.location.reload());
-                            } else {
-                                Swal.fire('Error!', 'Error cancelling order: ' + data.message, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire('Error!', 'An error occurred while cancelling the order.', 'error');
-                        });
-                    }
-                });
-            }
-        });
-    }
+  
+  <!-- CSS for grid layout -->
+  <style>
+      .order-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          padding: 20px;
+          background-color: #f8f9fa;
+      }
+  
+      .order-item {
+          background-color: #fff;
+          padding: 15px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+      }
+  
+      .order-info, .order-products, .order-address, .order-status {
+          padding: 10px;
+          border-bottom: 1px solid #ddd;
+      }
+  
+      .order-status {
+          border-bottom: none;
+      }
+  
+      .order-products ul {
+          list-style: none;
+          padding: 0;
+      }
+  
+      .product-item {
+          display: flex;
+          align-items: center;
+      }
+  
+      .product-image {
+          width: 50px;
+          height: 50px;
+          margin-right: 10px;
+          object-fit: cover;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+      }
+  
+      .cancel-button {
+          padding: 5px 10px;
+          background-color: #dc3545;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+  
+      .cancel-button:hover {
+          background-color: #c82333;
+      }
+  
+      h2 {
+          grid-column: span 2;
+          margin-bottom: 20px;
+      }
+      .pagination {
+      display: flex;
+      justify-content: center;
+      padding: 0;
+      list-style: none;
+  }
+  
+  
+      @media (max-width: 768px) {
+          .order-grid {
+              grid-template-columns: 1fr;
+          }
+      }
+  </style>
+  
+  <nav>
+      <ul class="pagination justify-content-center">
+          <% if (currentPage > 1) { %>
+              <li class="page-item">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+              </li>
+          <% } %>
+  
+          <% for (let i = 1; i <= totalPages; i++) { %>
+              <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                  <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+              </li>
+          <% } %>
+  
+          <% if (currentPage < totalPages) { %>
+              <li class="page-item">
+                  <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+              </li>
+          <% } %>
+      </ul>
+  </nav>
+  <script>
+  // Function to show the cancellation modal using SweetAlert
+  function cancelOrder(orderId) {
+      Swal.fire({
+          title: 'Cancel Order',
+          text: 'Are you sure you want to cancel this order?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, cancel it!',
+          cancelButtonText: 'No, keep it'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              // Show another SweetAlert for providing cancellation reason
+              Swal.fire({
+                  title: 'Cancel Order',
+                  html: `
+                      <select id="cancelReason" class="swal2-input">
+                          <option value="Wrong item">Wrong item</option>
+                          <option value="Damaged item">Damaged item</option>
+                          <option value="Delayed delivery">Delayed delivery</option>
+                          <option value="Changed my mind">Changed my mind</option>
+                          <option value="Found a better price">Found a better price</option>
+                          <option value="Other">Other</option>
+                      </select>
+                      <input id="cancelReasonOther" class="swal2-input" placeholder="Please specify other reason" style="display: none;">
+                  `,
+                  focusConfirm: false,
+                  preConfirm: () => {
+                      const reasonSelect = document.getElementById('cancelReason');
+                      let cancelReason = reasonSelect.value;
+  
+                      if (cancelReason === 'Other') {
+                          const otherReason = document.getElementById('cancelReasonOther').value.trim();
+                          if (otherReason) {
+                              cancelReason = otherReason;
+                          } else {
+                              Swal.showValidationMessage('Please specify the reason for cancellation.');
+                              return false;
+                          }
+                      }
+  
+                      return {
+                          reason: cancelReason,
+                          orderId: orderId
+                      };
+                  }
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      // Handle the cancellation request
+                      fetch('/cancelOrder', {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(result.value),
+                      })
+                      .then(response => response.json())
+                      .then(data => {
+                          if (data.success) {
+                              Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success')
+                                  .then(() => window.location.reload());
+                          } else {
+                              Swal.fire('Error!', 'Error cancelling order: ' + data.message, 'error');
+                          }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                          Swal.fire('Error!', 'An error occurred while cancelling the order.', 'error');
+                      });
+                  }
+              });
+          }
+      });
+  }
+  
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-
-
-<br><br><br><br><br><br><br><br><br><br>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  
+  
+  <br><br><br><br><br><br><br><br><br><br>

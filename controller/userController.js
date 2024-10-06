@@ -1005,12 +1005,15 @@ const getUserDetails = async (req, res, next) => {
             return res.redirect('/login');
         }
 
-        // Create a wallet for the user
-        const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
-        await wallet.save();
+        // Find or create a wallet for the user
+        let wallet = await Wallet.findOne({ userId: user._id });
+        if (!wallet) {
+            wallet = new Wallet({ userId: user._id, amount: 0 });
+            await wallet.save();
+        }
 
         // Set amount from wallet
-        let amount = wallet.amount;
+        const amount = wallet.amount;
 
         // Breadcrumb navigation
         const breadcrumbs = [
@@ -1022,7 +1025,7 @@ const getUserDetails = async (req, res, next) => {
         
     } catch (error) {
         console.error('Error fetching user details:', error.message);
-        res.status(500).send('Server Error');
+        res.status(500).redirect('/login'); // Redirect to login on error
     }
 };
 
@@ -1400,36 +1403,53 @@ const orderLoad = async (req, res) => {
         });
     }
 };
-
-
-const cancelOrder= async (req, res) => {
+const cancelOrder = async (req, res) => {
     try {
         const { reason, orderId } = req.body;
 
-       
+        // Validate input
         if (!reason || !orderId) {
             return res.status(400).json({ success: false, message: 'Invalid input' });
         }
 
-       
+        // Find the order
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-    
+        // Check if the order is delivered
+        if (order.status === 'Delivered') {
+            return res.status(400).json({ success: false, message: 'Cannot cancel a delivered order' });
+        }
+
+        // Update order status to Cancelled
         order.status = 'Cancelled';
+
+        // Credit to wallet if payment method is Razorpay
+        if (order.paymentMethod === 'Razorpay') {
+            const user = await User.findById(order.userId); // Assuming you have a reference to the user in the order
+
+            // Create or update the user's wallet
+            const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
+
+            // Credit the amount to wallet
+            wallet.amount += order.totalAmount; // Update wallet amount
+            await wallet.save();
+            console.log(`Credited ${order.totalAmount} to wallet of user ${order.userId}`);
+        }
+
+        // Save the updated order
         await order.save();
 
-        
         console.log(`Order ${orderId} cancelled for reason: ${reason}`);
-
         res.json({ success: true });
     } catch (error) {
         console.error('Error cancelling order:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 const wishlistLoad = async (req, res) => {
     const userId = req.session.user_id;
