@@ -42,7 +42,15 @@
                               <td class="table-info"><%= category.name %></td>
                               <td class="table-info"><%= category.description %></td>
                               <td>
-                                <a href="/admin/category-edit/<%= category._id %>" class="btn btn-sm btn-warning">Edit</a>
+                                <button type="button" class="btn btn-primary">
+                                <a href="/admin/category-edit/<%= category._id %>" class="text-light">Edit</a>
+                              </button>
+                                <br>
+                                <br>
+                                <button type="button" class="btn btn-primary">
+                                  <a href="/admin/categoryOffer?id=<%= category._id %>" class="text-light">Offer</a>
+                                </button>
+                                
                               </td>
                             </tr>
                           <% }) %>
@@ -82,7 +90,7 @@
   .btn-primary {
       background-color: #007bff;
       color: white;
-      padding: 10px 20px;
+      padding: 5px 10px;
       text-decoration: none;
       border-radius: 5px;
       border: none;

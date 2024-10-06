@@ -153,4 +153,38 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
     }*/
+         offerPage : async(req,res)=>{
+            try{
+                const categoryid = req.query.id;
+                const user = await User.findById(req.session.User_id);
+                const category = await Category.findById(categoryid);
+                res.render('admin/categoryOffer',{category,
+                    layout: adminLayout
+                });
+        
+            }catch(error){
+                res.status(500).send('server error');
+            }
+        },
+         categoryOffer : async (req,res)=>{
+            try{
+                const { categoryId } = req.params;
+                console.log(categoryId,'id')
+                const { offer, offerStart, offerEnd } = req.body;
+                const category = await Category.findByIdAndUpdate(
+                    categoryId,
+                    { $set: { offer, offerStart, offerEnd } },
+                    { new: true }
+                  );
+                  if (!category) {
+                    return res.status(404).json({ success: false, message: 'Product not found' });
+                  }
+                  
+                  res.json({ success: true, message: 'Offer added successfully', category });
+                } catch (error) {
+                  console.error('Error updating offer:', error);
+                  res.status(500).json({ success: false, message:'server error'})
+        }
+        },
+        
 };

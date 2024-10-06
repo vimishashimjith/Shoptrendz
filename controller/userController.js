@@ -13,6 +13,7 @@ const Order=require('../model/orderSchema')
 const Category=require('../model/categorySchema')
 const WishList=require('../model/wishlistSchema')
 const Payment=require('../model/payment')
+const Coupon=require('../model/couponSchema')
 const mongoose=require('mongoose')
 const { getTestError } = require("razorpay/dist/utils/razorpay-utils");
 const Razorpay = require("razorpay");
@@ -1602,7 +1603,30 @@ const removeFromWishlist = async (req, res) => {
         return res.status(500).json({ message: 'Server error while removing product from wishlist.' });
     }
 };
-
+const validateCoupon = async (req, res,next) => {
+    try {
+      const { couponCode } = req.body;
+      console.log(couponCode, "code");
+      const coupon = await Coupon.findOne({
+        code: { $regex: new RegExp(couponCode, "i") },
+      });
+  
+      if (!coupon) {
+        return res.status(404).json({ error: "Coupon not found." });
+      }
+  
+      if (new Date() > new Date(coupon.expirityDate)) {
+        return res.status(400).json({ error: "Coupon has expired." });
+      }
+  
+      const discountAmount = coupon.maxDiscount;
+      console.log(coupon.maxDiscount, "coupon code");
+      res.json({ valid: true, discountAmount });
+    } catch (error) {
+      console.error(error.message);
+      next(error)
+    }
+  };
 
 
 module.exports = {
@@ -1647,8 +1671,8 @@ module.exports = {
     searchProduct,
     addTowishlist,
     wishlistLoad,
-    
-    removeFromWishlist
+    removeFromWishlist,
+    validateCoupon
  
 
 };

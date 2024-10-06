@@ -10,7 +10,8 @@ const {
     searchProduct, paymentProcess,
     addTowishlist,
     wishlistLoad,
-    removeFromWishlist
+    removeFromWishlist,
+    validateCoupon
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -66,7 +67,7 @@ router.get('/orders', auth.isAuthenticated, orderLoad);
 router.post('/cancelOrder', auth.isAuthenticated, cancelOrder);
 
 router.post('/paymentProcess',auth.isAuthenticated,paymentProcess)
-
+router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 
 
 router.get('/success', successGoogleLogin);
