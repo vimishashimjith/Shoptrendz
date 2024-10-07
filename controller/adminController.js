@@ -5,7 +5,9 @@ const Product = require('../model/productSchema');
 const adminLayout = './layouts/auth/admin/authLayout.ejs';
 const mongoose = require('mongoose');
 const Coupon = require('../model/couponSchema'); 
-
+const excel = require('exceljs'); 
+const pdf = require('pdfkit'); 
+const stream = require('stream');
 
 module.exports = {
     getAdminLogin: async (req, res) => {
@@ -408,43 +410,73 @@ module.exports = {
       
       SalesReport: async (req, res) => {
         try {
-            const page = parseInt(req.query.page) || 1; 
-            const limit = parseInt(req.query.limit) || 10; 
-            const skip = (page - 1) * limit; 
-            const search = req.query.search || ''; 
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+            const search = req.query.search || '';
     
-          
-            const searchFilter = search ? {
-                $or: [
-                    { 'userId.username': { $regex: search, $options: 'i' } },
-                    { 'products.productName': { $regex: search, $options: 'i' } },
-                ],
-            } : {};
+        
+            const { startDate, endDate, presetFilter } = req.query;
+            let dateFilter = {};
     
-         
-            const orders = await Order.find(searchFilter)
-                .populate('userId', 'username') 
-                .populate('products.productId', 'name price') 
-                .skip(skip) 
-                .limit(limit); 
+            if (presetFilter === 'today') {
+                const today = new Date();
+                dateFilter = { createdAt: { $gte: today.setHours(0, 0, 0, 0) } };
+            } else if (presetFilter === 'week') {
+                const startOfWeek = new Date();
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); 
+                dateFilter = { createdAt: { $gte: startOfWeek } };
+            } else if (presetFilter === 'month') {
+                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                dateFilter = { createdAt: { $gte: startOfMonth } };
+            } else if (startDate && endDate) {
+                dateFilter = { createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) } };
+            }
     
-           
-            const totalOrders = await Order.countDocuments(searchFilter); 
-            const totalPages = Math.ceil(totalOrders / limit); 
+            
+            const searchFilter = search
+                ? {
+                    $or: [
+                        { 'userId.username': { $regex: search, $options: 'i' } },
+                        { 'products.productName': { $regex: search, $options: 'i' } }
+                    ]
+                }
+                : {};
+    
+            const orders = await Order.find({ ...searchFilter, ...dateFilter })
+                .populate('userId', 'username')
+                .populate('products.productId', 'name price')
+                .skip(skip)
+                .limit(limit);
+    
+            const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter });
+            const totalPages = Math.ceil(totalOrders / limit);
+    
+            
+            let totalSales = 0;
+            let totalDiscount = 0;
+            orders.forEach(order => {
+                totalSales += order.totalAmount;
+                totalDiscount += order.discount || 0;
+            });
     
             res.render('admin/salesReport', {
                 order: orders,
                 admin: req.admin,
                 layout: adminLayout,
                 currentPage: page,
-                totalPages: totalPages, 
-                search: search,
-                limit: limit, 
+                totalPages: totalPages,
+                totalSales,
+                totalDiscount,
+                totalOrders,
+                search,
+                limit
             });
         } catch (error) {
             console.error('Error fetching sales report:', error);
             res.status(500).send('Internal Server Error');
         }
-    }
+    },
+    
     
 }

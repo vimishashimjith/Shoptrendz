@@ -5,8 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Sales Report</title>
-    <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
-    <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+8qG2t02PmG1cmo7o5tktzNdJ+v3I" crossorigin="anonymous">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="../Admin/assets/libs/datatables/datatables.min.css" />
+
     <style>
         *, *:after, *:before {
             box-sizing: border-box;
@@ -84,6 +89,35 @@
             font-style: italic;
             color: #777;
         }
+
+        .sales-summary h3 {
+            margin: 10px 0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .pagination .page-item {
+            margin: 0 5px;
+        }
+
+        .pagination .page-link {
+            display: block;
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: #0056b3;
+        }
     </style>
 </head>
 
@@ -102,97 +136,112 @@
             <%- include('../partials/admin/header.ejs') %>
 
             <!-- Main Content -->
-            <div class="page-wrapper">
-                <br><br><br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <div class="container m-5">
+                <div class="report-header">
+                    <!-- Custom Date Range Filter -->
+                    <form action="/admin/salesReport" method="GET" style="flex-grow: 1; display: flex; gap: 10px;">
+                        <label for="dateFilter">Date Range:</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                        <input type="date" id="endDate" name="endDate" required>
+                        <button type="submit">Filter</button>
+                    </form>
 
-                <div class="container m-5">
-                    <div class="report-header">
-                        <form action="/admin/filtered-report" method="GET" style="flex-grow: 1; display: flex; gap: 10px;">
-                            <label for="dateFilter">Date Range:</label>
-                            <input type="date" id="startDate" name="startDate" required>
-                            <input type="date" id="endDate" name="endDate" required>
-                            <button type="submit">Filter</button>
-                        </form>
-                        <div>
-                            <button onclick="downloadReport('pdf')">Download PDF</button>
-                            <button onclick="downloadReport('excel')">Download Excel</button>
-                        </div>
+                    <!-- Preset Filters -->
+                    <form action="/admin/salesReport" method="GET" style="margin-left: 20px;">
+                        <select name="presetFilter" onchange="this.form.submit()">
+                            <option value="">--Select--</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </form>
+
+                    <!-- Download Buttons -->
+                    <div>
+                        <button class="btn btn-success" onclick="downloadReport('pdf')">Download PDF</button>
+                        <button class="btn btn-success" onclick="downloadReport('excel')">Download Excel</button>
                     </div>
+                </div>
 
-                    <table id="example" class="display nowrap">
-                        <thead>
-                            <tr>
-                                <th>Buyer</th>
-                                <th>Product Name</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                
-                                <th>Total</th>
-                             
-                                <th>Coupons</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (order.length > 0) { %>
-                                <% order.forEach(orderItem => { %>
-                                    <% orderItem.products.forEach(product => { %>
-                                        <tr>
-                                            <td><%= orderItem.userId ? orderItem.userId.username : 'Unknown User' %></td>
-                                            <td><%= product.productId?.name %></td>
-                                            <td><%= product.quantity %></td>
-                                            <td><%= product.productId?.price %></td>
-                                           
-                                            <td><%= orderItem.totalAmount %> INR</td>
-                                          
-                                            <td><%= orderItem.coupons || 0 %></td>
-                                        </tr>
-                                    <% }); %>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="8" class="no-orders">No orders found</td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                        
-                    </table>
-                 
-                    <ul class="pagination">
-                        <% for (let i = 1; i <= totalPages; i++) { %>
-                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                <a class="page-link" href="/admin/salesReport?page=<%= i %>&limit=<%= limit %>&search=<%= search %>">
-                                    <%= i %>
-                                </a>
-                            </li>
-                        <% } %>
-                    </ul>
+                <!-- Sales Summary -->
+                <div class="sales-summary">
+                    <h3>Total Sales: ₹<%= totalSales %></h3>
+                    <h3>Total Orders: <%= totalOrders %></h3>
                     
                 </div>
 
-                <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
-                <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-                <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
-                <script src="../Admin/assets/js/sidebarmenu.js"></script>
-                <script src="../Admin/assets/js/app.min.js"></script>
-                <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
-                <script>
-                    $(document).ready(function () {
-                        $('#example').DataTable({
-                            dom: 'Bfrtip',
-                            buttons: [
-                                'copy', 'csv', 'excel', 'pdf', 'print'
-                            ]
-                        });
-                    });
+                <!-- Orders Table -->
+                <table id="example" class="display nowrap">
+                    <thead>
+                        <tr>
+                            <th>Buyer</th>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+            
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (order.length > 0) { %>
+                            <% order.forEach(orderItem => { %>
+                                <% orderItem.products.forEach(product => { %>
+                                    <tr>
+                                        <td><%= orderItem.userId ? orderItem.userId.username : 'Unknown User' %></td>
+                                        <td><%= product.productId?.name %></td>
+                                        <td><%= product.quantity %></td>
+                                        <td> ₹<%= product.productId?.price %></td>
+                                       
+                                        <td> ₹<%= orderItem.totalAmount %></td>
+                                    </tr>
+                                <% }); %>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="no-orders">No orders found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
 
-                    function downloadReport(format) {
-                        window.location.href = `/admin/download-report?format=${format}`;
-                    }
-                </script>
+                <!-- Pagination -->
+                <ul class="pagination">
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                            <a class="page-link" href="/admin/salesReport?page=<%= i %>&limit=<%= limit %>&search=<%= search %>">
+                                <%= i %>
+                            </a>
+                        </li>
+                    <% } %>
+                </ul>
             </div>
+
+            <!-- JavaScript for DataTable and report downloads -->
+            <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+            <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
+            <script>
+                $(document).ready(function () {
+                    $('#example').DataTable({
+                        dom: 'Bfrtip',
+                        buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                    });
+                });
+               
+               
+            </script>
         </div>
     </div>
     <!-- Content End -->
+    <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+            <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
 </body>
 
 </html>

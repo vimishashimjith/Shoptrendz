@@ -322,10 +322,10 @@ const deleteAddress = async (req, res, next) => {
    
 const insertUser = async (req, res) => {
     try {
-        const { username, email, mobileno, password, passwordRe, referralCode } = req.body; // Added referralCode to destructuring
+        const { username, email, mobileno, password, passwordRe, referralCode } = req.body; 
         const errors = {};
 
-        // Validation checks
+       
         if (!username) {
             errors.username = "Username is required";
         } else {
