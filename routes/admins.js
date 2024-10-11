@@ -63,6 +63,7 @@ router.get('/orderDetails/:orderId', adminController.getOrderDetails);
 
 router.post('/updateStatus', adminAuth.isLogin, adminController.updateOrderStatus);
 router.post('/cancelOrders', adminAuth.isLogin, adminController.cancelOrders);
+router.post('/updateCancellationStatus', adminController.updateCancellationStatus);
 router.get('/coupon', adminAuth.isLogin, adminController.getCouponCodes);
 router.get('/addCoupon', adminAuth.isLogin, adminController.addCouponLoad);
 

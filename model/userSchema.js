@@ -46,7 +46,8 @@ const userSchema = new Schema({
     referralCode: {
         type: String,
         unique: true
-    }
+    },
+    
 },{
     timestamps:true
 })

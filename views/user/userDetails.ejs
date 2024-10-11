@@ -25,6 +25,7 @@
         <div class="col-lg-5">
           <div class="intro-excerpt">
             <h3 style="color: #732fcc;">Hello, <%= user.username %> 👋</h3>
+
           </div>
         </div>
       </div>
@@ -37,6 +38,7 @@
       
       <h2 style="color:#732fcc; font-weight: 600;"><%= user.name %></h2>
       <p class="lead text-muted"><%= user.email %></p>
+      
       <button class="btn btn-primary" style="padding: 10px 20px; margin-top: 20px;">
         <a href="/editProfile?id=<%= user._id %>" style="color: white; text-decoration: none;">Edit Profile</a>
       </button>
@@ -64,11 +66,37 @@
           <div class="card-body">
               <div class="text-center mb-4">
                   <h5>Wallet Balance</h5>
-                  <h3><i class="bi bi-currency-rupee"></i><%= amount %></h3>
+                  <h3><i class="bi bi-currency-rupee"></i> <%= wallet.amount %></h3>
               </div>
-  
+          
               <!-- Transaction History Section -->
-              
+              <div class="transaction-history">
+                  <h5>Transaction History</h5>
+                  <table class="table table-bordered">
+                      <thead>
+                          <tr>
+                              <th>Type</th>
+                              <th>Amount</th>
+                              <th>Date</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <% if (wallet.transactions.length === 0) { %>
+                              <tr>
+                                  <td colspan="3" class="text-center">No transactions available.</td>
+                              </tr>
+                          <% } else { %>
+                              <% wallet.transactions.forEach(transaction => { %>
+                                  <tr>
+                                      <td><%= transaction.type %></td>
+                                      <td><i class="bi bi-currency-rupee"></i> <%= transaction.amount %></td>
+                                      <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                                  </tr>
+                              <% }) %>
+                          <% } %>
+                      </tbody>
+                  </table>
+              </div>
           </div>
       </div>
   </div>
@@ -103,6 +131,7 @@
             <p><strong>Username:</strong> <%= user.username %></p>
             <p><strong>Email:</strong> <%= user.email %></p>
             <p><strong>Phone:</strong> <%= user.mobileno %></p>
+            
             <a href="/changePassword" class="btn btn-secondary mt-3">Change Password</a>
           </div>
         </div>

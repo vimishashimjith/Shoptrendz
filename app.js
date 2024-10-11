@@ -32,6 +32,7 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(expressLayouts);
 app.set('layout', 'layouts/userLayout.ejs');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

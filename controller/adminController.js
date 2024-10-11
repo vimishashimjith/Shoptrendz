@@ -477,6 +477,42 @@ module.exports = {
             res.status(500).send('Internal Server Error');
         }
     },
+    updateCancellationStatus : async (req, res) => {
+        const { action, orderId } = req.body;
     
+        if (!action || !orderId) {
+            return res.status(400).json({ success: false, message: "Invalid request." });
+        }
     
+        try {
+            // Find the order by ID
+            const order = await Order.findById(orderId);
+            
+            if (!order) {
+                return res.status(404).json({ success: false, message: "Order not found." });
+            }
+    
+            // Handle action based on admin's choice
+            if (action === 'Approve') {
+                order.status = 'Cancelled'; // Update status to Cancelled
+                await order.save();
+    
+                // Optionally, send an email notification to the customer
+              
+                return res.status(200).json({ success: true, message: "Cancellation request approved successfully." });
+            } else if (action === 'Reject') {
+                order.status = 'Active'; // Change back to Active or appropriate status
+                await order.save();
+    
+                // Optionally, send an email notification to the customer
+                await sendEmail(order.customerEmail, "Your cancellation request has been rejected", "Your order cancellation request has been rejected.");
+                return res.status(200).json({ success: true, message: "Cancellation request rejected successfully." });
+            } else {
+                return res.status(400).json({ success: false, message: "Invalid action." });
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ success: false, message: "An error occurred while updating the cancellation status." });
+        }
+    }
 }

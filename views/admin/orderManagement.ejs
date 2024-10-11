@@ -199,18 +199,27 @@ function cancelOrders() {
                         </td>
                         <td>
                           <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
-                            <%= order.status %>
-                            <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
-                              <option value="changeStatus">Change Status</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Out-For-Delivery">Out For Delivery</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Cancelled">Cancel</option>
-                            </select>
+                              <%= order.status %>
+                              <% if (order.status === 'Cancellation Requested') { %>
+                                  <select id="changeStatus-<%= order._id %>" onchange="updateCancellationStatus('<%= order._id %>')">
+                                      <option value="changeStatus">Select Action</option>
+                                      <option value="Approve">Approve Cancellation</option>
+                                      <option value="Reject">Reject Cancellation</option>
+                                  </select>
+                              <% } else { %>
+                                  <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
+                                      <option value="changeStatus">Change Status</option>
+                                      <option value="Shipped">Shipped</option>
+                                      <option value="Out-For-Delivery">Out For Delivery</option>
+                                      <option value="Delivered">Delivered</option>
+                                      <option value="Cancelled">Cancel</option>
+                                  </select>
+                              <% } %>
                           <% } else { %>
-                            <%= order.status %>
+                              <%= order.status %>
                           <% } %>
-                        </td>
+                      </td>
+                      
                         <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                         <td>
                           <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">Details</a>
@@ -252,6 +261,58 @@ function cancelOrders() {
       </div>
     </div>
   </div>
+  <script>
+    function updateCancellationStatus(orderId) {
+    const newStatus = document.getElementById(`changeStatus-${orderId}`);
+    let action = newStatus.value;
+
+    if (action === 'changeStatus') {
+        swal("Warning", "Please select a valid action.", "warning");
+        return;
+    }
+
+    // Show confirmation dialog before proceeding
+    swal({
+        title: "Are you sure?",
+        text: `You are about to ${action === 'Approve' ? 'approve' : 'reject'} the cancellation request.`,
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+    }).then((willUpdate) => {
+        if (willUpdate) {
+            // If confirmed, proceed with the cancellation action
+            fetch('/admin/updateCancellationStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: action,
+                    orderId: orderId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    swal("Success!", `Cancellation request ${action.toLowerCase()}d successfully.`, "success")
+                        .then(() => {
+                            window.location.reload(); // Reload the page to reflect changes
+                        });
+                } else {
+                    swal("Error", "An error occurred while updating the cancellation status: " + data.message, "error");
+                }
+            })
+            .catch(error => {
+                swal("Error", "An error occurred while updating the cancellation status.", "error");
+            });
+        } else {
+            // Reset the select value if the user cancels
+            newStatus.value = 'changeStatus';
+        }
+    });
+}
+
+  </script>
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../Admin/assets/js/sidebarmenu.js"></script>

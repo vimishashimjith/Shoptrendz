@@ -398,7 +398,14 @@ const insertUser = async (req, res) => {
             const refferee = await User.findOne({ referralCode });
             if (refferee) {
                 const refereeWallet = await Wallet.findOne({ userId: refferee._id });
-                refereeWallet.amount += 100; 
+                const referralBonus = 100;  // Referral bonus amount
+                refereeWallet.amount += referralBonus;
+        
+                // Add referral transaction to wallet
+                refereeWallet.transactions.push({
+                    type: 'Referral',
+                    amount: referralBonus,
+                });
                 await refereeWallet.save();
             } else {
                 return res.render("user/signup", {
@@ -407,7 +414,7 @@ const insertUser = async (req, res) => {
                 });
             }
         }
-
+        
         const otp = generateOtp();
         const otpData = new OtpData({ userId, otp });
         await otpData.save(); 
@@ -422,14 +429,21 @@ const insertUser = async (req, res) => {
 
 const updateUsersWithReferralCode = async () => {
     try {
-        await User.updateMany({}, { $set: { referralCode: null } });
-        console.log("Updated all users with referralCode field.");
+        
+        await User.updateMany(
+            { referralCode: null }, 
+            { $set: { referralCode: "NEW_REFERRAL_CODE" } } 
+        );
+        console.log("Updated users with null referralCode field.");
+       
     } catch (error) {
         console.error("Error updating users:", error);
     }
 };
 
+
 updateUsersWithReferralCode();
+
 
 
 function generateRefferalCode (){
@@ -1000,27 +1014,26 @@ const getUserDetails = async (req, res, next) => {
             console.log('User not found');
             return res.redirect('/login');
         }
-
-        
         let wallet = await Wallet.findOne({ userId: user._id });
         if (!wallet) {
-            wallet = new Wallet({ userId: user._id, amount: 0 });
+            wallet = new Wallet({ 
+                userId: user._id, 
+                amount: 0,
+                transactions: [] // Initialize as an empty array
+            });
             await wallet.save();
         }
-
         
-        const amount = wallet.amount;
 
-        
+        // No need to separately define amount if you're already getting the wallet object
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
         ];
 
-        res.render('user/userDetails', { user, breadcrumbs, amount });
-        
+        res.render('user/userDetails', { user, breadcrumbs, wallet }); // Pass the entire wallet object
     } catch (error) {
-        console.error('Error fetching user details:', error.message);
+        console.error('Error fetching user details:', error);
         res.status(500).redirect('/login'); 
     }
 };
@@ -1203,17 +1216,19 @@ const paymentProcess = async(req,res)=>{
     try {
         const { addressId, paymentMethod, total } = req.body;
 
+        // Check if user is logged in
         if (!req.session.user_id) {
             return res.status(401).json({ success: false, message: "User not logged in" });
         }
 
         const userId = req.session.user_id;
 
+        // Validate user ID format
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ success: false, message: "Invalid user ID format" });
         }
 
-      
+        // Validate address
         const address = await Address.findById(addressId);
         if (!address) {
             return res.status(404).render('404', { url: req.originalUrl, message: 'Address not valid', isLoggedIn: false, count: 0 });
@@ -1225,14 +1240,13 @@ const paymentProcess = async(req,res)=>{
             return res.status(400).json({ success: false, message: "User cart is empty" });
         }
 
-       
+        // Process each product for order
         const productsWithPricing = [];
-
         for (const item of userCart.products) {
             const product = await Product.findById(item.productId);
             if (product) {
                 const productPrice = product.price;
-                const discount = productPrice - item.price; 
+                const discount = productPrice - item.price; // Calculate discount
 
                 productsWithPricing.push({
                     productId: item.productId,
@@ -1244,10 +1258,18 @@ const paymentProcess = async(req,res)=>{
             }
         }
 
-      
+        // Define COD limit
+        const codLimit = 1000;
+
+        // COD limit check before creating order
+        if (paymentMethod === "COD" && total > codLimit) {
+            return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
+        }
+
+        // Generate unique order ID
         const orderId = generateOrderId();
 
-        
+        // Create order and payment only if the order is valid (passes COD check)
         const order = new Order({
             orderId: orderId,
             userId: userId,
@@ -1259,7 +1281,6 @@ const paymentProcess = async(req,res)=>{
         });
         await order.save();
 
-      
         const payment = new Payment({
             orderId: order._id,
             paymentMethod: paymentMethod,
@@ -1268,35 +1289,31 @@ const paymentProcess = async(req,res)=>{
         });
         await payment.save();
 
-        const codLimit = 1000;
-
-        
+        // Handle COD payment
         if (paymentMethod === "COD") {
-            if (total > codLimit) {
-                return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
-            } else {
-                await Cart.deleteOne({ userId: userId });
-                return res.json({ success: true, message: "Order placed successfully with COD" });
-            }
-        } else if (paymentMethod === "Razorpay") {
+            await Cart.deleteOne({ userId: userId }); // Clear cart after successful COD order
+            return res.json({ success: true, message: "Order placed successfully with COD" });
+        }
+
+        // Handle Razorpay payment
+        if (paymentMethod === "Razorpay") {
             const options = {
                 amount: total * 100,
                 currency: "INR",
                 receipt: payment._id.toString(),
                 notes: {
-                    orderId: orderId, 
+                    orderId: orderId,
                 },
             };
 
-           
             razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
                 if (!err) {
-                    await Cart.deleteOne({ userId: userId }); 
+                    await Cart.deleteOne({ userId: userId }); // Clear cart after successful payment initiation
                     res.status(200).json({
                         success: true,
                         message: "Razorpay order created successfully",
                         order_id: razorpayOrder.id,
-                        amount: options.amount / 100, 
+                        amount: options.amount / 100,
                         key_id: RAZORPAY_ID_KEY,
                         contact: address.mobile,
                         name: address.fullname,
@@ -1399,51 +1416,55 @@ const orderLoad = async (req, res) => {
         });
     }
 };
-const cancelOrder = async (req, res) => {
+
+const requestCancellation = async (req, res) => {
+    const { orderId, reason } = req.body;
+
     try {
-        const { reason, orderId } = req.body;
-
-       
-        if (!reason || !orderId) {
-            return res.status(400).json({ success: false, message: 'Invalid input' });
-        }
-
-        
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found.' });
         }
 
-        
-        if (order.status === 'Delivered') {
-            return res.status(400).json({ success: false, message: 'Cannot cancel a delivered order' });
-        }
-
-        
-        order.status = 'Cancelled';
+        order.status = 'Cancellation Requested';
+        order.cancelReason = reason;
 
         if (order.paymentMethod === 'Razorpay') {
-            const user = await User.findById(order.userId); 
+            const user = await User.findById(order.userId);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'User not found.' });
+            }
 
-           
+            // Find or create the user's wallet
             const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
 
-            
-            wallet.amount += order.totalAmount; 
+            // Credit the order total to the wallet
+            wallet.amount += order.totalAmount;
+
+            // Create a new transaction for the credit
+            wallet.transactions.push({
+                type: 'OrderRefund', // Or any relevant type for cancellations
+                amount: order.totalAmount,
+                date: new Date(),
+            });
+
             await wallet.save();
-            console.log(`Credited ${order.totalAmount} to wallet of user ${order.userId}`);
+            console.log(`Credited ${order.totalAmount} to wallet of user ${user._id}`);
         }
 
-       
         await order.save();
 
-        console.log(`Order ${orderId} cancelled for reason: ${reason}`);
-        res.json({ success: true });
+        res.json({ success: true, message: 'Cancellation request has been sent for admin approval.' });
     } catch (error) {
-        console.error('Error cancelling order:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'An error occurred while processing your request.' });
     }
 };
+
+
+
+
+
 
 const returnOrder = async (req, res) => {
     try {
@@ -1749,13 +1770,12 @@ module.exports = {
     changePassword,
     placeOrder,
     orderLoad,
-    cancelOrder,
     paymentProcess,
     searchProduct,
     addTowishlist,
     wishlistLoad,
     removeFromWishlist,
     validateCoupon,
-    returnOrder
+    returnOrder,requestCancellation
 
 };

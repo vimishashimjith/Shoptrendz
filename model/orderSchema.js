@@ -50,7 +50,10 @@ const orderSchema = new mongoose.Schema({
     orderDate: {
         type: Date, 
         default: Date.now 
-    }
+    },
+    cancellationReason: { type: String, default: null },
+    isCancellationRequested: { type: Boolean, default: false },
+    isCancellationApproved: { type: Boolean, default: null },
 }, {
     timestamps: true
 });
