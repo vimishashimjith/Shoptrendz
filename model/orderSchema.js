@@ -43,6 +43,11 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true 
     },
+    paymentId: { // New reference field to connect payment
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Payment',
+        default: null // Optional: set default to null if not applicable
+    },
     status: { 
         type: String,
         default: 'Pending' 

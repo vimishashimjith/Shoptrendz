@@ -8,6 +8,7 @@ const Coupon = require('../model/couponSchema');
 const excel = require('exceljs'); 
 const pdf = require('pdfkit'); 
 const stream = require('stream');
+const Payment=require('../model/paymentSchema')
 
 module.exports = {
     getAdminLogin: async (req, res) => {
@@ -159,7 +160,7 @@ module.exports = {
         }
     },
 
-  loadOrderManagementPage : async (req, res) => {
+    loadOrderManagementPage : async (req, res) => {
         try {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
@@ -203,31 +204,35 @@ module.exports = {
             }
     
             const orderId = req.params.orderId;
+    
             const order = await Order.findById(orderId)
                 .populate('userId', 'username email')
                 .populate({
                     path: 'products.productId',
-                    select: 'name price' 
+                    select: 'name price'
                 })
-                .populate('addressId', 'street city pincode');
+                .populate('addressId', 'street city pincode')
+                .populate('paymentId', 'status paymentMethod');  // Only populate necessary fields
     
             if (!order) {
                 return res.status(404).send("Order not found");
             }
     
-            
-            order.products = order.products || [];
+            // Log payment status to verify
+            console.log('Payment Status:', order.paymentId?.status);
     
             res.render('admin/orderDetails', {
                 order,
                 title: 'Order Details',
-                layout: adminLayout,
+                layout: adminLayout
             });
         } catch (error) {
             console.error('Error in getOrderDetails:', error.message);
             res.status(500).send("Internal Server Error");
         }
     },
+    
+    
     
     
     
@@ -505,7 +510,7 @@ module.exports = {
                 await order.save();
     
                 // Optionally, send an email notification to the customer
-                await sendEmail(order.customerEmail, "Your cancellation request has been rejected", "Your order cancellation request has been rejected.");
+               
                 return res.status(200).json({ success: true, message: "Cancellation request rejected successfully." });
             } else {
                 return res.status(400).json({ success: false, message: "Invalid action." });
@@ -514,5 +519,71 @@ module.exports = {
             console.error(error);
             return res.status(500).json({ success: false, message: "An error occurred while updating the cancellation status." });
         }
-    }
+    },
+    updatePaymentStatus : async (req, res) => {
+        try {
+          const orderId = req.query.id;
+      
+          const order = await Order.findById(orderId).populate('paymentId');
+          if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+          }
+      
+          const payment = order.paymentId;
+          if (!payment) {
+            return res.status(404).json({ success: false, message: 'Payment not found' });
+          }
+      
+          // Toggle the payment status
+          payment.status = payment.status === 'pending' ? 'paid' : 'pending';
+          await payment.save(); // Save the updated payment status
+      
+          console.log(`Payment status updated to: ${payment.status}`); // Debug log to verify the change
+      
+          res.redirect('/admin/orderManagement');
+        } catch (error) {
+          console.error('Error updating payment status:', error);
+          res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+      },
+      
+      
+      // Controller to update order status and manage stock adjustments
+       updateStatus : async (req, res) => {
+        try {
+          const { status, orderId } = req.body;
+      
+          const order = await Order.findByIdAndUpdate(
+            orderId, 
+            { $set: { status: status } }, 
+            { new: true }
+          ).populate('products.productId'); // Populating product details
+      
+          if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+          }
+      
+          // If the order is marked as 'Delivered', decrease stock accordingly
+          if (status === 'Delivered') {
+            for (const item of order.products) {
+              const product = await Product.findById(item.productId);
+              if (product) {
+                const sizeObj = product.sizes.find(s => s.size === item.size);
+                if (sizeObj) {
+                  await Product.updateOne(
+                    { _id: item.productId, 'size.size': item.size },
+                    { $inc: { 'size.$.stock': -item.quantity } }
+                  );
+                }
+              }
+            }
+          }
+      
+          res.json({ success: true });
+        } catch (error) {
+          console.error('Error updating order status:', error.message);
+          res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+      },
+      
 }

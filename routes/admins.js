@@ -81,6 +81,7 @@ router.post('/:categoryId/categoryOffer', adminAuth.isLogin, categoryController.
 
 router.get('/salesReport', adminAuth.isLogin,adminController.SalesReport)
 
-
+router.get("/updatePaymentStatus",adminAuth.isLogin,adminController.updatePaymentStatus);
+router.post("/updateStatus",adminAuth.isLogin,adminController.updateStatus);
 
 module.exports = router;

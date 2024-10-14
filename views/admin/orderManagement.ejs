@@ -181,49 +181,57 @@ function cancelOrders() {
                   </tr>
                 </thead>
                 <tbody class="text-black">
-                  <% if (orders.length > 0) { %>
+                  <% if (Array.isArray(orders) && orders.length > 0) { %>
                     <% orders.forEach((order, index) => { %>
                       <tr>
                         <td><input class="form-check-input order-checkbox" type="checkbox" value="<%= order._id %>" id="flexCheckDefault"></td>
                         <td><%= index + 1 %></td>
                         <td><%= order.orderId %></td>
-                        <td><%= order.userId ? order.userId.username : 'Unknown' %></td>
-                        <td>₹<%= order.totalAmount.toFixed(2) %></td>
+                        <td><%= order.userId?.username || 'Unknown' %></td>
+                        <td>₹<%= order.totalAmount?.toFixed(2) || '0.00' %></td>
                         <td><%= order.paymentMethod %></td>
                         <td class="status">
-                          <% if (order.paymentStatus === 'pending') { %>
-                            <button class="btn btn-danger"><a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Pending</a></button>
+                          <% if (order.paymentId && order.paymentId.status === 'pending') { %> 
+                            <button class="btn btn-danger">
+                              <a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Pending</a>
+                            </button>
+                          <% } else if (order.paymentId && order.paymentId.status === 'paid') { %>
+                            <button class="btn btn-success" style="pointer-events: none;">
+                              <a class="text-light">Paid</a>
+                            </button>
                           <% } else { %>
-                            <button class="btn btn-success"><a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Paid</a></button>
+                            <button class="btn btn-warning" style="pointer-events: none;">
+                              <a class="text-light">Unknown</a>
+                            </button>
                           <% } %>
                         </td>
+                        
+                        
                         <td>
                           <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
-                              <%= order.status %>
-                              <% if (order.status === 'Cancellation Requested') { %>
-                                  <select id="changeStatus-<%= order._id %>" onchange="updateCancellationStatus('<%= order._id %>')">
-                                      <option value="changeStatus">Select Action</option>
-                                      <option value="Approve">Approve Cancellation</option>
-                                      <option value="Reject">Reject Cancellation</option>
-                                  </select>
-                              <% } else { %>
-                                  <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
-                                      <option value="changeStatus">Change Status</option>
-                                      <option value="Shipped">Shipped</option>
-                                      <option value="Out-For-Delivery">Out For Delivery</option>
-                                      <option value="Delivered">Delivered</option>
-                                      <option value="Cancelled">Cancel</option>
-                                  </select>
-                              <% } %>
+                            <%= order.status %>
+                            <% if (order.status === 'Cancellation Requested') { %>
+                              <select id="changeStatus-<%= order._id %>" onchange="updateCancellationStatus('<%= order._id %>')">
+                                <option value="changeStatus">Select Action</option>
+                                <option value="Approve">Approve Cancellation</option>
+                                <option value="Reject">Reject Cancellation</option>
+                              </select>
+                            <% } else { %>
+                              <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
+                                <option value="changeStatus">Change Status</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Out-For-Delivery">Out For Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancel</option>
+                              </select>
+                            <% } %>
                           <% } else { %>
-                              <%= order.status %>
+                            <%= order.status %>
                           <% } %>
-                      </td>
-                      
+                        </td>
                         <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
                         <td>
-                          <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">Details</a>
-                          </button>
+                          <button class="btn btn-info"><a href="/admin/orderDetails/<%= order._id %>" class="btn btn-info">Details</a></button>
                         </td>
                       </tr>
                     <% }) %>
@@ -233,6 +241,7 @@ function cancelOrders() {
                     </tr>
                   <% } %>
                 </tbody>
+                
               </table>
               <!-- Pagination Controls -->
 <ul class="pagination">

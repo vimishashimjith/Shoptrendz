@@ -12,9 +12,13 @@ const Address=require('../model/addressSchema')
 const Order=require('../model/orderSchema')
 const Category=require('../model/categorySchema')
 const WishList=require('../model/wishlistSchema')
-const Payment=require('../model/payment')
+const Payment=require('../model/paymentSchema')
 const Coupon=require('../model/couponSchema')
 const Wallet=require('../model/walletSchema')
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
+const moment = require('moment');
 const mongoose=require('mongoose')
 const { getTestError } = require("razorpay/dist/utils/razorpay-utils");
 const Razorpay = require("razorpay");
@@ -1246,7 +1250,7 @@ const paymentProcess = async(req,res)=>{
             const product = await Product.findById(item.productId);
             if (product) {
                 const productPrice = product.price;
-                const discount = productPrice - item.price; // Calculate discount
+                const discount = productPrice - item.price;
 
                 productsWithPricing.push({
                     productId: item.productId,
@@ -1261,15 +1265,12 @@ const paymentProcess = async(req,res)=>{
         // Define COD limit
         const codLimit = 1000;
 
-        // COD limit check before creating order
         if (paymentMethod === "COD" && total > codLimit) {
             return res.status(400).json({ success: false, message: `COD is not allowed for orders above Rs ${codLimit}.` });
         }
 
-        // Generate unique order ID
         const orderId = generateOrderId();
 
-        // Create order and payment only if the order is valid (passes COD check)
         const order = new Order({
             orderId: orderId,
             userId: userId,
@@ -1279,6 +1280,7 @@ const paymentProcess = async(req,res)=>{
             paymentMethod: paymentMethod,
             status: "Ordered",
         });
+
         await order.save();
 
         const payment = new Payment({
@@ -1289,44 +1291,57 @@ const paymentProcess = async(req,res)=>{
         });
         await payment.save();
 
-        // Handle COD payment
         if (paymentMethod === "COD") {
-            await Cart.deleteOne({ userId: userId }); // Clear cart after successful COD order
+            await Cart.deleteOne({ userId: userId });
             return res.json({ success: true, message: "Order placed successfully with COD" });
-        }
-
-        // Handle Razorpay payment
-        if (paymentMethod === "Razorpay") {
+        } else if (paymentMethod === "Razorpay") {
             const options = {
                 amount: total * 100,
                 currency: "INR",
                 receipt: payment._id.toString(),
-                notes: {
-                    orderId: orderId,
-                },
+                notes: { orderId: orderId },
             };
 
             razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
-                if (!err) {
-                    await Cart.deleteOne({ userId: userId }); // Clear cart after successful payment initiation
-                    res.status(200).json({
-                        success: true,
-                        message: "Razorpay order created successfully",
-                        order_id: razorpayOrder.id,
-                        amount: options.amount / 100,
-                        key_id: RAZORPAY_ID_KEY,
-                        contact: address.mobile,
-                        name: address.fullname,
-                        email: address.email,
-                        db_order_id: order._id,
-                    });
-                } else {
+                if (err) {
                     console.error("Error creating Razorpay order:", err);
-                    res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
+                    return res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
                 }
+                await Cart.deleteOne({ userId: userId });
+                res.status(200).json({
+                    success: true,
+                    message: "Razorpay order created successfully",
+                    order_id: razorpayOrder.id,
+                    amount: options.amount / 100,
+                    key_id: RAZORPAY_ID_KEY,
+                    contact: address.mobile,
+                    name: address.fullname,
+                    email: address.email,
+                    db_order_id: order._id,
+                });
+                payment.status = 'paid';
+                await payment.save();
             });
+        } else if (paymentMethod === "Wallet") {
+            const wallet = await Wallet.findOne({ userId: userId });
+            if (!wallet) {
+                return res.json({ success: false, message: 'No Wallet available now' });
+            }
+
+            if (wallet.amount >= total) {
+                wallet.amount -= total;
+                await wallet.save();
+
+                payment.status = 'paid';
+                await payment.save();
+
+                await Cart.deleteOne({ userId: userId });
+                return res.json({ success: true, message: "Order placed successfully with Wallet" });
+            } else {
+                return res.status(400).json({ success: false, message: "Insufficient wallet balance" });
+            }
         } else {
-            res.status(400).json({ success: false, message: "Invalid payment method selected" });
+            return res.status(400).json({ success: false, message: "Invalid payment method selected" });
         }
     } catch (error) {
         console.error("Error placing order:", error.message);
@@ -1533,6 +1548,7 @@ const wishlistLoad = async (req, res) => {
 };
 
 
+
 const searchProduct = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1731,7 +1747,103 @@ const validateCoupon = async (req, res,next) => {
       next(error)
     }
   };
+  const downloadInvoice = async (req, res) => {
+    try {
+        const order = await Order.findOne({ orderId: req.params.orderId })
+            .populate('products.productId')
+            .populate('addressId')
+            .exec();
 
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        // Generate PDF
+        const doc = new PDFDocument({ margin: 50 });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+
+        // Add invoice title
+        doc.fontSize(20).text('Invoice', { align: 'center' });
+        doc.moveDown();
+
+        // Add order details
+        doc.fontSize(12).text(`Order ID: ${order.orderId}`);
+        doc.text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`);
+        doc.text(`Payment Method: ${order.paymentMethod}`);
+        doc.moveDown();
+
+        // Shipping Charge
+        const shippingCharge = 100;
+        doc.text(`Shipping Charge: ${shippingCharge.toFixed(2)}`);
+        doc.moveDown();
+
+        // Draw Products Table Header
+        const tableTop = doc.y; // Get current vertical position
+        const tableWidth = 500; // Set table width
+        const columnWidths = [250, 100, 100]; // Column widths for Product Name, Quantity, and Size
+
+        // Draw table header
+        doc.fontSize(12).fillColor('white').rect(50, tableTop, tableWidth, 20).fill(); // Header background
+        doc.fillColor('black'); // Reset color for text
+        doc.text('Product Name', 50, tableTop + 5, { width: columnWidths[0], align: 'left' });
+        doc.text('Quantity', 300, tableTop + 5, { width: columnWidths[1], align: 'right' });
+        doc.text('Size', 400, tableTop + 5, { width: columnWidths[2], align: 'right' });
+
+        doc.moveDown();
+
+        // Draw a line below the header
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown();
+
+        // Add Products with attractive row styles
+        order.products.forEach((item, index) => {
+            const rowHeight = 20; // Height of each row
+            if (index % 2 === 0) {
+                // Light gray background for even rows
+                doc.fillColor('#f0f0f0').rect(50, doc.y, tableWidth, rowHeight).fill();
+                doc.fillColor('black'); // Reset color for text
+            } else {
+                // White background for odd rows
+                doc.fillColor('white').rect(50, doc.y, tableWidth, rowHeight).fill();
+                doc.fillColor('black'); // Reset color for text
+            }
+
+            doc.text(`${item.productId.name}`, 50, doc.y + 5, { width: columnWidths[0], align: 'left' });
+            doc.text(`${item.quantity}`, 300, doc.y + 5, { width: columnWidths[1], align: 'right' });
+            doc.text(`${item.size}`, 400, doc.y + 5, { width: columnWidths[2], align: 'right' });
+            doc.moveDown();
+        });
+
+        // Calculate total amount (sum of product prices)
+        const totalProductAmount = order.products.reduce((total, item) => {
+            return total + (item.productId.price * item.quantity);
+        }, 0);
+
+        // Calculate total amount with shipping
+        const totalAmountWithShipping = totalProductAmount + shippingCharge;
+
+        // Display Total Amount
+        doc.moveDown();
+        doc.text(`Total Amount: ${totalAmountWithShipping.toFixed(2)}`, { align: 'right' });
+
+        // Draw Shipping Address at the end
+        doc.moveDown();
+        doc.text('Shipping Address:', { underline: true });
+        if (order.addressId) {
+            doc.text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.pincode}`);
+        } else {
+            doc.text('No shipping address provided');
+        }
+
+        // Finalize the PDF and send it to the client
+        doc.pipe(res);
+        doc.end();
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).send('Server error');
+    }
+};
 
 module.exports = {
     loadRegister,
@@ -1776,6 +1888,10 @@ module.exports = {
     wishlistLoad,
     removeFromWishlist,
     validateCoupon,
-    returnOrder,requestCancellation
+    returnOrder,
+    requestCancellation,
+    downloadInvoice
+
+    
 
 };

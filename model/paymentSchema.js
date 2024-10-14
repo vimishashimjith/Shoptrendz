@@ -9,7 +9,7 @@ const paymentSchema = new mongoose.Schema({
     paymentMethod: {
         type: String,
         enum: ['COD', 'Card-Payment', 'Bank-transfer', 'PayPal', 'Razorpay', 'Wallet'],
-        required: true // Corrected 'require' to 'required'
+        required: true // Corrected 'require' to 'required
     },
     amount: {
         type: Number,

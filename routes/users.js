@@ -13,7 +13,9 @@ const {
     removeFromWishlist,
     validateCoupon,
     returnOrder,
-    requestCancellation
+    requestCancellation,
+    downloadInvoice
+
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -64,7 +66,7 @@ router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWish
 
 
 
-
+router.get('/downloadInvoice/:orderId', downloadInvoice);
 router.get('/orders', auth.isAuthenticated, orderLoad);
 
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
