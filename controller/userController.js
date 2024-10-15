@@ -402,10 +402,8 @@ const insertUser = async (req, res) => {
             const refferee = await User.findOne({ referralCode });
             if (refferee) {
                 const refereeWallet = await Wallet.findOne({ userId: refferee._id });
-                const referralBonus = 100;  // Referral bonus amount
+                const referralBonus = 100;  
                 refereeWallet.amount += referralBonus;
-        
-                // Add referral transaction to wallet
                 refereeWallet.transactions.push({
                     type: 'Referral',
                     amount: referralBonus,
@@ -1023,19 +1021,19 @@ const getUserDetails = async (req, res, next) => {
             wallet = new Wallet({ 
                 userId: user._id, 
                 amount: 0,
-                transactions: [] // Initialize as an empty array
+                transactions: [] 
             });
             await wallet.save();
         }
         
 
-        // No need to separately define amount if you're already getting the wallet object
+        
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
         ];
 
-        res.render('user/userDetails', { user, breadcrumbs, wallet }); // Pass the entire wallet object
+        res.render('user/userDetails', { user, breadcrumbs, wallet }); 
     } catch (error) {
         console.error('Error fetching user details:', error);
         res.status(500).redirect('/login'); 
@@ -1200,51 +1198,66 @@ const generateOrderId = () => {
 
 
 
-const paymentProcess = async(req,res)=>{
-    try{
-      const { paymentId, success,orderId } = req.body;
-      const userId =req.session.user_id 
-      const paymentStatus = success ? 'paid' : 'failed';
-      await Payment.findOneAndUpdate({orderId:orderId},{status:paymentStatus});
-      console.log('payment status change',success);
-      res.json({success:true});
-  } catch (error) {
-      console.error(`Error processing payment: ${error}`);
-      res.json({ success: false });
+const paymentProcess = async(req, res) => {
+    try {
+        const { paymentId, success, orderId } = req.body;
+        const userId = req.session.user_id; 
+        const paymentStatus = success ? 'paid' : 'failed';
+
+        
+        const payment = await Payment.findOneAndUpdate(
+            { orderId: orderId },
+            { status: paymentStatus },
+            { new: true }
+        );
+
+        
+        if (!payment) {
+            return res.status(404).json({ success: false, message: 'Payment not found' });
+        }
+
+       
+        await Order.findByIdAndUpdate(
+            orderId,
+            { paymentId: payment._id }, 
+            { new: true }
+        );
+
+        console.log('Payment status changed:', success);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(`Error processing payment: ${error}`);
+        res.json({ success: false });
     }
-  };
+};
+
   
 
 
-  const placeOrder = async (req, res) => {
+const placeOrder = async (req, res) => {
     try {
         const { addressId, paymentMethod, total } = req.body;
 
-        // Check if user is logged in
         if (!req.session.user_id) {
             return res.status(401).json({ success: false, message: "User not logged in" });
         }
 
         const userId = req.session.user_id;
 
-        // Validate user ID format
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ success: false, message: "Invalid user ID format" });
         }
 
-        // Validate address
         const address = await Address.findById(addressId);
         if (!address) {
             return res.status(404).render('404', { url: req.originalUrl, message: 'Address not valid', isLoggedIn: false, count: 0 });
         }
 
-        // Fetch user's cart
         const userCart = await Cart.findOne({ userId: userId });
         if (!userCart || !userCart.products || userCart.products.length === 0) {
             return res.status(400).json({ success: false, message: "User cart is empty" });
         }
 
-        // Process each product for order
         const productsWithPricing = [];
         for (const item of userCart.products) {
             const product = await Product.findById(item.productId);
@@ -1262,7 +1275,6 @@ const paymentProcess = async(req,res)=>{
             }
         }
 
-        // Define COD limit
         const codLimit = 1000;
 
         if (paymentMethod === "COD" && total > codLimit) {
@@ -1271,6 +1283,7 @@ const paymentProcess = async(req,res)=>{
 
         const orderId = generateOrderId();
 
+      
         const order = new Order({
             orderId: orderId,
             userId: userId,
@@ -1281,16 +1294,21 @@ const paymentProcess = async(req,res)=>{
             status: "Ordered",
         });
 
-        await order.save();
+        await order.save(); 
 
+      
         const payment = new Payment({
             orderId: order._id,
             paymentMethod: paymentMethod,
             amount: total,
             status: "pending",
         });
-        await payment.save();
+        await payment.save(); 
 
+       
+        order.paymentId = payment._id; 
+        await order.save(); 
+       
         if (paymentMethod === "COD") {
             await Cart.deleteOne({ userId: userId });
             return res.json({ success: true, message: "Order placed successfully with COD" });
@@ -1319,7 +1337,7 @@ const paymentProcess = async(req,res)=>{
                     email: address.email,
                     db_order_id: order._id,
                 });
-                payment.status = 'paid';
+                payment.status = 'paid'; 
                 await payment.save();
             });
         } else if (paymentMethod === "Wallet") {
@@ -1450,15 +1468,15 @@ const requestCancellation = async (req, res) => {
                 return res.status(404).json({ success: false, message: 'User not found.' });
             }
 
-            // Find or create the user's wallet
+            
             const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
 
-            // Credit the order total to the wallet
+            
             wallet.amount += order.totalAmount;
 
-            // Create a new transaction for the credit
+           
             wallet.transactions.push({
-                type: 'OrderRefund', // Or any relevant type for cancellations
+                type: 'OrderRefund', 
                 amount: order.totalAmount,
                 date: new Date(),
             });
@@ -1758,55 +1776,55 @@ const validateCoupon = async (req, res,next) => {
             return res.status(404).send('Order not found');
         }
 
-        // Generate PDF
+        
         const doc = new PDFDocument({ margin: 50 });
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
 
-        // Add invoice title
+       
         doc.fontSize(20).text('Invoice', { align: 'center' });
         doc.moveDown();
 
-        // Add order details
+        
         doc.fontSize(12).text(`Order ID: ${order.orderId}`);
         doc.text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`);
         doc.text(`Payment Method: ${order.paymentMethod}`);
         doc.moveDown();
 
-        // Shipping Charge
+        
         const shippingCharge = 100;
         doc.text(`Shipping Charge: ${shippingCharge.toFixed(2)}`);
         doc.moveDown();
 
-        // Draw Products Table Header
-        const tableTop = doc.y; // Get current vertical position
-        const tableWidth = 500; // Set table width
-        const columnWidths = [250, 100, 100]; // Column widths for Product Name, Quantity, and Size
+        
+        const tableTop = doc.y; 
+        const tableWidth = 500; 
+        const columnWidths = [250, 100, 100]; 
 
-        // Draw table header
-        doc.fontSize(12).fillColor('white').rect(50, tableTop, tableWidth, 20).fill(); // Header background
-        doc.fillColor('black'); // Reset color for text
+        
+        doc.fontSize(12).fillColor('white').rect(50, tableTop, tableWidth, 20).fill(); 
+        doc.fillColor('black'); 
         doc.text('Product Name', 50, tableTop + 5, { width: columnWidths[0], align: 'left' });
         doc.text('Quantity', 300, tableTop + 5, { width: columnWidths[1], align: 'right' });
         doc.text('Size', 400, tableTop + 5, { width: columnWidths[2], align: 'right' });
 
         doc.moveDown();
 
-        // Draw a line below the header
+        
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
 
-        // Add Products with attractive row styles
+       
         order.products.forEach((item, index) => {
-            const rowHeight = 20; // Height of each row
+            const rowHeight = 20; 
             if (index % 2 === 0) {
-                // Light gray background for even rows
+               
                 doc.fillColor('#f0f0f0').rect(50, doc.y, tableWidth, rowHeight).fill();
-                doc.fillColor('black'); // Reset color for text
+                doc.fillColor('black'); 
             } else {
-                // White background for odd rows
+               
                 doc.fillColor('white').rect(50, doc.y, tableWidth, rowHeight).fill();
-                doc.fillColor('black'); // Reset color for text
+                doc.fillColor('black'); 
             }
 
             doc.text(`${item.productId.name}`, 50, doc.y + 5, { width: columnWidths[0], align: 'left' });
@@ -1815,19 +1833,19 @@ const validateCoupon = async (req, res,next) => {
             doc.moveDown();
         });
 
-        // Calculate total amount (sum of product prices)
+       
         const totalProductAmount = order.products.reduce((total, item) => {
             return total + (item.productId.price * item.quantity);
         }, 0);
 
-        // Calculate total amount with shipping
+       
         const totalAmountWithShipping = totalProductAmount + shippingCharge;
 
-        // Display Total Amount
+       
         doc.moveDown();
         doc.text(`Total Amount: ${totalAmountWithShipping.toFixed(2)}`, { align: 'right' });
 
-        // Draw Shipping Address at the end
+      
         doc.moveDown();
         doc.text('Shipping Address:', { underline: true });
         if (order.addressId) {
@@ -1836,7 +1854,7 @@ const validateCoupon = async (req, res,next) => {
             doc.text('No shipping address provided');
         }
 
-        // Finalize the PDF and send it to the client
+      
         doc.pipe(res);
         doc.end();
     } catch (error) {

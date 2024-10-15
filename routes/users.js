@@ -7,14 +7,16 @@ const {
     viewCart, addToCart, checkoutLoad, addAddress, addAddressLoad, successGoogleLogin, errorlogin, updateCartQuantity, removeFromCart,
     showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails, editProfileLoad, editProfile, getChangePasswordPage,
     changePassword, placeOrder, orderLoad, resendOTP,
-    searchProduct, paymentProcess,
+    searchProduct, 
     addTowishlist,
     wishlistLoad,
     removeFromWishlist,
     validateCoupon,
     returnOrder,
     requestCancellation,
-    downloadInvoice
+    downloadInvoice,
+    paymentProcess
+ 
 
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
@@ -63,7 +65,7 @@ router.post('/addTowishlist', auth.isAuthenticated, addTowishlist);
 
 router.get('/wishlist',auth.isAuthenticated,wishlistLoad)
 router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWishlist);
-
+router.post('/payment-process',auth.isAuthenticated,paymentProcess);
 
 
 router.get('/downloadInvoice/:orderId', downloadInvoice);
@@ -71,8 +73,9 @@ router.get('/orders', auth.isAuthenticated, orderLoad);
 
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
-router.post('/paymentProcess',auth.isAuthenticated,paymentProcess)
+
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
+
 
 
 router.get('/success', successGoogleLogin);

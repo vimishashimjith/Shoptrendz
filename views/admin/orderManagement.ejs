@@ -204,6 +204,7 @@ function cancelOrders() {
                               <a class="text-light">Unknown</a>
                             </button>
                           <% } %>
+                          
                         </td>
                         
                         
@@ -218,12 +219,13 @@ function cancelOrders() {
                               </select>
                             <% } else { %>
                               <select id="changeStatus-<%= order._id %>" onchange="updateStatus('<%= order._id %>')">
-                                <option value="changeStatus">Change Status</option>
-                                <option value="Shipped">Shipped</option>
-                                <option value="Out-For-Delivery">Out For Delivery</option>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Cancelled">Cancel</option>
+                                <option value="changeStatus" disabled selected>Change Status</option>
+                                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                <option value="Out-For-Delivery" <%= order.status === 'Out-For-Delivery' ? 'selected' : '' %>>Out For Delivery</option>
+                                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancel</option>
                               </select>
+                              
                             <% } %>
                           <% } else { %>
                             <%= order.status %>

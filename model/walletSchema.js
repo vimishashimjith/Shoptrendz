@@ -15,7 +15,7 @@ const WalletSchema = new mongoose.Schema({
       {
         type: {
           type: String,
-          enum: ['Referral', 'OrderRefund'],  // Allowing specific types of transactions
+          enum: ['Referral', 'OrderRefund'], 
           required: true
         },
         amount: {

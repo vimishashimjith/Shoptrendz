@@ -67,6 +67,7 @@
                         
                             <% if (order.status === 'Delivered') { %>
                                 <button onclick="returnOrder('<%= order._id %>')" class="return-button">Return Order</button>
+
                                 <button onclick="downloadInvoice('<%= order.orderId %>')" class="download-button">Download Invoice</button>
    
                               
@@ -198,14 +199,13 @@
                 Swal.fire({
                     title: 'Request Cancellation',
                     html: `<select id="cancelReason" class="swal2-input">
-                            <option value="Wrong item">Wrong item</option>
-                            <option value="Damaged item">Damaged item</option>
+                           
                             <option value="Delayed delivery">Delayed delivery</option>
                             <option value="Changed my mind">Changed my mind</option>
                             <option value="Found a better price">Found a better price</option>
-                            <option value="Other">Other</option>
+                           
                            </select>
-                           <input id="cancelReasonOther" class="swal2-input" placeholder="Please specify other reason" style="display: none;">`,
+                        `,
                     preConfirm: () => {
                         const reasonSelect = document.getElementById('cancelReason');
                         let cancelReason = reasonSelect.value;
@@ -245,6 +245,47 @@
             }
         });
     }
+    function returnOrder(orderId) {
+    Swal.fire({
+        title: 'Return Order',
+        input: 'text',
+        inputLabel: 'Reason for return',
+        inputPlaceholder: 'Enter your return reason',
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Please provide a reason for the return!';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Send the return request to the server
+            fetch('/returnOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ orderId, reason: result.value }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        Swal.fire('Success', 'Your return request has been submitted.', 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch((error) => {
+                    Swal.fire('Error', 'An error occurred while submitting the return request.', 'error');
+                });
+        }
+    });
+}
+
     function downloadInvoice(orderId) {
     window.location.href = `/downloadInvoice/${orderId}`;
 }

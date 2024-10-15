@@ -4,21 +4,22 @@ const paymentSchema = new mongoose.Schema({
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order',
-        required: true // Corrected 'require' to 'required'
+        required: true 
     },
     paymentMethod: {
         type: String,
         enum: ['COD', 'Card-Payment', 'Bank-transfer', 'PayPal', 'Razorpay', 'Wallet'],
-        required: true // Corrected 'require' to 'required
+        required: true 
     },
     amount: {
         type: Number,
-        required: true // Corrected 'require' to 'required'
+        required: true 
     },
     status: {
         type: String,
         enum: ['pending', 'paid', 'failed'],
-        required: true // Corrected 'require' to 'required'
+        default: 'Pending',
+        required: true 
     },
 }, { timestamps: true });
 

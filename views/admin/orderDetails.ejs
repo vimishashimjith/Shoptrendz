@@ -50,9 +50,9 @@
                                 <p><strong>Order Date:</strong> <%= order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A' %></p>
                                 <p><strong>Total Amount:</strong> ₹<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></p>
                                 <p><strong>Payment Method:</strong> <%= order.paymentMethod || 'N/A' %></p>
-                                <p><strong>Payment Status:</strong> <%= order.paymentId && order.paymentId.status ? order.paymentId.status : 'N/A' %></p>
-                                <p><strong>Order Status:</strong> <%= order.status || 'N/A' %></p>
-                                
+                                <p><strong>Payment Status:</strong> 
+                                    <%= order.paymentId ? (order.paymentId.status || 'N/A') : 'N/A' %>
+                                </p>
                             </div>
                         </div>
                         

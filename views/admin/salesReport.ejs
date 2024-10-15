@@ -2,16 +2,15 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin</title>
-  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
-  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
-</head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin</title>
+    <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+    <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
 
-<body>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+8qG2t02PmG1cmo7o5tktzNdJ+v3I" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-2O3C9G0gK1g8Ahp5ybDd7jbD1Ibj0rPofPLZgJXFeGyRU0N4F4xPR8k8R9IY1RZR" crossorigin="anonymous">
 
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="../Admin/assets/libs/datatables/datatables.min.css" />
@@ -69,7 +68,8 @@
             margin-top: 20px;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             text-align: left;
             border: 1px solid #ddd;
@@ -126,10 +126,8 @@
 </head>
 
 <body>
-
     <!-- Content Start -->
-    <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-        data-sidebar-position="fixed" data-header-position="fixed">
+    <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
 
         <!-- Sidebar -->
         <%- include('../partials/admin/sidebar.ejs') %>
@@ -141,7 +139,6 @@
 
             <!-- Main Content -->
             <br>
-            
             <div class="container m-5">
                 <div class="report-header">
                     <!-- Custom Date Range Filter -->
@@ -164,8 +161,10 @@
 
                     <!-- Download Buttons -->
                     <div>
-                        <button class="btn btn-success" onclick="downloadReport('pdf')">Download PDF</button>
-                        <button class="btn btn-success" onclick="downloadReport('excel')">Download Excel</button>
+                        <div>
+                            <button class="btn btn-success" id="downloadPdf">Download PDF</button>
+                            <button class="btn btn-success" id="downloadExcel">Download Excel</button>
+                        </div>
                     </div>
                 </div>
 
@@ -173,7 +172,6 @@
                 <div class="sales-summary">
                     <h3>Total Sales: ₹<%= totalSales %></h3>
                     <h3>Total Orders: <%= totalOrders %></h3>
-                    
                 </div>
 
                 <!-- Orders Table -->
@@ -184,7 +182,6 @@
                             <th>Product Name</th>
                             <th>Quantity</th>
                             <th>Price</th>
-            
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -197,14 +194,13 @@
                                         <td><%= product.productId?.name %></td>
                                         <td><%= product.quantity %></td>
                                         <td> ₹<%= product.productId?.price %></td>
-                                       
                                         <td> ₹<%= orderItem.totalAmount %></td>
                                     </tr>
                                 <% }); %>
                             <% }); %>
                         <% } else { %>
                             <tr>
-                                <td colspan="6" class="no-orders">No orders found</td>
+                                <td colspan="5" class="no-orders">No orders found</td>
                             </tr>
                         <% } %>
                     </tbody>
@@ -225,23 +221,33 @@
             <!-- JavaScript for DataTable and report downloads -->
             <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
             <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script>
-                $(document).ready(function () {
-                    $('#example').DataTable({
-                        dom: 'Bfrtip',
-                        buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                // Define the necessary variables
+                let currentPage = 1; // Set the current page number
+                let limit = 10;      // Set the number of items per page
+                let search = '';     // Initialize the search query
+            
+                // Define the downloadReport function
+                function downloadReport(format) {
+                    const searchParams = new URLSearchParams({
+                        page: currentPage,
+                        limit: limit,
+                        search: search
                     });
+            
+                    window.location.href = `/admin/SalesReport?format=${format}&${searchParams.toString()}`;
+                }
+            
+                // Attach event listeners after DOM is ready
+                $(document).ready(function () {
+                    $('#downloadPdf').click(() => downloadReport('pdf'));
+                    $('#downloadExcel').click(() => downloadReport('excel'));
                 });
-               
-               
             </script>
         </div>
     </div>
     <!-- Content End -->
-    <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
-            <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
 </body>
 
 </html>

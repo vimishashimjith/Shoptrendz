@@ -160,43 +160,39 @@ module.exports = {
         }
     },
 
-    loadOrderManagementPage : async (req, res) => {
+    loadOrderManagementPage: async (req, res) => {
         try {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-              
-            
-            const page = parseInt(req.query.page, 8) || 1;
-            const limit = 8; 
-            const skip = (page - 1) * limit; 
     
-            
+            const page = parseInt(req.query.page, 10) || 1; 
+            const limit = 8;
+            const skip = (page - 1) * limit;
+    
             const totalOrders = await Order.countDocuments();
-    
-           
             const orders = await Order.find()
                 .populate('userId', 'username email')
                 .populate('addressId', 'street city zipcode')
+                .populate('paymentId', 'status')
                 .skip(skip)
                 .limit(limit);
     
-          
             const totalPages = Math.ceil(totalOrders / limit);
     
-            
-            res.render('admin/orderManagement', { 
-                title: 'Order Management', 
-                layout: adminLayout, 
+            res.render('admin/orderManagement', {
+                title: 'Order Management',
+                layout: adminLayout,
                 orders,
-                currentPage: page,          
-                totalPages: totalPages   
+                currentPage: page,
+                totalPages
             });
         } catch (error) {
             console.error('Error in loadOrderManagementPage:', error.message);
-            res.status(500).send("Internal Server Error");
+            res.status(500).send('Internal Server Error');
         }
     },
+    
     getOrderDetails: async (req, res) => {
         try {
             if (!req.session.adminId) {
@@ -212,13 +208,16 @@ module.exports = {
                     select: 'name price'
                 })
                 .populate('addressId', 'street city pincode')
-                .populate('paymentId', 'status paymentMethod');  // Only populate necessary fields
+                .populate('paymentId', 'status');
+    
+           
+            console.log('Order:', order);
     
             if (!order) {
                 return res.status(404).send("Order not found");
             }
     
-            // Log payment status to verify
+            
             console.log('Payment Status:', order.paymentId?.status);
     
             res.render('admin/orderDetails', {
@@ -232,12 +231,6 @@ module.exports = {
         }
     },
     
-    
-    
-    
-    
-    
-   
 
    updateOrderStatus : async (req, res) => {
         try {
@@ -356,7 +349,7 @@ module.exports = {
         }
     },
     addCouponLoad: (req, res) => {
-        // Render the add coupon page
+      
         if (!req.session.adminId) {
             return res.redirect('/admin/login');
         }
@@ -490,26 +483,26 @@ module.exports = {
         }
     
         try {
-            // Find the order by ID
+            
             const order = await Order.findById(orderId);
             
             if (!order) {
                 return res.status(404).json({ success: false, message: "Order not found." });
             }
     
-            // Handle action based on admin's choice
+           
             if (action === 'Approve') {
-                order.status = 'Cancelled'; // Update status to Cancelled
+                order.status = 'Cancelled'; 
                 await order.save();
     
-                // Optionally, send an email notification to the customer
+                
               
                 return res.status(200).json({ success: true, message: "Cancellation request approved successfully." });
             } else if (action === 'Reject') {
-                order.status = 'Active'; // Change back to Active or appropriate status
+                order.status = 'Active'; 
                 await order.save();
     
-                // Optionally, send an email notification to the customer
+                
                
                 return res.status(200).json({ success: true, message: "Cancellation request rejected successfully." });
             } else {
@@ -520,70 +513,68 @@ module.exports = {
             return res.status(500).json({ success: false, message: "An error occurred while updating the cancellation status." });
         }
     },
-    updatePaymentStatus : async (req, res) => {
+    updatePaymentStatus: async (req, res) => {
         try {
-          const orderId = req.query.id;
-      
-          const order = await Order.findById(orderId).populate('paymentId');
-          if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-          }
-      
-          const payment = order.paymentId;
-          if (!payment) {
-            return res.status(404).json({ success: false, message: 'Payment not found' });
-          }
-      
-          // Toggle the payment status
-          payment.status = payment.status === 'pending' ? 'paid' : 'pending';
-          await payment.save(); // Save the updated payment status
-      
-          console.log(`Payment status updated to: ${payment.status}`); // Debug log to verify the change
-      
-          res.redirect('/admin/orderManagement');
-        } catch (error) {
-          console.error('Error updating payment status:', error);
-          res.status(500).json({ success: false, message: 'Internal Server Error' });
-        }
-      },
-      
-      
-      // Controller to update order status and manage stock adjustments
-       updateStatus : async (req, res) => {
-        try {
-          const { status, orderId } = req.body;
-      
-          const order = await Order.findByIdAndUpdate(
-            orderId, 
-            { $set: { status: status } }, 
-            { new: true }
-          ).populate('products.productId'); // Populating product details
-      
-          if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-          }
-      
-          // If the order is marked as 'Delivered', decrease stock accordingly
-          if (status === 'Delivered') {
-            for (const item of order.products) {
-              const product = await Product.findById(item.productId);
-              if (product) {
-                const sizeObj = product.sizes.find(s => s.size === item.size);
-                if (sizeObj) {
-                  await Product.updateOne(
-                    { _id: item.productId, 'size.size': item.size },
-                    { $inc: { 'size.$.stock': -item.quantity } }
-                  );
-                }
-              }
+            const orderId = req.query.id;
+            const order = await Order.findById(orderId).populate('paymentId');
+    
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Order not found' });
             }
-          }
-      
-          res.json({ success: true });
+    
+            const payment = order.paymentId;
+            if (!payment) {
+                return res.status(404).json({ success: false, message: 'Payment not found' });
+            }
+    
+           
+            payment.status = payment.status === 'pending' ? 'paid' : 'pending';
+            await payment.save();
+    
+            console.log(`Payment status updated to: ${payment.status}`);
+            res.redirect('/admin/orderManagement');
         } catch (error) {
-          console.error('Error updating order status:', error.message);
-          res.status(500).json({ success: false, message: 'Internal Server Error' });
+            console.error('Error updating payment status:', error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
-      },
+    },
       
+      
+    
+    updateStatus: async (req, res) => {
+        try {
+            const { status, orderId } = req.body;
+    
+            const order = await Order.findByIdAndUpdate(
+                orderId, 
+                { $set: { status } }, 
+                { new: true }
+            ).populate('products.productId'); 
+    
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Order not found' });
+            }
+    
+            
+            if (status === 'Delivered') {
+                for (const item of order.products) {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        const sizeObj = product.sizes.find(s => s.size === item.size);
+                        if (sizeObj) {
+                            await Product.updateOne(
+                                { _id: item.productId, 'sizes.size': item.size },
+                                { $inc: { 'sizes.$.stock': -item.quantity } }
+                            );
+                        }
+                    }
+                }
+            }
+    
+            res.json({ success: true, message: 'Order status updated successfully' });
+        } catch (error) {
+            console.error('Error updating order status:', error.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },    
 }
