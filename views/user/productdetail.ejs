@@ -30,39 +30,72 @@
         
         <!-- Product Details Section -->
        <!-- Product Details Section -->
-<div class="col-lg-7 h-auto mb-30">
-    <div class="h-100 bg-light p-30">
-        <h3><%= product.name %></h3>
-        <h3 class="font-weight-semi-bold mb-4">₹<%= product.price %></h3>
-        <p class="mb-4"><%= product.description %></p>
-        <% if (product.sizes.some(size => size.stock > 0)) { %>
-            <p>Stocks Available</p>
-        <% } else { %>
-            <p class="text-danger">Out of Stock</p>
-        <% } %>
-        <!-- Size Selection -->
-        <div id="sizes-container" class="mb-3">
-            <label for="size">Size:</label>
-            <select id="size-select" name="sizes[0][size]" onchange="updateMaxQuantity()">
-                <% product.sizes.forEach(size => { %>
-                    <option value="<%= size.size %>" data-stock="<%= size.stock %>">
-                        <%= size.size %> (Available: <%= size.stock %>)
-                    </option>
-                <% }) %>
-            </select>
-        </div>
-
-        <!-- Quantity Selection -->
-        <div>
-            <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 50px; height: 40px; padding-left: 10px; font-size: 16px; margin-right: 1px;" required>
-            <button class="btn btn-primary px-3" onclick="addToCart('<%= product._id %>')">
-                <i class="fa fa-shopping-cart mr-1"></i> Add To Cart
-            </button>
-            <p id="stock-status" class="mt-2"></p>
+       <div class="col-lg-7 h-auto mb-30">
+        <div class="h-100 bg-light p-30">
+            <h3><%= product.name %></h3>
+    
+            <!-- Price and Offer Display -->
+            <div class="d-flex align-items-center mb-4">
+                <!-- Strikethrough Original Price if there is an Offer -->
+                <% if (product.isOnOffer) { %>
+                    <h5 class="text-muted me-3">
+                        <del>₹<%= product.price.toFixed(2) %></del>
+                    </h5>
+                <% } %>
+            
+                <!-- Display Final Price -->
+                <h3 class="text-danger fw-bold me-3">
+                    ₹<%= product.finalPrice %>
+                </h3>
+            
+                <!-- Show Offer Badge if any offer is applied -->
+                <% if (product.isOnOffer) { %>
+                    <span class="badge bg-success text-white fw-bold p-1">
+                        <%= product.offerType %>: Save <%= product.bestOffer %>% Off!
+                    </span>
+                <% } %>
+            </div>
+            
+    
+    
+            <p class="mb-4"><%= product.description %></p>
+    
+            <% if (product.sizes.some(size => size.stock > 0)) { %>
+                <p>Stocks Available</p>
+            <% } else { %>
+                <p class="text-danger">Out of Stock</p>
+            <% } %>
+    
+            <!-- Size Selection -->
+            <div id="sizes-container" class="mb-3">
+                <label for="size">Size:</label>
+                <select id="size-select" name="sizes[0][size]" onchange="updateMaxQuantity()">
+                    <% product.sizes.forEach(size => { %>
+                        <option value="<%= size.size %>" data-stock="<%= size.stock %>">
+                            <%= size.size %> (Available: <%= size.stock %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+    
+            <!-- Quantity Selection -->
+            <div>
+                <label for="quantity">Quantity:</label>
+                <input 
+                    type="number" id="quantity" name="quantity" min="1" value="1"
+                    style="width: 50px; height: 40px; padding-left: 10px; font-size: 16px; margin-right: 1px;" 
+                    required
+                >
+                <button class="btn btn-primary px-3" onclick="addToCart('<%= product._id %>')">
+                    <i class="fa fa-shopping-cart mr-1"></i> Add To Cart
+                </button>
+                <p id="stock-status" class="mt-2"></p>
+            </div>
         </div>
     </div>
-</div>
+    
+    
+    
 
     </div>
 </div>

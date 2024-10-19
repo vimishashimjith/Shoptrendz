@@ -43,7 +43,14 @@
                                     <% } %>
                                 </td>
                                 
-                                <td class="align-middle">₹<%= product.price %></td>
+                                <td class="align-middle">
+                                    <% if (product.offer > 0) { %>
+                                        <span style="text-decoration: line-through;">₹<%= product.price %></span> <br />
+                                        <strong>₹<%= (product.price - (product.price * product.offer) / 100).toFixed(2) %></strong>
+                                    <% } else { %>
+                                        ₹<%= product.price %>
+                                    <% } %>
+                                </td>
                                 <td class="align-middle">
                                     <div class="input-group quantity mx-auto" style="width: 100px;">
                                         <div class="input-group-btn">
@@ -59,7 +66,14 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="align-middle">₹<%= product.price * product.quantity %></td>
+                                <td class="align-middle">
+                                    <% 
+                                      const finalPrice = product.offer > 0 
+                                      ? (product.price - (product.price * product.offer) / 100) 
+                                      : product.price; 
+                                    %>
+                                    ₹<%= (finalPrice * product.quantity).toFixed(2) %>
+                                </td>
                                 <td class="align-middle">
                                     <button class="btn btn-sm btn-danger" onclick="removeFromCart('<%= product.productId._id %>')" aria-label="Remove item">
                                         <i class="fa fa-times"></i>
@@ -76,28 +90,19 @@
             </table>
         </div>
         <div class="col-lg-4">
-            <form class="mb-30" action="">
-                <div class="input-group">
-                    
-                    <div class="input-group-append">
-                       
-                    </div>
-                </div>
-            </form>
             <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Cart Summary</span></h5>
             <div class="bg-light p-30 mb-5">
                 <div class="border-bottom pb-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h6>Subtotal</h6>
-                        <h6>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.price * product.quantity), 0) : 0 %></h6>
+                        <h6>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.offer > 0 ? (product.price - (product.price * product.offer) / 100) * product.quantity : product.price * product.quantity), 0) : 0 %></h6>
                     </div>
 
                 </div>
                 <div class="pt-2">
                     <div class="d-flex justify-content-between mt-2">
                         <h5>Total</h5>
-                        <h5>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.price * product.quantity), 0) : 0 %></h5>
-
+                        <h5>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.offer > 0 ? (product.price - (product.price * product.offer) / 100) * product.quantity : product.price * product.quantity), 0) : 0 %></h5>
                     </div>
                     <button class="btn btn-block btn-primary font-weight-bold my-3 py-3" onclick="proceedToCheckout()">Proceed To Checkout</button>
                 </div>

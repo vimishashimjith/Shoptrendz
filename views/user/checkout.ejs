@@ -188,14 +188,20 @@
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="product-name"><%= item.productId.name %></p>
-                                <p>₹<%= (item.productId.price * item.quantity).toFixed(2) %></p>
+                                <% 
+                                    // Calculate the final price based on the offer
+                                    const finalPrice = item.productId.offer > 0 
+                                        ? (item.productId.price - (item.productId.price * item.productId.offer / 100)) * item.quantity 
+                                        : item.productId.price * item.quantity; 
+                                %>
+                                <p>₹<%= finalPrice.toFixed(2) %></p>
                             </div>
                         <% }) %>
                     <% } else { %>
                         <div class="text-center">Your cart is empty.</div>
                     <% } %>
                 </div>
-               
+                
                 <div class="border-bottom pt-3 pb-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h6>Subtotal</h6>
@@ -206,6 +212,7 @@
                         <h6>Shipping Charge</h6>
                         <h6 class="text-black" id="shippingChargeAmount">₹<%= shippingCharge.toFixed(2) %></h6>
                     </div>
+                
                     <div id="couponDiscountRow" class="d-flex justify-content-between mb-3" style="display:none;">
                         <h6>Discount</h6>
                         <h6 id="discountAmount"> 0%</h6>
@@ -218,6 +225,7 @@
                         </div>
                     </div>
                 </div>
+                
              
             <!-- Payment Method Section -->
             <div class="payment-method">

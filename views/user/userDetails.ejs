@@ -38,7 +38,7 @@
       
       <h2 style="color:#732fcc; font-weight: 600;"><%= user.name %></h2>
       <p class="lead text-muted"><%= user.email %></p>
-      
+      <p><strong>ReferralCode:</strong><%=user.referralCode%></p>
       <button class="btn btn-primary" style="padding: 10px 20px; margin-top: 20px;">
         <a href="/editProfile?id=<%= user._id %>" style="color: white; text-decoration: none;">Edit Profile</a>
       </button>
@@ -131,7 +131,7 @@
             <p><strong>Username:</strong> <%= user.username %></p>
             <p><strong>Email:</strong> <%= user.email %></p>
             <p><strong>Phone:</strong> <%= user.mobileno %></p>
-            
+        
             <a href="/changePassword" class="btn btn-secondary mt-3">Change Password</a>
           </div>
         </div>
