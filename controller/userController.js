@@ -1365,25 +1365,23 @@ const generateOrderId = () => {
 
 
 
-const paymentProcess = async(req, res) => {
+const paymentProcess = async (req, res) => {
     try {
         const { paymentId, success, orderId } = req.body;
         const userId = req.session.user_id; 
         const paymentStatus = success ? 'paid' : 'failed';
 
-        
         const payment = await Payment.findOneAndUpdate(
             { orderId: orderId },
             { status: paymentStatus },
             { new: true }
         );
 
-        
         if (!payment) {
             return res.status(404).json({ success: false, message: 'Payment not found' });
         }
 
-       
+        // Update order with paymentId regardless of success or failure
         await Order.findByIdAndUpdate(
             orderId,
             { paymentId: payment._id }, 
@@ -1450,7 +1448,6 @@ const placeOrder = async (req, res) => {
 
         const orderId = generateOrderId();
 
-      
         const order = new Order({
             orderId: orderId,
             userId: userId,
@@ -1461,21 +1458,19 @@ const placeOrder = async (req, res) => {
             status: "Ordered",
         });
 
-        await order.save(); 
+        await order.save();
 
-      
         const payment = new Payment({
             orderId: order._id,
             paymentMethod: paymentMethod,
             amount: total,
             status: "pending",
         });
-        await payment.save(); 
+        await payment.save();
 
-       
-        order.paymentId = payment._id; 
-        await order.save(); 
-       
+        order.paymentId = payment._id;
+        await order.save();
+
         if (paymentMethod === "COD") {
             await Cart.deleteOne({ userId: userId });
             return res.json({ success: true, message: "Order placed successfully with COD" });
@@ -1490,8 +1485,12 @@ const placeOrder = async (req, res) => {
             razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
                 if (err) {
                     console.error("Error creating Razorpay order:", err);
+                    
+                  
                     return res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
                 }
+
+             
                 await Cart.deleteOne({ userId: userId });
                 res.status(200).json({
                     success: true,
@@ -1504,8 +1503,6 @@ const placeOrder = async (req, res) => {
                     email: address.email,
                     db_order_id: order._id,
                 });
-                payment.status = 'paid'; 
-                await payment.save();
             });
         } else if (paymentMethod === "Wallet") {
             const wallet = await Wallet.findOne({ userId: userId });
@@ -1559,10 +1556,13 @@ const orderLoad = async (req, res) => {
 
         if (req.params.id) {
            
-            orders = await Order.find({ userId, orderId: req.params.id })
-                .populate('addressId', 'street city pincode')
-                .populate('products.productId', 'name')
-                .exec();
+            orders = await Order.find({ userId })
+            .populate('products.productId', 'name')
+            .populate('addressId', 'street city pincode')
+            
+            .skip(skip)
+            .limit(limit)
+            .exec();
 
             if (!orders || orders.length === 0) {
                 return res.status(404).render('error', {
@@ -1580,6 +1580,7 @@ const orderLoad = async (req, res) => {
             orders = await Order.find({ userId })
                 .populate('products.productId')
                 .populate('addressId')
+                .populate('paymentId', 'status')
                 .skip(skip)
                 .limit(limit)
                 .exec();

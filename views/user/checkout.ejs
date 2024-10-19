@@ -392,6 +392,32 @@
             });
         }
     }
+    function sendPaymentStatusToBackend(paymentId, success,orderId) {
+	console.log(orderId,'order id')
+    fetch('/process-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            paymentId: paymentId,
+            success: success,
+			orderId:orderId
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            swal("Error", "Failed to send payment status to backend.", "error");
+        }else{
+			console.log('Payment status updated successfully');
+		}
+    })
+    .catch(error => {
+        console.error('Error sending payment status:', error);
+        swal("Error", "An error occurred while sending payment status to backend.", "error");
+    });
+}
 
     // Function to handle order success
     function handleOrderSuccess(message, redirectUrl) {
@@ -405,6 +431,7 @@
         });
     }
 
+
     // Function to handle Razorpay success
     function handleRazorpaySuccess(response, orderId) {
         console.log('Razorpay Payment Success:', response); // Debug log
@@ -414,14 +441,24 @@
 
     // Function to handle Razorpay payment failure
     function handleRazorpayFailure(error, orderId) {
-        console.error('Razorpay Payment Failure:', error); // Debug log
-        Swal.fire({
-            icon: 'error',
-            title: 'Payment Failed',
-            text: 'Your payment failed. Please try again.'
-        });
-        // Optionally handle payment failure (e.g., cancel the order in the database)
-    }
+    console.error('Razorpay Payment Failure:', error); // Debug log to check the error details
+    handleOrderFailure("Payment failed. Please try again.", "/orders"); // Provide a relevant message and redirect URL
+}
+
+function handleOrderFailure(message, redirectUrl) {
+    console.log('Order Failure:', message); // Debug log for order failure message
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        confirmButtonText: 'Okay' // Optional: add a button text for better UX
+    }).then(() => {
+        if (redirectUrl) {
+            window.location.href = redirectUrl; // Redirect if a URL is provided
+        }
+    });
+}
+
     document.getElementById('couponButton').addEventListener('click', async () => {
     const couponCode = document.getElementById('couponCode').value;
 
