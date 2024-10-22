@@ -15,9 +15,7 @@ const {
     returnOrder,
     requestCancellation,
     downloadInvoice,
-    paymentProcess
  
-
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
@@ -65,7 +63,7 @@ router.post('/addTowishlist', auth.isAuthenticated, addTowishlist);
 
 router.get('/wishlist',auth.isAuthenticated,wishlistLoad)
 router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWishlist);
-router.post('/payment-process',auth.isAuthenticated,paymentProcess);
+
 
 
 router.get('/downloadInvoice/:orderId', downloadInvoice);
@@ -75,7 +73,6 @@ router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
 
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
-
 
 
 router.get('/success', successGoogleLogin);

@@ -176,8 +176,10 @@
                         <input type="text" id="couponCode" class="form-control border-0 p-4" placeholder="Coupon Code">
                         <div class="input-group-append">
                             <button id="couponButton" class="btn btn-primary">Apply Coupon</button>
+                            <button id="removeCouponButton" class="btn btn-danger" style="display: none;">Remove Coupon</button>
                         </div>
                     </div>
+                    
                 </form>
             <!-- Order Total Section -->
             <div class="order-total">
@@ -459,7 +461,9 @@ function handleOrderFailure(message, redirectUrl) {
     });
 }
 
-    document.getElementById('couponButton').addEventListener('click', async () => {
+let originalTotal; // Store the original total before applying the coupon
+
+document.getElementById('couponButton').addEventListener('click', async () => {
     const couponCode = document.getElementById('couponCode').value;
 
     if (!couponCode) {
@@ -470,6 +474,9 @@ function handleOrderFailure(message, redirectUrl) {
         });
         return;
     }
+
+    // Store the original total before applying the coupon
+    originalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
 
     try {
         const response = await fetch('/validateCoupon', {
@@ -486,7 +493,13 @@ function handleOrderFailure(message, redirectUrl) {
             // Update the UI with the discount amount
             document.getElementById('discountAmount').innerText = ` ${result.discountAmount}%`;
             document.getElementById('couponDiscountRow').style.display = 'flex';
+
+            // Update total
             updateTotal(result.discountAmount);
+
+            // Show the remove coupon button and hide the apply button
+            document.getElementById('removeCouponButton').style.display = 'inline-block';
+            document.getElementById('couponButton').style.display = 'none';
         } else {
             // Show error message
             Swal.fire({
@@ -507,18 +520,39 @@ function handleOrderFailure(message, redirectUrl) {
 
 // Function to update total after applying the coupon discount
 function updateTotal(discountPercentage) {
-    // Get the subtotal from the element
-    const subtotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
-    
+    // Get the original subtotal
+    const subtotal = originalTotal;
+
     // Calculate the discount amount based on the percentage
     const discountAmount = (subtotal * discountPercentage) / 100;
-    
+
     // Calculate the new total after applying the discount
     const newTotal = subtotal - discountAmount;
-    
+
     // Update the DOM with the new total
     document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
 }
+
+// Add an event listener for removing the coupon
+document.getElementById('removeCouponButton').addEventListener('click', () => {
+    // Restore the original total if the coupon is removed
+    if (originalTotal !== undefined) {
+        document.querySelector('#finalTotal h5:last-child').innerText = `₹${originalTotal.toFixed(2)}`;
+    }
+
+    // Hide the coupon discount row
+    document.getElementById('discountAmount').innerText = '';
+    document.getElementById('couponDiscountRow').style.display = 'none';
+
+    // Hide the remove coupon button and show the apply button again
+    document.getElementById('removeCouponButton').style.display = 'none';
+    document.getElementById('couponButton').style.display = 'inline-block';
+
+    // Clear the coupon code input
+    document.getElementById('couponCode').value = '';
+});
+
+
 
 </script>
 

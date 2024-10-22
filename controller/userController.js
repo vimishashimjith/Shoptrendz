@@ -1546,23 +1546,22 @@ const orderLoad = async (req, res) => {
             });
         }
 
-      
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 3; 
-        const skip = (page - 1) * limit; 
+        const limit = parseInt(req.query.limit) || 3;
+        const skip = (page - 1) * limit;
 
         let orders;
         let totalOrders = 0;
 
         if (req.params.id) {
-           
+            // Fetch specific orders
             orders = await Order.find({ userId })
-            .populate('products.productId', 'name')
-            .populate('addressId', 'street city pincode')
-            
-            .skip(skip)
-            .limit(limit)
-            .exec();
+                .populate('products.productId', 'name')
+                .populate('addressId', 'street city pincode')
+                .sort({ createdAt: -1 })  // Sort by createdAt in descending order
+                .skip(skip)
+                .limit(limit)
+                .exec();
 
             if (!orders || orders.length === 0) {
                 return res.status(404).render('error', {
@@ -1572,40 +1571,37 @@ const orderLoad = async (req, res) => {
                 });
             }
 
-            totalOrders = orders.length; 
+            totalOrders = orders.length;
         } else {
-          
-            totalOrders = await Order.countDocuments({ userId }); 
+            // Fetch all orders for the user
+            totalOrders = await Order.countDocuments({ userId });
 
             orders = await Order.find({ userId })
                 .populate('products.productId')
                 .populate('addressId')
                 .populate('paymentId', 'status')
+                .sort({ createdAt: -1 })  // Sort by createdAt in descending order
                 .skip(skip)
                 .limit(limit)
                 .exec();
         }
 
-        
         const totalPages = Math.ceil(totalOrders / limit);
 
         console.log('Fetched Orders:', orders);
 
-       
         const breadcrumbs = [
             { name: "Home", url: "/" },
             { name: "Profile", url: "/userDetails" },
             { name: "Orders", url: "/orders" }
         ];
 
-      
         res.render('user/orders', {
             orders,
             user,
             breadcrumbs,
             currentPage: page,
             totalPages: totalPages,
-            
         });
 
     } catch (error) {
@@ -1617,6 +1613,7 @@ const orderLoad = async (req, res) => {
         });
     }
 };
+
 
 const requestCancellation = async (req, res) => {
     const { orderId, reason } = req.body;
@@ -1933,103 +1930,118 @@ const validateCoupon = async (req, res,next) => {
       next(error)
     }
   };
-  const downloadInvoice = async (req, res) => {
+  const downloadInvoice = async (req, res, next) => {
     try {
         const order = await Order.findOne({ orderId: req.params.orderId })
-            .populate('products.productId')
-            .populate('addressId')
+            .populate('products.productId') // Ensure productId is populated
+            .populate('addressId') // Populating the address
             .exec();
 
         if (!order) {
             return res.status(404).send('Order not found');
         }
 
-        
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument();
+        res.setHeader('Content-Disposition', `attachment; filename=invoice_${order.orderId}.pdf`);
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+        doc.pipe(res);
 
+        // Invoice Header
+        doc.fontSize(20).text('Shoptrendz', { align: 'center' });
+        doc.fontSize(16).text('Shoptrendz', { align: 'center' });
+        doc.text('Shoptrendz | +012 345 67890 | shoptrendz@example.com', { align: 'center' });
+        doc.moveDown();
+        doc.moveDown();
        
-        doc.fontSize(20).text('Invoice', { align: 'center' });
         doc.moveDown();
 
-        
-        doc.fontSize(12).text(`Order ID: ${order.orderId}`);
-        doc.text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`);
-        doc.text(`Payment Method: ${order.paymentMethod}`);
+        // Invoice Details
+      
+        doc.moveDown();
+        doc.text(`Order Number: #ORD${order.orderId}`);
+        doc.text('Payment Status: Paid');
         doc.moveDown();
 
-        
-        const shippingCharge = 100;
-        doc.text(`Shipping Charge: ${shippingCharge.toFixed(2)}`);
+        // Bill To
+        doc.text('Bill To:', { underline: true });
+        doc.text(`${order.addressId.fullname}`);
+        doc.text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`);
+        doc.text(`${order.addressId.mobile || 'N/A'} | ${order.addressId.email || 'N/A'}`);
         doc.moveDown();
 
-        
-        const tableTop = doc.y; 
-        const tableWidth = 500; 
-        const columnWidths = [250, 100, 100]; 
+      
 
-        
-        doc.fontSize(12).fillColor('white').rect(50, tableTop, tableWidth, 20).fill(); 
-        doc.fillColor('black'); 
-        doc.text('Product Name', 50, tableTop + 5, { width: columnWidths[0], align: 'left' });
-        doc.text('Quantity', 300, tableTop + 5, { width: columnWidths[1], align: 'right' });
-        doc.text('Size', 400, tableTop + 5, { width: columnWidths[2], align: 'right' });
+        // Table Header for Products
+        const tableTop = 350;
+        const itemX = 50;
+        const quantityX = 200;
+        const priceX = 300;
+        const totalX = 400;
 
-        doc.moveDown();
+        doc.font('Helvetica-Bold');
+        doc.fontSize(12).text('Item', itemX, tableTop);
+        doc.text('Quantity', quantityX, tableTop);
+        doc.text('Unit Price (₹)', priceX, tableTop);
+        doc.text('Total (₹)', totalX, tableTop);
+        doc.moveTo(itemX, tableTop + 15).lineTo(totalX + 50, tableTop + 15).stroke();
 
-        
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-        doc.moveDown();
+        // Draw Products Table Rows
+        let yPosition = tableTop + 20;
 
-       
-        order.products.forEach((item, index) => {
-            const rowHeight = 20; 
-            if (index % 2 === 0) {
-               
-                doc.fillColor('#f0f0f0').rect(50, doc.y, tableWidth, rowHeight).fill();
-                doc.fillColor('black'); 
-            } else {
-               
-                doc.fillColor('white').rect(50, doc.y, tableWidth, rowHeight).fill();
-                doc.fillColor('black'); 
-            }
+        order.products.forEach(item => {
+            const product = item.productId; // Get product details
+            const quantity = item.quantity;
+            const price = product.price || 0; // Default to 0 if undefined
+            const total = price * quantity;
 
-            doc.text(`${item.productId.name}`, 50, doc.y + 5, { width: columnWidths[0], align: 'left' });
-            doc.text(`${item.quantity}`, 300, doc.y + 5, { width: columnWidths[1], align: 'right' });
-            doc.text(`${item.size}`, 400, doc.y + 5, { width: columnWidths[2], align: 'right' });
-            doc.moveDown();
+            doc.font('Helvetica');
+            doc.text(product.name || 'Unknown Item', itemX, yPosition);
+            doc.text(quantity.toString(), quantityX, yPosition);
+            doc.text(price.toFixed(2), priceX, yPosition);
+            doc.text(total.toFixed(2), totalX, yPosition);
+            yPosition += 20;
         });
 
-       
-        const totalProductAmount = order.products.reduce((total, item) => {
-            return total + (item.productId.price * item.quantity);
-        }, 0);
+        // Pricing Summary
+        doc.moveTo(itemX, yPosition + 10).lineTo(totalX + 50, yPosition + 10).stroke();
+        yPosition += 10;
 
-       
-        const totalAmountWithShipping = totalProductAmount + shippingCharge;
-
-       
-        doc.moveDown();
-        doc.text(`Total Amount: ${totalAmountWithShipping.toFixed(2)}`, { align: 'right' });
-
+        // Summary Details
+      // Adjusted totalX position for better visibility
+      const pageWidth = doc.page.width; // Get the width of the page
+      const textWidthOffset = 100; // Adjust this value based on the width of your text to center align
       
-        doc.moveDown();
-        doc.text('Shipping Address:', { underline: true });
-        if (order.addressId) {
-            doc.text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.pincode}`);
-        } else {
-            doc.text('No shipping address provided');
-        }
-
+      // Function to get centered x position for total values
+      const getCenterXPosition = (amountText) => {
+          const amountWidth = doc.widthOfString(amountText);
+          return (pageWidth - amountWidth) / 2; // Centering calculation
+      };
       
-        doc.pipe(res);
+      // Summary Details
+      doc.font('Helvetica-Bold').fontSize(12).text('Subtotal:', itemX, yPosition);
+      doc.text(`${(order.subtotal || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.subtotal || 0).toFixed(2)}`), yPosition, { align: 'center' });
+      yPosition += 20;
+      
+      doc.text('Discount:', itemX, yPosition);
+      doc.text(`- ${(order.discount || 0).toFixed(2)}`, getCenterXPosition(`- ₹${(order.discount || 0).toFixed(2)}`), yPosition, { align: 'center' });
+      yPosition += 20;
+      
+      doc.text('Shipping Charge:', itemX, yPosition);
+      doc.text(`${(order.shippingCharge || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.shippingCharge || 0).toFixed(2)}`), yPosition, { align: 'center' });
+      yPosition += 20;
+      
+      doc.font('Helvetica-Bold').fontSize(12).text('Total Amount:', itemX, yPosition);
+      doc.text(`${(order.totalAmount || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.totalAmount || 0).toFixed(2)}`), yPosition, { align: 'center' });
+      
+       
         doc.end();
     } catch (error) {
-        console.error('Error generating invoice:', error);
-        res.status(500).send('Server error');
+        console.error('Error generating PDF:', error);
+        next(error);
     }
 };
+
+
 
 module.exports = {
     loadRegister,

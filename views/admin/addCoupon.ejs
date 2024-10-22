@@ -62,33 +62,37 @@
               <div class="card-body">
                 <h6 class="card-title">Add New Coupon</h6>
                 <div class="bg-light p-4">
-                  <form action="" method="post">
+                  <form id="addCouponForm" action="" method="post">
                     <div class="mb-3">
                       <label for="code" class="form-label">Coupon Code</label>
-                      <input type="text" class="form-control" id="code" name="code" required>
+                      <input type="text" class="form-control" id="code" name="code" >
+                      <div id="codeError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                       <label for="type" class="form-label">Coupon Type</label>
-                      <input type="text" class="form-control" id="type" name="type" required>
+                      <input type="text" class="form-control" id="type" name="type" >
+                      <div id="typeError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="discount" class="form-label">Max Discount</label>
-                        <input type="number" class="form-control" id="maxDiscount" name="maxDiscount" required> <!-- Changed name to maxDiscount -->
-                      </div>
-                      
+                      <label for="discount" class="form-label">Max Discount</label>
+                      <input type="number" class="form-control" id="maxDiscount" name="maxDiscount" >
+                      <div id="maxDiscountError" class="text-danger"></div>
+                    </div>
                     <div class="mb-3">
                       <label for="description" class="form-label">Description</label>
-                      <input type="text" class="form-control" id="description" name="description" required>
+                      <input type="text" class="form-control" id="description" name="description" >
+                      <div id="descriptionError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                       <label for="limit" class="form-label">Limit</label>
-                      <input type="number" class="form-control" id="limit" name="limit" required>
+                      <input type="number" class="form-control" id="limit" name="limit" >
+                      <div id="limitError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="expired" class="form-label">Expiry Date</label>
-                        <input type="date" class="form-control" id="expiryDate" name="expiryDate" required> <!-- Changed name to expiryDate -->
-                      </div>
-                      
+                      <label for="expiryDate" class="form-label">Expiry Date</label>
+                      <input type="date" class="form-control" id="expiryDate" name="expiryDate" >
+                      <div id="expiryDateError" class="text-danger"></div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Add Coupon</button>
                   </form>
                 </div>
@@ -102,7 +106,89 @@
       </div>
     </div>
   </div>
-
+  <script>
+    document.getElementById('addCouponForm').addEventListener('submit', function (event) {
+      const code = document.getElementById('code').value.trim();
+      const type = document.getElementById('type').value.trim();
+      const maxDiscount = document.getElementById('maxDiscount').value;
+      const description = document.getElementById('description').value.trim();
+      const limit = document.getElementById('limit').value;
+      const expiryDate = document.getElementById('expiryDate').value;
+  
+      // Error div elements
+      const codeError = document.getElementById('codeError');
+      const typeError = document.getElementById('typeError');
+      const maxDiscountError = document.getElementById('maxDiscountError');
+      const descriptionError = document.getElementById('descriptionError');
+      const limitError = document.getElementById('limitError');
+      const expiryDateError = document.getElementById('expiryDateError');
+  
+      // Clear previous errors
+      codeError.innerHTML = '';
+      typeError.innerHTML = '';
+      maxDiscountError.innerHTML = '';
+      descriptionError.innerHTML = '';
+      limitError.innerHTML = '';
+      expiryDateError.innerHTML = '';
+  
+      let isValid = true;
+  
+      // Coupon Code Validation
+      if (!code) {
+        codeError.innerHTML = 'Coupon code is required.';
+        isValid = false;
+      } else if (code.length < 3 || code.length > 20) {
+        codeError.innerHTML = 'Coupon code must be between 3 and 20 characters.';
+        isValid = false;
+      }
+  
+      // Coupon Type Validation
+      if (!type) {
+        typeError.innerHTML = 'Coupon type is required.';
+        isValid = false;
+      } else if (!['percentage', 'fixed'].includes(type.toLowerCase())) {
+        typeError.innerHTML = 'Coupon type must be either "percentage" or "fixed".';
+        isValid = false;
+      }
+  
+      // Max Discount Validation
+      if (maxDiscount === '' || maxDiscount <= 0) {
+        maxDiscountError.innerHTML = 'Max discount must be a positive number.';
+        isValid = false;
+      }
+  
+      // Description Validation
+      if (!description) {
+        descriptionError.innerHTML = 'Description is required.';
+        isValid = false;
+      } else if (description.length < 5) {
+        descriptionError.innerHTML = 'Description must be at least 5 characters long.';
+        isValid = false;
+      }
+  
+      // Limit Validation
+      if (limit === '' || limit <= 0) {
+        limitError.innerHTML = 'Usage limit must be a positive number.';
+        isValid = false;
+      }
+  
+      // Expiry Date Validation
+      if (!expiryDate) {
+        expiryDateError.innerHTML = 'Expiry date is required.';
+        isValid = false;
+      } else {
+        const today = new Date().toISOString().split('T')[0];
+        if (expiryDate < today) {
+          expiryDateError.innerHTML = 'Expiry date cannot be in the past.';
+          isValid = false;
+        }
+      }
+  
+      if (!isValid) {
+        event.preventDefault(); // Prevent form submission if validation fails
+      }
+    });
+  </script>
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../Admin/assets/js/sidebarmenu.js"></script>
