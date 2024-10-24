@@ -33,7 +33,14 @@
                 </thead>
                 <tbody class="align-middle">
                     <% if (cart && cart.products.length > 0) { %>
-                        <% cart.products.forEach(product => { %>
+                        <% cart.products.forEach(product => { 
+                            // Calculate the best offer
+                            const categoryOffer = product.category?.offer || 0;
+                            const productOffer = product.offer || 0;
+                            const bestOffer = Math.max(categoryOffer, productOffer); // Choose the higher offer
+                            const discountAmount = (product.price * bestOffer) / 100;
+                            const finalPrice = product.price - discountAmount; // Calculate the final price after applying the best offer
+                        %>
                             <tr data-product-id="<%= product.productId._id %>" data-stock="<%= product.stock %>" data-size="<%= product.size %>">
                                 <td class="align-middle">
                                     <% if (product.images) { %>
@@ -43,39 +50,41 @@
                                     <% } %>
                                 </td>
                                 
+                                <!-- Price Section -->
                                 <td class="align-middle">
-                                    <% if (product.offer > 0) { %>
-                                        <span style="text-decoration: line-through;">₹<%= product.price %></span> <br />
-                                        <strong>₹<%= (product.price - (product.price * product.offer) / 100).toFixed(2) %></strong>
+                                    <% if (bestOffer > 0) { %>
+                                        <span style="text-decoration: line-through;">₹<%= product.price.toFixed(2) %></span> <br />
+                                        <strong>₹<%= finalPrice.toFixed(2) %></strong>
                                     <% } else { %>
-                                        ₹<%= product.price %>
+                                        ₹<%= product.price.toFixed(2) %>
                                     <% } %>
                                 </td>
+                
+                                <!-- Quantity Section -->
                                 <td class="align-middle">
                                     <div class="input-group quantity mx-auto" style="width: 100px;">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-primary btn-minus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', -1)" aria-label="Decrease quantity">
+                                            <button class="btn btn-sm btn-primary btn-minus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', -1)">
                                                 <i class="fa fa-minus"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm bg-secondary border-0 text-center" value="<%= product.quantity %>" readonly aria-label="Quantity">
+                                        <input type="text" class="form-control form-control-sm bg-secondary border-0 text-center" value="<%= product.quantity %>" readonly>
                                         <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-primary btn-plus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', 1)" aria-label="Increase quantity">
+                                            <button class="btn btn-sm btn-primary btn-plus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', 1)">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </td>
+                
+                                <!-- Total Price -->
                                 <td class="align-middle">
-                                    <% 
-                                      const finalPrice = product.offer > 0 
-                                      ? (product.price - (product.price * product.offer) / 100) 
-                                      : product.price; 
-                                    %>
                                     ₹<%= (finalPrice * product.quantity).toFixed(2) %>
                                 </td>
+                
+                                <!-- Remove Button -->
                                 <td class="align-middle">
-                                    <button class="btn btn-sm btn-danger" onclick="removeFromCart('<%= product.productId._id %>')" aria-label="Remove item">
+                                    <button class="btn btn-sm btn-danger" onclick="removeFromCart('<%= product.productId._id %>')">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </td>
@@ -87,6 +96,7 @@
                         </tr>
                     <% } %>
                 </tbody>
+                
             </table>
         </div>
         <div class="col-lg-4">
@@ -102,10 +112,19 @@
                 <div class="pt-2">
                     <div class="d-flex justify-content-between mt-2">
                         <h5>Total</h5>
-                        <h5>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.offer > 0 ? (product.price - (product.price * product.offer) / 100) * product.quantity : product.price * product.quantity), 0) : 0 %></h5>
+                        <h5>
+                            ₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => {
+                                const categoryOffer = product.category?.offer || 0;
+                                const productOffer = product.offer || 0;
+                                const bestOffer = Math.max(categoryOffer, productOffer);
+                                const finalPrice = product.price - (product.price * bestOffer) / 100;
+                                return total + (finalPrice * product.quantity);
+                            }, 0).toFixed(2) : 0 %>
+                        </h5>
                     </div>
                     <button class="btn btn-block btn-primary font-weight-bold my-3 py-3" onclick="proceedToCheckout()">Proceed To Checkout</button>
                 </div>
+                
             </div>
         </div>
         <!-- Cart End -->

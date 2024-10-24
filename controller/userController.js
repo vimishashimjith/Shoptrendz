@@ -776,18 +776,25 @@ const addToCart = async (req, res) => {
             return res.status(400).json({ message: 'Size and valid quantity are required' });
         }
 
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productId).populate('category');
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Determine if product is on offer
+        // Get current date for offer comparison
         const today = new Date();
         let finalPrice = product.price;
 
-        if (product.offer > 0 && today >= product.offerStart && today <= product.offerEnd) {
-            finalPrice = product.price - (product.price * product.offer) / 100;
-        }
+        // Calculate the offer price for product-based offers
+        const productOfferValid = product.offer > 0 && today >= product.offerStart && today <= product.offerEnd;
+        const productOfferPrice = productOfferValid ? product.price - (product.price * product.offer) / 100 : product.price;
+
+        // Calculate category-based offer if applicable
+        const categoryOfferValid = product.category?.offer > 0;
+        const categoryOfferPrice = categoryOfferValid ? product.price - (product.price * product.category.offer) / 100 : product.price;
+
+        // Use the best offer (lower price)
+        finalPrice = Math.min(productOfferPrice, categoryOfferPrice);
 
         const selectedSize = product.sizes.find(s => s.size === size);
         if (!selectedSize) {
@@ -821,6 +828,7 @@ const addToCart = async (req, res) => {
 
         if (productIndex > -1) {
             cart.products[productIndex].quantity = totalQuantity;
+            cart.products[productIndex].price = finalPrice; // Update price to reflect best offer
         } else {
             const productImage = product.images.length > 0 ? product.images[0].url : '';
             cart.products.push({
@@ -858,6 +866,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Error adding product to cart' });
     }
 };
+
 
 
 
@@ -1007,13 +1016,11 @@ const forgetLoad = async (req, res) => {
     }
 };
 
-
-
 const checkoutLoad = async (req, res) => {
     try {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
-        
+
         if (!userId) {
             return res.status(401).render('error', {
                 url: req.originalUrl,
@@ -1023,7 +1030,7 @@ const checkoutLoad = async (req, res) => {
         }
 
         let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
-        
+
         if (!userCart) {
             return res.status(404).render('error', {
                 url: req.originalUrl,
@@ -1032,21 +1039,55 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Calculate subtotal considering the offer
-        const subtotal = userCart.products.reduce((total, item) => {
-            const itemPrice = item.productId.offer > 0 
-                ? (item.productId.price - (item.productId.price * item.productId.offer / 100)) * item.quantity 
-                : item.productId.price * item.quantity; 
-            return total + itemPrice;
+        const today = new Date();
+
+        // Calculate subtotal with the best available offer
+        const subtotal = userCart.products.reduce((total, product) => {
+            let finalPrice = product.productId.price;
+            let bestOffer = 0;
+            let offerType = ''; // Track the offer type applied
+
+            // Helper function to calculate discount
+            const calculateDiscount = (price, discount) => (price * discount) / 100;
+
+            // Check for valid product offer
+            if (product.productId.offer > 0 && today >= new Date(product.productId.offerStart) && today <= new Date(product.productId.offerEnd)) {
+                const productDiscount = calculateDiscount(product.productId.price, product.productId.offer);
+                finalPrice = product.productId.price - productDiscount;
+                bestOffer = product.productId.offer;
+                offerType = 'Product Offer'; // Store the applied offer type
+            }
+
+            // Check if category offer is valid and better than product offer
+            const category = product.productId.category;
+            if (
+                category &&
+                category.offer > 0 &&
+                today >= new Date(category.offerStart) &&
+                today <= new Date(category.offerEnd) &&
+                category.offer > bestOffer
+            ) {
+                const categoryDiscount = calculateDiscount(product.productId.price, category.offer);
+                finalPrice = product.productId.price - categoryDiscount;
+                bestOffer = category.offer;
+                offerType = 'Category Offer'; // Store the applied offer type
+            }
+
+            // Store final price and offer type in the product item for rendering in EJS
+            product.finalPrice = finalPrice;
+            product.offerType = offerType;
+
+            const productTotal = finalPrice * product.quantity;
+
+            return total + productTotal;
         }, 0);
 
-        const shippingCharge = 100;  
-        
-        // Calculate the total including shipping charge
-        const total = subtotal + shippingCharge;  
+        const shippingCharge = 100; // You can modify the logic for dynamic shipping if needed
+
+        const total = subtotal + shippingCharge;
 
         const addresses = await Address.find({ user: userId });
-        
+
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Shop', url: '/shop' },
@@ -1054,14 +1095,15 @@ const checkoutLoad = async (req, res) => {
             { name: 'Checkout', url: '/checkout' }
         ];
 
+        // Render checkout page with data
         res.render('user/checkout', {
             cart: userCart,
+            subtotal,
+            shippingCharge,
             total,
             addresses,
             user,
-            breadcrumbs,
-            subtotal,
-            shippingCharge  
+            breadcrumbs
         });
 
         console.log('Cart data:', userCart);
@@ -1070,6 +1112,7 @@ const checkoutLoad = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 const forgetVerify = async (req, res) => {
@@ -1947,94 +1990,91 @@ const validateCoupon = async (req, res,next) => {
         doc.pipe(res);
 
         // Invoice Header
-        doc.fontSize(20).text('Shoptrendz', { align: 'center' });
-        doc.fontSize(16).text('Shoptrendz', { align: 'center' });
+        doc.fontSize(15).text('Shoptrendz', { align: 'center' });
         doc.text('Shoptrendz | +012 345 67890 | shoptrendz@example.com', { align: 'center' });
-        doc.moveDown();
-        doc.moveDown();
-       
-        doc.moveDown();
+        doc.moveDown().moveDown(); // Add some space after the header
 
-        // Invoice Details
-      
-        doc.moveDown();
-        doc.text(`Order Number: #ORD${order.orderId}`);
-        doc.text('Payment Status: Paid');
-        doc.moveDown();
+        // Define X positions for the left (Bill To) and right (Order Number) sections
+        const leftX = 50; // X position for left-aligned content (Bill To)
+        const rightX = 350; // X position for right-aligned content (Order Number)
 
-        // Bill To
-        doc.text('Bill To:', { underline: true });
-        doc.text(`${order.addressId.fullname}`);
-        doc.text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`);
-        doc.text(`${order.addressId.mobile || 'N/A'} | ${order.addressId.email || 'N/A'}`);
-        doc.moveDown();
+        // Set Y position for both sections to be on the same row
+        const detailsY = 150; // Y position for both sections (same line)
 
-      
+        // Bill To section on the left
+      // Bill To section on the left
+doc.fontSize(12).text('Bill To:', leftX, detailsY, { underline: true }); // Adjusted font size
+doc.fontSize(12).text(`${order.addressId.fullname}`, leftX, detailsY + 20); // Adjusted font size
+doc.fontSize(12).text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`, leftX, detailsY + 40); // Adjusted font size
+doc.fontSize(12).text(`${order.addressId.mobile || 'N/A'}`, leftX, detailsY + 60); // Adjusted font size
+doc.moveDown();
 
-        // Table Header for Products
-        const tableTop = 350;
-        const itemX = 50;
-        const quantityX = 200;
-        const priceX = 300;
-        const totalX = 400;
+// Order Number and Payment Status on the right (same row)
+doc.fontSize(12).text(`Order Number: ${order.orderId}`, rightX, detailsY, { align: 'right' }); // Adjusted font size
+doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'right' }); // Adjusted font size
 
+        const tableTop = 260;
+        const itemX = 50; // Further shifted left
+        const quantityX = 180; // Further shifted left
+        const priceX = 340; // Further shifted left
+        const totalX = 490; // Further shifted left
+        
         doc.font('Helvetica-Bold');
         doc.fontSize(12).text('Item', itemX, tableTop);
         doc.text('Quantity', quantityX, tableTop);
         doc.text('Unit Price (₹)', priceX, tableTop);
         doc.text('Total (₹)', totalX, tableTop);
         doc.moveTo(itemX, tableTop + 15).lineTo(totalX + 50, tableTop + 15).stroke();
-
+        
         // Draw Products Table Rows
         let yPosition = tableTop + 20;
-
+        let subtotal = 0; // Subtotal will store the sum of products' total prices
+        
         order.products.forEach(item => {
             const product = item.productId; // Get product details
             const quantity = item.quantity;
             const price = product.price || 0; // Default to 0 if undefined
             const total = price * quantity;
-
+        
+            // Adding each product's total to the subtotal
+            subtotal += total;
+        
             doc.font('Helvetica');
             doc.text(product.name || 'Unknown Item', itemX, yPosition);
             doc.text(quantity.toString(), quantityX, yPosition);
             doc.text(price.toFixed(2), priceX, yPosition);
             doc.text(total.toFixed(2), totalX, yPosition);
-            yPosition += 20;
+            yPosition += 30; // Move down for the next row
         });
-
+        
         // Pricing Summary
         doc.moveTo(itemX, yPosition + 10).lineTo(totalX + 50, yPosition + 10).stroke();
-        yPosition += 10;
-
+        yPosition += 30;
+        
+        const discount = order.discount || 0; // Default discount to 0 if not present
+        const shippingCharge = 100; // Fixed shipping charge
+        
         // Summary Details
-      // Adjusted totalX position for better visibility
-      const pageWidth = doc.page.width; // Get the width of the page
-      const textWidthOffset = 100; // Adjust this value based on the width of your text to center align
-      
-      // Function to get centered x position for total values
-      const getCenterXPosition = (amountText) => {
-          const amountWidth = doc.widthOfString(amountText);
-          return (pageWidth - amountWidth) / 2; // Centering calculation
-      };
-      
-      // Summary Details
-      doc.font('Helvetica-Bold').fontSize(12).text('Subtotal:', itemX, yPosition);
-      doc.text(`${(order.subtotal || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.subtotal || 0).toFixed(2)}`), yPosition, { align: 'center' });
-      yPosition += 20;
-      
-      doc.text('Discount:', itemX, yPosition);
-      doc.text(`- ${(order.discount || 0).toFixed(2)}`, getCenterXPosition(`- ₹${(order.discount || 0).toFixed(2)}`), yPosition, { align: 'center' });
-      yPosition += 20;
-      
-      doc.text('Shipping Charge:', itemX, yPosition);
-      doc.text(`${(order.shippingCharge || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.shippingCharge || 0).toFixed(2)}`), yPosition, { align: 'center' });
-      yPosition += 20;
-      
-      doc.font('Helvetica-Bold').fontSize(12).text('Total Amount:', itemX, yPosition);
-      doc.text(`${(order.totalAmount || 0).toFixed(2)}`, getCenterXPosition(`₹${(order.totalAmount || 0).toFixed(2)}`), yPosition, { align: 'center' });
-      
-       
+        doc.font('Helvetica-Bold').fontSize(12).text('Subtotal:', itemX, yPosition);
+        doc.text(`${subtotal.toFixed(2)}`, totalX, yPosition);
+        yPosition += 30;
+        
+        doc.font('Helvetica').fontSize(12).text('Discount:', itemX, yPosition);
+        doc.text(` ${discount.toFixed(2)}`, totalX, yPosition);
+        yPosition += 30;
+        
+        doc.font('Helvetica').fontSize(12).text('Shipping Charge:', itemX, yPosition);
+        doc.text(`${shippingCharge.toFixed(2)}`, totalX, yPosition);
+        yPosition += 30;
+        
+        const totalAmount = subtotal - discount + shippingCharge; // Total amount calculation
+        
+        doc.font('Helvetica-Bold').fontSize(12).text('Total Amount:', itemX, yPosition);
+        doc.text(`${totalAmount.toFixed(2)}`, totalX, yPosition);
+        
         doc.end();
+
+       
     } catch (error) {
         console.error('Error generating PDF:', error);
         next(error);

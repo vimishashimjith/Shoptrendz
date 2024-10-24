@@ -183,83 +183,87 @@
                 </form>
             <!-- Order Total Section -->
             <div class="order-total">
-                
+                <!-- Products Section -->
                 <div class="border-bottom pb-3">
                     <h6 class="mb-3">Products</h6>
                     <% if (cart && cart.products.length > 0) { %>
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="product-name"><%= item.productId.name %></p>
-                                <% 
-                                    // Calculate the final price based on the offer
-                                    const finalPrice = item.productId.offer > 0 
-                                        ? (item.productId.price - (item.productId.price * item.productId.offer / 100)) * item.quantity 
-                                        : item.productId.price * item.quantity; 
-                                %>
-                                <p>₹<%= finalPrice.toFixed(2) %></p>
+                                <p>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></p>
                             </div>
+                            <% if (item.offerType) { %>  <!-- Check if there's an offer applied -->
+                                <div class="text-muted">
+                                    <small><%= item.offerType %></small>
+                                </div>
+                            <% } %>
                         <% }) %>
                     <% } else { %>
                         <div class="text-center">Your cart is empty.</div>
                     <% } %>
                 </div>
-                
+            
+                <!-- Subtotal, Shipping, and Total Calculation -->
                 <div class="border-bottom pt-3 pb-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h6>Subtotal</h6>
-                        <h6>₹<%= subtotal.toFixed(2) %></h6>
+                        <h6>₹<%= subtotal.toFixed(2) %></h6> <!-- Displaying the calculated subtotal -->
                     </div>
-                
-                    <div class="d-flex justify-content-between mb-3" id="shippingChargeRow" style="display: none;">
+                    <div class="d-flex justify-content-between mb-3" id="shippingChargeRow">
                         <h6>Shipping Charge</h6>
-                        <h6 class="text-black" id="shippingChargeAmount">₹<%= shippingCharge.toFixed(2) %></h6>
+                        <h6 class="text-black" id="shippingChargeAmount">₹<%= shippingCharge.toFixed(2) %></h6> <!-- Shipping charge -->
                     </div>
-                
                     <div id="couponDiscountRow" class="d-flex justify-content-between mb-3" style="display:none;">
                         <h6>Discount</h6>
-                        <h6 id="discountAmount"> 0%</h6>
+                        <h6 id="discountAmount">0%</h6>
                     </div>
-                
                     <div class="pt-2">
                         <div class="d-flex justify-content-between mt-2" id="finalTotal">
                             <h5>Total</h5>
-                            <h5>₹<%= total.toFixed(2) %></h5>
+                            <h5>₹<%= total.toFixed(2) %></h5> <!-- Final total with subtotal and shipping included -->
                         </div>
                     </div>
                 </div>
-                
-             
-            <!-- Payment Method Section -->
-            <div class="payment-method">
-                <h5 class="section-title position-relative text-uppercase mb-3">
-                    <span class="bg-secondary pr-3">Payment</span>
-                </h5>
-                <div class="bg-light p-30">
-                    <div class="form-group">
-                        <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="cashondelivery" value="COD">
-                            <label class="custom-control-label" for="cashondelivery">Cash On Delivery</label>
+            
+                <!-- Payment Method Section -->
+                <div class="payment-method">
+                    <h5 class="section-title position-relative text-uppercase mb-3">
+                        <span class="bg-secondary pr-3">Payment</span>
+                    </h5>
+                    <div class="bg-light p-30">
+                        <!-- Cash on Delivery Option -->
+                        <div class="form-group">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" name="payment" id="cashondelivery" value="COD">
+                                <label class="custom-control-label" for="cashondelivery">Cash On Delivery</label>
+                            </div>
+                        </div>
+            
+                        <!-- Razorpay Option -->
+                        <div class="form-group mb-4">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" name="payment" id="razorpay" value="Razorpay">
+                                <label class="custom-control-label" for="razorpay">Razorpay</label>
+                            </div>
+                        </div>
+            
+                        <!-- Wallet Option -->
+                        <div class="form-group mb-4">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" name="payment" id="wallet" value="Wallet">
+                                <label class="custom-control-label" for="wallet">Wallet</label>
+                            </div>
                         </div>
                     </div>
-                
-                    <div class="form-group mb-4">
-                        <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="razorpay" value="Razorpay">
-                            <label class="custom-control-label" for="razorpay">Razorpay</label>
-                        </div>
-                    </div>
-                
-                    <div class="form-group mb-4">
-                        <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="wallet" value="Wallet">
-                            <label class="custom-control-label" for="wallet">Wallet</label>
-                        </div>
-                    </div>
-                </div>
-                
+            
+                    <!-- Place Order Button -->
                     <button class="btn btn-block btn-primary font-weight-bold py-3" onclick="placeOrder()">Place Order</button>
                 </div>
             </div>
+            
+            
+            
+
         </div>
     </div>
 </div>
@@ -541,7 +545,7 @@ document.getElementById('removeCouponButton').addEventListener('click', () => {
     }
 
     // Hide the coupon discount row
-    document.getElementById('discountAmount').innerText = '';
+    document.getElementById('discountAmount').innerText = 'none';
     document.getElementById('couponDiscountRow').style.display = 'none';
 
     // Hide the remove coupon button and show the apply button again
