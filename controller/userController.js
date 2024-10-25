@@ -1029,7 +1029,16 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        let userCart = await Cart.findOne({ userId, active: true }).populate('products.productId').lean();
+        // Fetch active cart of the user, populating the products and their categories
+        let userCart = await Cart.findOne({ userId, active: true })
+            .populate({
+                path: 'products.productId',
+                populate: {
+                    path: 'category', // Populate the category details of each product
+                    model: 'Category'
+                }
+            })
+            .lean();
 
         if (!userCart) {
             return res.status(404).render('error', {
@@ -1041,52 +1050,60 @@ const checkoutLoad = async (req, res) => {
 
         const today = new Date();
 
+        // Helper function to calculate discount amount
+        const calculateDiscount = (price, discount) => (price * discount) / 100;
+
         // Calculate subtotal with the best available offer
         const subtotal = userCart.products.reduce((total, product) => {
-            let finalPrice = product.productId.price;
-            let bestOffer = 0;
-            let offerType = ''; // Track the offer type applied
+            let productPrice = product.productId.price; // Base price of the product
+            let bestDiscountAmount = 0; // Best discount in terms of money saved
+            let bestOfferType = ''; // Track which offer is applied
 
-            // Helper function to calculate discount
-            const calculateDiscount = (price, discount) => (price * discount) / 100;
-
-            // Check for valid product offer
-            if (product.productId.offer > 0 && today >= new Date(product.productId.offerStart) && today <= new Date(product.productId.offerEnd)) {
-                const productDiscount = calculateDiscount(product.productId.price, product.productId.offer);
-                finalPrice = product.productId.price - productDiscount;
-                bestOffer = product.productId.offer;
-                offerType = 'Product Offer'; // Store the applied offer type
+            // Product-specific offer validation
+            if (
+                product.productId.offer > 0 && 
+                today >= new Date(product.productId.offerStart) && 
+                today <= new Date(product.productId.offerEnd)
+            ) {
+                const productDiscountAmount = calculateDiscount(productPrice, product.productId.offer);
+                bestDiscountAmount = productDiscountAmount; // Apply product offer
+                bestOfferType = 'Product Offer'; // Indicate offer type as product
             }
 
-            // Check if category offer is valid and better than product offer
+            // Category-specific offer validation and comparison
             const category = product.productId.category;
             if (
                 category &&
                 category.offer > 0 &&
                 today >= new Date(category.offerStart) &&
-                today <= new Date(category.offerEnd) &&
-                category.offer > bestOffer
+                today <= new Date(category.offerEnd)
             ) {
-                const categoryDiscount = calculateDiscount(product.productId.price, category.offer);
-                finalPrice = product.productId.price - categoryDiscount;
-                bestOffer = category.offer;
-                offerType = 'Category Offer'; // Store the applied offer type
+                const categoryDiscountAmount = calculateDiscount(productPrice, category.offer);
+
+                // Apply category offer only if it's better than product offer
+                if (categoryDiscountAmount > bestDiscountAmount) {
+                    bestDiscountAmount = categoryDiscountAmount;
+                    bestOfferType = 'Category Offer'; // Indicate offer type as category
+                }
             }
 
-            // Store final price and offer type in the product item for rendering in EJS
-            product.finalPrice = finalPrice;
-            product.offerType = offerType;
+            // Calculate the final price after applying the best discount
+            const finalPrice = productPrice - bestDiscountAmount;
 
+            // Store final price and applied offer type in the product item for rendering in EJS
+            product.finalPrice = finalPrice;
+            product.offerType = bestOfferType;
+
+            // Calculate total price for this product (final price * quantity)
             const productTotal = finalPrice * product.quantity;
 
-            return total + productTotal;
+            return total + productTotal; // Add product total to the cart subtotal
         }, 0);
 
-        const shippingCharge = 100; // You can modify the logic for dynamic shipping if needed
+        const shippingCharge = 100; // Static shipping charge, you can make it dynamic if needed
+        const total = subtotal + shippingCharge; // Final total = subtotal + shipping
 
-        const total = subtotal + shippingCharge;
-
-        const addresses = await Address.find({ user: userId });
+        const addresses = await Address.find({ user: userId }); // Get user addresses
 
         const breadcrumbs = [
             { name: 'Home', url: '/' },
@@ -1095,7 +1112,7 @@ const checkoutLoad = async (req, res) => {
             { name: 'Checkout', url: '/checkout' }
         ];
 
-        // Render checkout page with data
+        // Render checkout page with all the required data
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
@@ -1112,6 +1129,7 @@ const checkoutLoad = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 

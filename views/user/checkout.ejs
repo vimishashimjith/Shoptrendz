@@ -190,11 +190,11 @@
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="product-name"><%= item.productId.name %></p>
-                                <p>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></p>
+                                <p>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></p> <!-- Display final price -->
                             </div>
-                            <% if (item.offerType) { %>  <!-- Check if there's an offer applied -->
+                            <% if (item.offerType) { %>  <!-- Display only if there's an offer applied -->
                                 <div class="text-muted">
-                                    <small><%= item.offerType %></small>
+                                    <small><%= item.offerType %></small> <!-- Display whether it's Product or Category Offer -->
                                 </div>
                             <% } %>
                         <% }) %>
@@ -202,7 +202,6 @@
                         <div class="text-center">Your cart is empty.</div>
                     <% } %>
                 </div>
-            
                 <!-- Subtotal, Shipping, and Total Calculation -->
                 <div class="border-bottom pt-3 pb-2">
                     <div class="d-flex justify-content-between mb-3">

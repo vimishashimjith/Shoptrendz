@@ -27,17 +27,23 @@ const orderSchema = new mongoose.Schema({
                 type: Number,
                 required: true 
             },
-            size:{
-                type:String,
-                required:true
+            size: {
+                type: String,
+                required: true
             }
-           
-        },
-       
+        }
     ],
     totalAmount: {
         type: Number, 
         required: true 
+    },
+    discount: { 
+        type: Number,
+        default: 0 // Stores the offer-based discount amount
+    },
+    couponDiscount: { 
+        type: Number,
+        default: 0 // Stores the discount from coupon codes, if any
     },
     paymentMethod: {
         type: String,
@@ -58,7 +64,7 @@ const orderSchema = new mongoose.Schema({
     },
     cancellationReason: { type: String, default: null },
     isCancellationRequested: { type: Boolean, default: false },
-    isCancellationApproved: { type: Boolean, default: null },
+    isCancellationApproved: { type: Boolean, default: null }
 }, {
     timestamps: true
 });
