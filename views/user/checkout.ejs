@@ -279,7 +279,7 @@
 <!-- Updated JavaScript for Address Management -->
 <script>
     let selectedAddressId;
-
+    let couponDiscountAmount = 0; 
     // Function to select an address
     function selectAddress(addressId) {
         // Remove the 'selected' class from all address options
@@ -294,6 +294,7 @@
     }
 
     // Function to place the order
+   
     async function placeOrder() {
         // Get the selected payment method
         const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
@@ -335,7 +336,8 @@
                     addressId: selectedAddressId,
                     paymentMethod: paymentMethod,
                     total: finalTotal,
-                    productName: productNames
+                    productName: productNames,
+                    couponDiscount: couponDiscountAmount
                 })
             });
 
@@ -523,18 +525,14 @@ document.getElementById('couponButton').addEventListener('click', async () => {
 
 // Function to update total after applying the coupon discount
 function updateTotal(discountPercentage) {
-    // Get the original subtotal
     const subtotal = originalTotal;
-
-    // Calculate the discount amount based on the percentage
     const discountAmount = (subtotal * discountPercentage) / 100;
-
-    // Calculate the new total after applying the discount
     const newTotal = subtotal - discountAmount;
 
-    // Update the DOM with the new total
     document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
+    couponDiscountAmount = discountAmount;
 }
+
 
 // Add an event listener for removing the coupon
 document.getElementById('removeCouponButton').addEventListener('click', () => {

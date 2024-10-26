@@ -1485,6 +1485,8 @@ const placeOrder = async (req, res) => {
         }
 
         const productsWithPricing = [];
+        let totalDiscount = 0;
+
         for (const item of userCart.products) {
             const product = await Product.findById(item.productId);
             if (product) {
@@ -1498,6 +1500,8 @@ const placeOrder = async (req, res) => {
                     discount: discount,
                     price: productPrice,
                 });
+
+                totalDiscount += discount * item.quantity; // Multiply by quantity for total product discount
             }
         }
 
@@ -1515,6 +1519,8 @@ const placeOrder = async (req, res) => {
             addressId: addressId,
             products: productsWithPricing,
             totalAmount: total,
+            discount: totalDiscount, 
+            couponDiscount: req.body.couponDiscount,
             paymentMethod: paymentMethod,
             status: "Ordered",
         });
@@ -1546,12 +1552,9 @@ const placeOrder = async (req, res) => {
             razorpayInstance.orders.create(options, async (err, razorpayOrder) => {
                 if (err) {
                     console.error("Error creating Razorpay order:", err);
-                    
-                  
                     return res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
                 }
 
-             
                 await Cart.deleteOne({ userId: userId });
                 res.status(200).json({
                     success: true,
@@ -1591,6 +1594,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 
 
