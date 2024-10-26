@@ -1425,39 +1425,44 @@ const generateOrderId = () => {
 
 
 
-
 const paymentProcess = async (req, res) => {
     try {
         const { paymentId, success, orderId } = req.body;
-        const userId = req.session.user_id; 
-        const paymentStatus = success ? 'paid' : 'failed';
 
-        const payment = await Payment.findOneAndUpdate(
-            { orderId: orderId },
-            { status: paymentStatus },
-            { new: true }
-        );
-
-        if (!payment) {
-            return res.status(404).json({ success: false, message: 'Payment not found' });
+        // Validate required fields
+        if (!paymentId || !orderId) {
+            return res.status(400).json({ success: false, message: 'Payment ID and Order ID are required' });
         }
 
-        // Update order with paymentId regardless of success or failure
-        await Order.findByIdAndUpdate(
-            orderId,
-            { paymentId: payment._id }, 
-            { new: true }
-        );
+        // Attempt to find the order by orderId
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
 
-        console.log('Payment status changed:', success);
-        res.json({ success: true });
+        // Attempt to find the payment associated with the order
+        const payment = await Payment.findOne({ orderId: order._id });
+        if (!payment) {
+            return res.status(404).json({ success: false, message: 'Payment record not found' });
+        }
+
+        // Update payment status based on success
+        payment.status = success ? 'paid' : 'failed';
+        await payment.save();
+
+        // Update order status based on payment success
+        order.status = success ? 'ordered' : 'Failed';
+        await order.save();
+
+        // Send a success response
+        return res.status(200).json({ success: true, message: 'Payment status updated' });
     } catch (error) {
-        console.error(`Error processing payment: ${error}`);
-        res.json({ success: false });
+        console.error('Error processing payment:', error);
+        // Return a 500 Internal Server Error for unexpected errors
+        return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
-  
 
 
 const placeOrder = async (req, res) => {
@@ -1520,7 +1525,7 @@ const placeOrder = async (req, res) => {
             products: productsWithPricing,
             totalAmount: total,
             discount: totalDiscount, 
-            couponDiscount: req.body.couponDiscount,
+            couponDiscount: req.body.couponDiscount-100,
             paymentMethod: paymentMethod,
             status: "Ordered",
         });
@@ -1594,6 +1599,7 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 
 
@@ -2150,7 +2156,8 @@ module.exports = {
     validateCoupon,
     returnOrder,
     requestCancellation,
-    downloadInvoice
+    downloadInvoice,
+    
 
     
 

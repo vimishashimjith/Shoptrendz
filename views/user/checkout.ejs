@@ -261,7 +261,7 @@
             </div>
             
             
-            
+        
 
         </div>
     </div>
@@ -278,8 +278,11 @@
 <!-- JavaScript for Handling Address Management -->
 <!-- Updated JavaScript for Address Management -->
 <script>
+    
     let selectedAddressId;
     let couponDiscountAmount = 0; 
+    let originalTotal; // Store the original total before applying the coupon
+
     // Function to select an address
     function selectAddress(addressId) {
         // Remove the 'selected' class from all address options
@@ -294,7 +297,6 @@
     }
 
     // Function to place the order
-   
     async function placeOrder() {
         // Get the selected payment method
         const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
@@ -378,10 +380,9 @@
                     });
 
                     razorpayObject.open();
-                }else if(paymentMethod === 'Wallet'){
-				handleOrderSuccess("Your order has been successfully placed.", "/orders");
-			}
-        
+                } else if (paymentMethod === 'Wallet') {
+                    handleOrderSuccess("Your order has been successfully placed.", "/orders");
+                }
             } else {
                 // Handle the case where the response indicates failure
                 Swal.fire({
@@ -399,32 +400,31 @@
             });
         }
     }
-    function sendPaymentStatusToBackend(paymentId, success,orderId) {
-	console.log(orderId,'order id')
-    fetch('/process-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            paymentId: paymentId,
-            success: success,
-			orderId:orderId
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            swal("Error", "Failed to send payment status to backend.", "error");
-        }else{
-			console.log('Payment status updated successfully');
-		}
-    })
-    .catch(error => {
-        console.error('Error sending payment status:', error);
-        swal("Error", "An error occurred while sending payment status to backend.", "error");
-    });
-}
+
+    function sendPaymentStatusToBackend(paymentId, success, orderId) {
+        fetch('/process-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                paymentId: paymentId,
+                success: success,
+                orderId: orderId
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Payment status updated successfully');
+            } else {
+                console.error('Failed to send payment status to backend:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending payment status:', error);
+        });
+    }
 
     // Function to handle order success
     function handleOrderSuccess(message, redirectUrl) {
@@ -438,124 +438,121 @@
         });
     }
 
-
     // Function to handle Razorpay success
     function handleRazorpaySuccess(response, orderId) {
         console.log('Razorpay Payment Success:', response); // Debug log
-        // Handle Razorpay payment success logic here (e.g., update order status)
+        sendPaymentStatusToBackend(response.razorpay_payment_id, true, orderId);
         handleOrderSuccess("Payment successful, order placed.", "/orders");
     }
 
     // Function to handle Razorpay payment failure
     function handleRazorpayFailure(error, orderId) {
-    console.error('Razorpay Payment Failure:', error); // Debug log to check the error details
-    handleOrderFailure("Payment failed. Please try again.", "/orders"); // Provide a relevant message and redirect URL
-}
-
-function handleOrderFailure(message, redirectUrl) {
-    console.log('Order Failure:', message); // Debug log for order failure message
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: message,
-        confirmButtonText: 'Okay' // Optional: add a button text for better UX
-    }).then(() => {
-        if (redirectUrl) {
-            window.location.href = redirectUrl; // Redirect if a URL is provided
-        }
-    });
-}
-
-let originalTotal; // Store the original total before applying the coupon
-
-document.getElementById('couponButton').addEventListener('click', async () => {
-    const couponCode = document.getElementById('couponCode').value;
-
-    if (!couponCode) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Please enter a coupon code!',
-        });
-        return;
+        console.error('Razorpay Payment Failure:', error); // Debug log to check the error details
+        sendPaymentStatusToBackend(null, false, orderId);
+        handleOrderFailure("Payment failed. Please try again.", "/orders"); // Provide a relevant message and redirect URL
     }
 
-    // Store the original total before applying the coupon
-    originalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
-
-    try {
-        const response = await fetch('/validateCoupon', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ couponCode }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            // Update the UI with the discount amount
-            document.getElementById('discountAmount').innerText = ` ${result.discountAmount}%`;
-            document.getElementById('couponDiscountRow').style.display = 'flex';
-
-            // Update total
-            updateTotal(result.discountAmount);
-
-            // Show the remove coupon button and hide the apply button
-            document.getElementById('removeCouponButton').style.display = 'inline-block';
-            document.getElementById('couponButton').style.display = 'none';
-        } else {
-            // Show error message
-            Swal.fire({
-                icon: 'error',
-                title: 'Invalid Coupon',
-                text: result.error,
-            });
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    function handleOrderFailure(message, redirectUrl) {
+        console.log('Order Failure:', message); // Debug log for order failure message
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Something went wrong while validating the coupon.',
+            text: message,
+            confirmButtonText: 'Okay' // Optional: add a button text for better UX
+        }).then(() => {
+            if (redirectUrl) {
+                window.location.href = redirectUrl; // Redirect if a URL is provided
+            }
         });
     }
-});
 
-// Function to update total after applying the coupon discount
-function updateTotal(discountPercentage) {
-    const subtotal = originalTotal;
-    const discountAmount = (subtotal * discountPercentage) / 100;
-    const newTotal = subtotal - discountAmount;
+    // Coupon application
+    document.getElementById('couponButton').addEventListener('click', async () => {
+        const couponCode = document.getElementById('couponCode').value;
 
-    document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
-    couponDiscountAmount = discountAmount;
-}
+        if (!couponCode) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please enter a coupon code!',
+            });
+            return;
+        }
 
+        // Store the original total before applying the coupon
+        originalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
 
-// Add an event listener for removing the coupon
-document.getElementById('removeCouponButton').addEventListener('click', () => {
-    // Restore the original total if the coupon is removed
-    if (originalTotal !== undefined) {
-        document.querySelector('#finalTotal h5:last-child').innerText = `₹${originalTotal.toFixed(2)}`;
+        try {
+            const response = await fetch('/validateCoupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ couponCode }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Update the UI with the discount amount
+                document.getElementById('discountAmount').innerText = `${result.discountAmount}%`;
+                document.getElementById('couponDiscountRow').style.display = 'flex';
+
+                // Update total
+                updateTotal(result.discountAmount);
+
+                // Show the remove coupon button and hide the apply button
+                document.getElementById('removeCouponButton').style.display = 'inline-block';
+                document.getElementById('couponButton').style.display = 'none';
+            } else {
+                // Show error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Coupon',
+                    text: result.error,
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Something went wrong while validating the coupon.',
+            });
+        }
+    });
+
+    // Function to update total after applying the coupon discount
+    function updateTotal(discountPercentage) {
+        const subtotal = originalTotal;
+        const discountAmount = (subtotal * discountPercentage) / 100;
+        const newTotal = subtotal - discountAmount;
+
+        document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
+        couponDiscountAmount = discountAmount;
     }
 
-    // Hide the coupon discount row
-    document.getElementById('discountAmount').innerText = 'none';
-    document.getElementById('couponDiscountRow').style.display = 'none';
+    // Add an event listener for removing the coupon
+    document.getElementById('removeCouponButton').addEventListener('click', () => {
+        // Restore the original total if the coupon is removed
+        if (originalTotal !== undefined) {
+            document.querySelector('#finalTotal h5:last-child').innerText = `₹${originalTotal.toFixed(2)}`;
+        }
 
-    // Hide the remove coupon button and show the apply button again
-    document.getElementById('removeCouponButton').style.display = 'none';
-    document.getElementById('couponButton').style.display = 'inline-block';
+        // Hide the coupon discount row
+        document.getElementById('discountAmount').innerText = 'none';
+        document.getElementById('couponDiscountRow').style.display = 'none';
 
-    // Clear the coupon code input
-    document.getElementById('couponCode').value = '';
-});
+        // Hide the remove coupon button and show the apply button again
+        document.getElementById('removeCouponButton').style.display = 'none';
+        document.getElementById('couponButton').style.display = 'inline-block';
 
-
-
+        // Clear the coupon code input
+        document.getElementById('couponCode').value = '';
+        couponDiscountAmount = 0; // Reset the coupon discount amount
+    });
 </script>
+
 
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
