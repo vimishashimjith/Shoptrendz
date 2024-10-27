@@ -1424,14 +1424,13 @@ const generateOrderId = () => {
 };
 
 
-
 const paymentProcess = async (req, res) => {
     try {
         const { paymentId, success, orderId } = req.body;
 
-        // Validate required fields
-        if (!paymentId || !orderId) {
-            return res.status(400).json({ success: false, message: 'Payment ID and Order ID are required' });
+        // Validate required fields (orderId is always required)
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
 
         // Attempt to find the order by orderId
@@ -1446,12 +1445,17 @@ const paymentProcess = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Payment record not found' });
         }
 
-        // Update payment status based on success
-        payment.status = success ? 'paid' : 'failed';
-        await payment.save();
+        // Update payment and order statuses based on success
+        if (success === true) {
+            payment.status = 'paid';
+            order.status = 'ordered';
+        } else {
+            payment.status = 'failed';
+            order.status = 'Failed';
+        }
 
-        // Update order status based on payment success
-        order.status = success ? 'ordered' : 'Failed';
+        // Save the updated payment and order statuses
+        await payment.save();
         await order.save();
 
         // Send a success response
@@ -1599,9 +1603,6 @@ const placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
-
-
-
 
 
 const orderLoad = async (req, res) => {
@@ -2156,9 +2157,6 @@ module.exports = {
     validateCoupon,
     returnOrder,
     requestCancellation,
-    downloadInvoice,
+    downloadInvoice
     
-
-    
-
 };

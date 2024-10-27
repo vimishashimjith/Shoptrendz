@@ -16,6 +16,7 @@ const {
     requestCancellation,
     downloadInvoice,
     paymentProcess,
+    retryPayment
  
 } = require('../controller/userController');
 const bodyparser = require('body-parser');
@@ -75,6 +76,7 @@ router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
 
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 router.post('/process-payment',auth.isAuthenticated,paymentProcess)
+
 
 router.get('/success', successGoogleLogin);
 router.get('/failure', errorlogin);

@@ -64,8 +64,8 @@
                         <div class="order-status">
                             <strong>Status:</strong> <%= order.status %> <br>
                             
-                            <% if (order.paymentStatus === 'Failed') { %>
-                                <button onclick="payAgain('<%= order.orderId %>')" class="pay-again-button">Pay Again</button>
+                            <% if (order.status === 'Failed') { %>
+                                <button onclick="payAgain('<%= order._id %>')" class="pay-again-button">Pay Again</button>
                             <% } %>
                 
                             <% if (order.status === 'Ordered') { %>
@@ -144,6 +144,18 @@
   
       .cancel-button:hover {
           background-color: #c82333;
+      }
+      .pay-again-button {
+          padding: 5px 10px;
+          background-color: #6735dc;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+  
+      .pay-again-button {
+          background-color:  #6735dc;
       }
   
       h2 {
