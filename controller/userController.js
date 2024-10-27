@@ -1448,7 +1448,7 @@ const paymentProcess = async (req, res) => {
         // Update payment and order statuses based on success
         if (success === true) {
             payment.status = 'paid';
-            order.status = 'ordered';
+            order.status = 'Ordered';
         } else {
             payment.status = 'failed';
             order.status = 'Failed';
@@ -1601,6 +1601,56 @@ const placeOrder = async (req, res) => {
     } catch (error) {
         console.error("Error placing order:", error.message);
         res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
+const payAgain = async (req, res) => {
+    const { id: orderId } = req.params; 
+    const userId = req.session.user_id;
+
+    console.log('Attempting to pay again for orderId:', orderId);
+
+    if (!userId) {
+        console.log('User not logged in.');
+        return res.status(401).json({ success: false, message: 'User not logged in.' });
+    }
+
+    try {
+        const order = await Order.findOne({ orderId });
+        console.log('Fetched order:', order);
+
+        if (!order || order.status !== 'Failed') {
+            return res.status(400).json({ success: false, message: 'Order not found or cannot be paid again.' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        const options = {
+            amount: order.totalAmount * 100, 
+            currency: "INR",
+            receipt: orderId,
+        };
+
+        const razorpayOrder = await razorpayInstance.orders.create(options);
+        console.log('Razorpay order created:', razorpayOrder);
+
+        res.json({
+            success: true,
+            key_id: RAZORPAY_ID_KEY,
+            order_id: razorpayOrder.id,
+            amount: order.totalAmount * 100,
+            name: user.username,
+            email: user.email,
+            contact: user.mobileno,
+            db_order_id: order._id 
+        });
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        res.status(500).json({ success: false, message: 'Failed to create payment order.' });
     }
 };
 
@@ -2157,6 +2207,8 @@ module.exports = {
     validateCoupon,
     returnOrder,
     requestCancellation,
-    downloadInvoice
+    downloadInvoice,
+    payAgain
+    
     
 };

@@ -63,9 +63,8 @@
                         <!-- Order Status and Actions -->
                         <div class="order-status">
                             <strong>Status:</strong> <%= order.status %> <br>
-                            
                             <% if (order.status === 'Failed') { %>
-                                <button onclick="payAgain('<%= order._id %>')" class="pay-again-button">Pay Again</button>
+                                <button onclick="payAgain('<%= order.orderId %>')" class="pay-again-button">Pay Again</button>
                             <% } %>
                 
                             <% if (order.status === 'Ordered') { %>
@@ -300,14 +299,265 @@
         }
     });
 }
+let selectedAddressId;
+    let couponDiscountAmount = 0; 
+    let originalTotal; // Store the original total before applying the coupon
 
+    // Function to select an address
+    function selectAddress(addressId) {
+        // Remove the 'selected' class from all address options
+        document.querySelectorAll('.address-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+
+        // Add the 'selected' class to the currently selected address option
+        const selectedOption = document.getElementById(`address-${addressId}`);
+        selectedOption.classList.add('selected');
+        selectedAddressId = addressId; // Update the global selected address ID
+    }
+    async function placeOrder() {
+        // Get the selected payment method
+        const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
+
+        // Get the final total amount
+        const finalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
+
+        // Get the product names
+        const productNames = Array.from(document.querySelectorAll('.product-name')).map(p => p.innerText.trim());
+
+        // Validate the selected address
+        if (!selectedAddressId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select an address!'
+            });
+            return;
+        }
+
+        // Validate the selected payment method
+        if (!paymentMethod) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select a payment method!'
+            });
+            return;
+        }
+
+        try {
+            // Make the fetch request to the server
+            const response = await fetch('/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    addressId: selectedAddressId,
+                    paymentMethod: paymentMethod,
+                    total: finalTotal,
+                    productName: productNames,
+                    couponDiscount: couponDiscountAmount
+                })
+            });
+
+            // Parse the response
+            const res = await response.json();
+
+            // Check if the order was successful
+            if (res.success) {
+                if (paymentMethod === 'COD') {
+                    handleOrderSuccess("Your order has been successfully placed.", "/orders");
+                } else if (paymentMethod === 'Razorpay') {
+                    // Set up Razorpay options
+                    const options = {
+                        key: res.key_id,
+                        amount: res.amount,
+                        currency: "INR",
+                        name: res.product_name,
+                        order_id: res.order_id,
+                        handler: function(response) {
+                            handleRazorpaySuccess(response, res.db_order_id);
+                        },
+                        prefill: {
+                            name: res.name,
+                            email: res.email,
+                            contact: res.contact
+                        },
+                        notes: {
+                            address: res.product_name
+                        },
+                        theme: {
+                            color: '#3399cc'
+                        }
+                    };
+
+                    const razorpayObject = new Razorpay(options);
+                    razorpayObject.on('payment.failed', function(response) {
+                        handleRazorpayFailure(response.error, res.db_order_id);
+                    });
+
+                    razorpayObject.open();
+                } else if (paymentMethod === 'Wallet') {
+                    handleOrderSuccess("Your order has been successfully placed.", "/orders");
+                }
+            } else {
+                // Handle the case where the response indicates failure
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: res.message || 'Failed to place your order. Please try again later.'
+                });
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error placing order',
+                text: 'An error occurred while processing your order. Please try again later.'
+            });
+        }
+    }
+    async function payAgain(orderId) {
+    try {
+        // Show a loading spinner or message
+        Swal.fire({
+            title: 'Processing Payment...',
+            onBeforeOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch(`/payAgain/${orderId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const res = await response.json();
+
+        if (res.success) {
+            // Set up Razorpay options
+            const options = {
+                key: res.key_id,
+                amount: res.amount,
+                currency: "INR",
+                name: "Your Shop Name",
+                order_id: res.order_id,
+                handler: function(response) {
+                    handleRazorpaySuccess(response, res.db_order_id); // Call success handler
+                },
+                prefill: {
+                    name: res.name,
+                    email: res.email,
+                    contact: res.contact
+                },
+                notes: {
+                    address: res.product_name
+                },
+                theme: {
+                    color: '#3399cc'
+                }
+            };
+
+            // Create Razorpay object
+            const razorpayObject = new Razorpay(options);
+            razorpayObject.on('payment.failed', function(response) {
+                handleRazorpayFailure(response.error, res.db_order_id); // Call failure handler
+            });
+
+            razorpayObject.open(); // Open the Razorpay payment modal
+        } else {
+            // Display error message if payment initiation fails
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: res.message || 'Failed to initiate payment. Please try again.',
+            });
+        }
+    } catch (error) {
+        console.error('Error initiating payment:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while trying to process your payment. Please try again.',
+        });
+    }
+}
+
+// Function to handle Razorpay success
+function handleRazorpaySuccess(response, orderId) {
+    console.log('Razorpay Payment Success:', response); // Debug log
+    sendPaymentStatusToBackend(response.razorpay_payment_id, true, orderId);
+    handleOrderSuccess("Payment successful, order placed.", "/orders");
+}
+
+// Function to handle Razorpay payment failure
+function handleRazorpayFailure(error, orderId) {
+        console.error('Razorpay Payment Failure:', error); // Debug log to check the error details
+        sendPaymentStatusToBackend(null, false, orderId);
+        handleOrderFailure("Payment failed. Please try again.", "/orders"); // Provide a relevant message and redirect URL
+    }
+
+function sendPaymentStatusToBackend(paymentId, success, orderId) {
+        fetch('/process-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                paymentId: paymentId,
+                success: success,
+                orderId: orderId
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Payment status updated successfully');
+            } else {
+                console.error('Failed to send payment status to backend:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending payment status:', error);
+        });
+    }
+    function handleOrderSuccess(message, redirectUrl) {
+        console.log('Order Success:', message); // Debug log
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+        }).then(() => {
+            window.location.href = redirectUrl; // Redirect to the orders page
+        });
+    }
+
+    function handleOrderFailure(message, redirectUrl) {
+        console.log('Order Failure:', message); // Debug log for order failure message
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message,
+            confirmButtonText: 'Okay' // Optional: add a button text for better UX
+        }).then(() => {
+            if (redirectUrl) {
+                window.location.href = redirectUrl; // Redirect if a URL is provided
+            }
+        });
+    }
     function downloadInvoice(orderId) {
     window.location.href = `/downloadInvoice/${orderId}`;
 }
+
+
 </script>
 
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   
   <br><br><br><br><br><br><br><br><br><br>
