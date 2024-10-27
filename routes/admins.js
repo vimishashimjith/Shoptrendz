@@ -81,7 +81,7 @@ router.post('/:categoryId/categoryOffer', adminAuth.isLogin, categoryController.
 
 router.get('/salesReport', adminAuth.isLogin, adminController.SalesReport);
 
-
+router.get('/salesData',adminAuth.isLogin,adminController.salesData)
 router.get("/updatePaymentStatus",adminAuth.isLogin,adminController.updatePaymentStatus);
 router.post("/updateStatus",adminAuth.isLogin,adminController.updateStatus);
 

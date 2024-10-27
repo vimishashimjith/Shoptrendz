@@ -58,13 +58,136 @@ module.exports = {
             if (!req.session.adminId) {
                 return res.redirect('/admin/login');
             }
-
+    
             const adminData = await User.findById(req.session.adminId);
             if (adminData && adminData.isAdmin) {
+                // Total Sales Calculation
+                const totalSales = await Order.aggregate([
+                    { 
+                        $group: {
+                            _id: null, // No grouping, just get the total sum
+                            totalSale: { $sum: "$totalAmount" }
+                        }
+                    }
+                ]);
+    
+                // Total Products Calculation
+                const totalProducts = await Product.countDocuments({ softDelete: false }); // Exclude soft deleted products
+    
+                // Total Users Calculation
+                const totalUsers = await User.countDocuments({ isAdmin: false }); 
+    
+                // Top 10 Best-Selling Products
+                const topSellingProducts = await Order.aggregate([
+                    { $unwind: "$products" },
+                    {
+                        $group: {
+                            _id: "$products.productId",
+                            totalQuantity: { $sum: "$products.quantity" }
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "products", // Collection name
+                            localField: "_id",
+                            foreignField: "_id",
+                            as: "productDetails"
+                        }
+                    },
+                    { $unwind: "$productDetails" },
+                    {
+                        $project: {
+                            _id: 0,
+                            productId: "$_id",
+                            productName: "$productDetails.name",
+                            totalQuantity: 1,
+                            price: "$productDetails.price",
+                            images: "$productDetails.images" // Include images field here
+                        }
+                    },
+                    { $sort: { totalQuantity: -1 } },
+                    { $limit: 10 }
+                ]);
+    
+                // Top 10 Best-Selling Categories
+                const topSellingCategories = await Order.aggregate([
+                    { $unwind: "$products" },
+                    {
+                        $lookup: {
+                            from: "products", // Collection name
+                            localField: "products.productId",
+                            foreignField: "_id",
+                            as: "productDetails"
+                        }
+                    },
+                    { $unwind: "$productDetails" },
+                    {
+                        $group: {
+                            _id: "$productDetails.category",
+                            totalQuantity: { $sum: "$products.quantity" }
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "categories", // Collection name
+                            localField: "_id",
+                            foreignField: "_id",
+                            as: "categoryDetails"
+                        }
+                    },
+                    { $unwind: "$categoryDetails" },
+                    {
+                        $project: {
+                            _id: 0,
+                            categoryId: "$_id",
+                            categoryName: "$categoryDetails.name",
+                            totalQuantity: 1
+                        }
+                    },
+                    { $sort: { totalQuantity: -1 } },
+                    { $limit: 10 }
+                ]);
+    
+                // Top 10 Best-Selling Brands
+                const topSellingBrands = await Order.aggregate([
+                    { $unwind: "$products" },
+                    {
+                        $lookup: {
+                            from: "products", // Collection name
+                            localField: "products.productId",
+                            foreignField: "_id",
+                            as: "productDetails"
+                        }
+                    },
+                    { $unwind: "$productDetails" },
+                    {
+                        $group: {
+                            _id: "$productDetails.brand",
+                            totalQuantity: { $sum: "$products.quantity" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            brandName: "$_id",
+                            totalQuantity: 1
+                        }
+                    },
+                    { $sort: { totalQuantity: -1 } },
+                    { $limit: 10 }
+                ]);
+    
+                // Render the dashboard with collected data
                 res.render('admin/home', { 
                     title: 'Admin Home', 
                     layout: adminLayout, 
-                    admin: adminData 
+                    admin: adminData,
+                    totalSale: totalSales.length > 0 ? totalSales[0].totalSale : 0,
+                    totalProducts: totalProducts,
+                    totalUsers: totalUsers,
+                    topSellingProducts,
+                    topSellingCategories,
+                    topSellingBrands
                 });
             } else {
                 res.status(403).redirect('/admin/login');
@@ -74,8 +197,7 @@ module.exports = {
             res.status(500).send("Internal Server Error");
         }
     },
-
-
+    
 
     logout: async (req, res) => {
         try {
@@ -525,6 +647,75 @@ module.exports = {
           }
       },
       
+      salesData: async (req, res) => {
+        const filter = req.query.filter || 'yearly';
+        let dateRange = {};
+        
+        const now = new Date();
+        switch (filter) {
+            case 'yearly':
+                dateRange = { $gte: new Date(now.getFullYear(), 0, 1), $lte: now };
+                break;
+            case 'monthly':
+                dateRange = { $gte: new Date(now.getFullYear(), now.getMonth(), 1), $lte: now };
+                break;
+            case 'weekly':
+                const weekStart = new Date(now);
+                weekStart.setDate(now.getDate() - now.getDay()); // Start of the week (Sunday)
+                weekStart.setHours(0, 0, 0, 0);
+                dateRange = { $gte: weekStart, $lte: now };
+                break;
+            case 'daily':
+                dateRange = { $gte: new Date(now.setHours(0, 0, 0, 0)), $lte: now };
+                break;
+            default:
+                return res.status(400).json({ error: "Invalid filter option" });
+        }
+    
+        try {
+            // Get total sales for the dashboard
+            const totalSales = await Order.aggregate([
+                { 
+                    $group: {
+                        _id: null, // No grouping, just get the total sum
+                        totalSale: { $sum: "$totalAmount" }
+                    }
+                }
+            ]);
+    
+            // Get orders based on the date range filter
+            const orders = await Order.aggregate([
+                { $match: { orderDate: dateRange } },
+                { 
+                    $group: {
+                        _id: { 
+                            $dateToString: { 
+                                format: filter === 'yearly' ? "%Y" : 
+                                        filter === 'monthly' ? "%Y-%m" : 
+                                        filter === 'weekly' ? "%Y-%U" : 
+                                        "%Y-%m-%d", 
+                                date: "$orderDate" 
+                            } 
+                        },
+                        totalSales: { $sum: "$totalAmount" } 
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ]);
+    
+            // Map orders to include labels and values for the front-end chart
+            const data = orders.map(order => ({
+                label: order._id,
+                value: order.totalSales
+            }));
+    
+            // Pass the total sales and order data to the view
+            res.render('admin/home', { totalSale: totalSales, salesData: data });
+        } catch (error) {
+            console.error("Error fetching sales data:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    },
     
     updateCancellationStatus : async (req, res) => {
         const { action, orderId } = req.body;
