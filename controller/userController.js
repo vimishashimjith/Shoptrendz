@@ -1529,7 +1529,7 @@ const placeOrder = async (req, res) => {
             products: productsWithPricing,
             totalAmount: total,
             discount: totalDiscount, 
-            couponDiscount: req.body.couponDiscount-100,
+            couponDiscount: req.body.couponDiscount,
             paymentMethod: paymentMethod,
             status: "Ordered",
         });
@@ -1786,6 +1786,7 @@ const requestCancellation = async (req, res) => {
 
 
 
+
 const returnOrder = async (req, res) => {
     try {
         const { reason, orderId } = req.body;
@@ -1799,19 +1800,27 @@ const returnOrder = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        
         if (order.status !== 'Delivered') {
             return res.status(400).json({ success: false, message: 'Order cannot be returned' });
         }
 
-        
+        // Update order status
         order.status = 'Returned';
-        order.returnReason = reason; 
-
-       
-
+        order.returnReason = reason;
         await order.save();
-        console.log(`Order ${orderId} returned for reason: ${reason}`);
+
+        // Credit refund to user's wallet
+        const wallet = await Wallet.findOneAndUpdate(
+            { userId: order.userId },
+            { 
+                $inc: { amount: order.totalAmount }, // Increase wallet amount by refunded amount
+                $push: { transactions: { type: 'OrderRefund', amount: order.totalAmount } },
+                modifiedOn: Date.now()
+            },
+            { upsert: true, new: true } // Create wallet if not exists
+        );
+
+        console.log(`Order ${orderId} returned for reason: ${reason}, amount refunded to wallet.`);
 
         res.json({ success: true });
     } catch (error) {
@@ -2081,16 +2090,15 @@ const validateCoupon = async (req, res,next) => {
         const detailsY = 150; // Y position for both sections (same line)
 
         // Bill To section on the left
-      // Bill To section on the left
-doc.fontSize(12).text('Bill To:', leftX, detailsY, { underline: true }); // Adjusted font size
-doc.fontSize(12).text(`${order.addressId.fullname}`, leftX, detailsY + 20); // Adjusted font size
-doc.fontSize(12).text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`, leftX, detailsY + 40); // Adjusted font size
-doc.fontSize(12).text(`${order.addressId.mobile || 'N/A'}`, leftX, detailsY + 60); // Adjusted font size
-doc.moveDown();
+        doc.fontSize(12).text('Bill To:', leftX, detailsY, { underline: true }); // Adjusted font size
+        doc.fontSize(12).text(`${order.addressId.fullname}`, leftX, detailsY + 20); // Adjusted font size
+        doc.fontSize(12).text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`, leftX, detailsY + 40); // Adjusted font size
+        doc.fontSize(12).text(`${order.addressId.mobile || 'N/A'}`, leftX, detailsY + 60); // Adjusted font size
+        doc.moveDown();
 
-// Order Number and Payment Status on the right (same row)
-doc.fontSize(12).text(`Order Number: ${order.orderId}`, rightX, detailsY, { align: 'right' }); // Adjusted font size
-doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'right' }); // Adjusted font size
+        // Order Number and Payment Status on the right (same row)
+        doc.fontSize(12).text(`Order Number: ${order.orderId}`, rightX, detailsY, { align: 'right' }); // Adjusted font size
+        doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'right' }); // Adjusted font size
 
         const tableTop = 260;
         const itemX = 50; // Further shifted left
@@ -2153,13 +2161,11 @@ doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'r
         
         doc.end();
 
-       
     } catch (error) {
         console.error('Error generating PDF:', error);
         next(error);
     }
 };
-
 
 
 module.exports = {

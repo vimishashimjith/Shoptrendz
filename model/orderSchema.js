@@ -56,7 +56,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: { 
         type: String,
-        enum:['Failed','Ordered','Shipped','Out-For-Delivery','Delivered','Cancelled','Return'],
+        enum:['Failed','Ordered','Shipped','Out-For-Delivery','Delivered','Cancelled','Returned','Cancellation Requested'],
         require:true, 
     },
     orderDate: {

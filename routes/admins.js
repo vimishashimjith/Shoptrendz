@@ -79,7 +79,8 @@ router.get('/categoryOffer', adminAuth.isLogin, categoryController.offerPage);
 router.post('/:categoryId/categoryOffer', adminAuth.isLogin, categoryController.categoryOffer); 
 
 
-router.get('/salesReport', adminAuth.isLogin,adminController.SalesReport)
+router.get('/salesReport', adminAuth.isLogin, adminController.SalesReport);
+
 
 router.get("/updatePaymentStatus",adminAuth.isLogin,adminController.updatePaymentStatus);
 router.post("/updateStatus",adminAuth.isLogin,adminController.updateStatus);
