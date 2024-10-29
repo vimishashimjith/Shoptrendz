@@ -139,11 +139,9 @@ function updateQuantity(productId, size, change) {
     const quantityInput = row.querySelector('input.form-control');
     const currentQuantity = parseInt(quantityInput.value, 10);
     const stock = parseInt(row.getAttribute('data-stock'), 10);
-
-    // Calculate the new quantity
+ 
     const newQuantity = currentQuantity + change;
 
-    // Ensure the new quantity does not exceed available stock
     if (newQuantity > stock) {
         Swal.fire({
             title: 'Error!',
@@ -154,7 +152,6 @@ function updateQuantity(productId, size, change) {
         return;
     }
 
-    // Check if the new quantity exceeds the maximum allowed
     if (newQuantity > MAX_QUANTITY) {
         Swal.fire({
             title: 'Error!',
@@ -165,7 +162,6 @@ function updateQuantity(productId, size, change) {
         return;
     }
 
-    // Ensure the quantity doesn't go below 1
     if (newQuantity < 1) {
         Swal.fire({
             title: 'Error!',
@@ -176,7 +172,6 @@ function updateQuantity(productId, size, change) {
         return;
     }
 
-    // If the quantity is valid, send the update request to the server
     fetch(`/cart/update-quantity/${productId}`, {
         method: 'POST',
         headers: {
@@ -193,7 +188,7 @@ function updateQuantity(productId, size, change) {
                 icon: 'success',
                 confirmButtonText: 'OK'
             }).then(() => {
-                location.reload();  // Reload the page to reflect the updated cart
+                location.reload();  
             });
         } else {
             Swal.fire({
@@ -231,7 +226,7 @@ function removeFromCart(productId) {
                 icon: 'success',
                 confirmButtonText: 'OK'
             }).then(() => {
-                location.reload();  // Reload the page to reflect changes
+                location.reload();  
             });
         } else {
             Swal.fire({
@@ -254,7 +249,7 @@ function removeFromCart(productId) {
 }
 
 function proceedToCheckout() {
-    window.location.href = '/checkout'; // Redirect to the checkout page
+    window.location.href = '/checkout'; 
 }
 </script>
 

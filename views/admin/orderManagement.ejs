@@ -68,7 +68,7 @@ function updateStatus(orderId) {
         return;
     }
 
-    // Show confirmation dialog before proceeding
+  
     swal({
         title: "Are you sure?",
         text: `You are about to change the status to "${status}".`,
@@ -93,7 +93,7 @@ function updateStatus(orderId) {
                 if (data.success) {
                     swal("Status changed!", "Order status changed successfully.", "success")
                         .then(() => {
-                            window.location.reload(); // Reload the page to reflect changes
+                            window.location.reload(); 
                         });
                 } else {
                     swal("Error", "An error occurred while updating the status: " + data.message, "error");
@@ -103,7 +103,7 @@ function updateStatus(orderId) {
                 swal("Error", "An error occurred while updating the status.", "error");
             });
         } else {
-            // Reset the select value if the user cancels
+          
             newStatus.value = 'changeStatus';
         }
     });
@@ -134,7 +134,7 @@ function cancelOrders() {
           if (data.success) {
             swal("Canceled!", "Selected orders have been canceled.", "success")
               .then(() => {
-                window.location.reload(); // Reload the page to reflect changes
+                window.location.reload(); 
               });
           } else {
             swal("Error", "An error occurred while canceling orders: " + data.message, "error");
@@ -283,7 +283,6 @@ function cancelOrders() {
         return;
     }
 
-    // Show confirmation dialog before proceeding
     swal({
         title: "Are you sure?",
         text: `You are about to ${action === 'Approve' ? 'approve' : 'reject'} the cancellation request.`,
@@ -292,7 +291,7 @@ function cancelOrders() {
         dangerMode: true,
     }).then((willUpdate) => {
         if (willUpdate) {
-            // If confirmed, proceed with the cancellation action
+            
             fetch('/admin/updateCancellationStatus', {
                 method: 'POST',
                 headers: {
@@ -308,7 +307,7 @@ function cancelOrders() {
                 if (data.success) {
                     swal("Success!", `Cancellation request ${action.toLowerCase()}d successfully.`, "success")
                         .then(() => {
-                            window.location.reload(); // Reload the page to reflect changes
+                            window.location.reload(); 
                         });
                 } else {
                     swal("Error", "An error occurred while updating the cancellation status: " + data.message, "error");
@@ -318,7 +317,7 @@ function cancelOrders() {
                 swal("Error", "An error occurred while updating the cancellation status.", "error");
             });
         } else {
-            // Reset the select value if the user cancels
+           
             newStatus.value = 'changeStatus';
         }
     });

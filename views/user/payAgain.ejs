@@ -16,16 +16,16 @@
     <script>
         document.getElementById('payButton').onclick = function(e) {
             var options = {
-                "key": "<%= order.key_id %>", // Enter the Key ID generated from the Dashboard
-                "amount": "<%= order.amount %>", // Amount is in currency subunits. Default is Paise. Hence, 100 = INR 1
+                "key": "<%= order.key_id %>", 
+                "amount": "<%= order.amount %>", 
                 "currency": "INR",
                 "name": "Your Company Name",
                 "description": "Order Payment",
-                "order_id": "<%= order.id %>", // Pass the Razorpay Order ID here
+                "order_id": "<%= order.id %>", 
                 "handler": function(response){
-                    // Handle successful payment here
+                 
                     console.log(response);
-                    // Send payment details to backend for verification
+                    
                     fetch('/payment-success', {
                         method: 'POST',
                         headers: {
@@ -39,7 +39,7 @@
                     }).then(res => res.json()).then(data => {
                         if(data.success) {
                             alert("Payment successful!");
-                            window.location.href = '/orders'; // Redirect to orders page
+                            window.location.href = '/orders'; 
                         } else {
                             alert("Payment failed. Please try again.");
                         }

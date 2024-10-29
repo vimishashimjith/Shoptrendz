@@ -57,7 +57,7 @@
             <div class="card-body">
               <h2 class="text-center">Product Offers</h2>
               <div class="row">
-                <% if (product) { %> <!-- Check if the product exists -->
+                <% if (product) { %> 
                 <div class="col-12 text-center">
                   <button type="button" class="btn btn-primary btn-custom" onclick="showOfferModal('<%= product._id %>')">Add Offer</button>
                   <div class="bg-light rounded h-100 p-4 mt-4">
@@ -86,7 +86,7 @@
                   </div>
                 </div>
                 <% } else { %>
-                <p class="text-center">No product details available</p> <!-- Display message if product does not exist -->
+                <p class="text-center">No product details available</p> 
                 <% } %>
               </div>
             </div>
@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    <!-- Custom Modal -->
+
     <div id="offerModal" class="modal-custom">
       <div class="modal-content-custom">
         <h3>Add Product Offer</h3>
@@ -121,7 +121,7 @@
       </div>
     </div>
 
-    <!-- SweetAlert2 and JavaScript for Modal and Form Submission -->
+ 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
       function showOfferModal(productId) {

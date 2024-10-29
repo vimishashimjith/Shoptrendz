@@ -101,21 +101,21 @@
 </div>
 
 <script>
-    // Function to update quantity input and stock status based on selected size
+    
 function updateMaxQuantity() {
     const sizeSelect = document.getElementById('size-select');
     const selectedSize = sizeSelect.options[sizeSelect.selectedIndex];
     const availableStock = parseInt(selectedSize.getAttribute('data-stock'), 10);
 
     const quantityInput = document.getElementById('quantity');
-    quantityInput.max = availableStock; // Set the maximum value for the quantity input
+    quantityInput.max = availableStock; 
 
-    // Ensure the quantity doesn't exceed available stock
+   
     if (quantityInput.value > availableStock) {
-        quantityInput.value = availableStock; // Reset value if it exceeds available stock
+        quantityInput.value = availableStock; 
     }
 
-    // Update stock status
+    
     const stockStatus = document.getElementById('stock-status');
     if (availableStock === 0) {
         stockStatus.textContent = 'Out of Stock';
@@ -126,7 +126,7 @@ function updateMaxQuantity() {
     }
 }
 
-// Handles adding the product to the cart
+
 function addToCart(productId) {
     const size = document.getElementById('size-select').value;
     const quantity = parseInt(document.getElementById('quantity').value, 10);
@@ -179,7 +179,7 @@ function addToCart(productId) {
     });
 }
 
-// Initialize the page with the correct stock status
+
 document.addEventListener('DOMContentLoaded', updateMaxQuantity);
 
    </script>

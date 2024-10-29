@@ -61,23 +61,19 @@ module.exports = {
     
             const adminData = await User.findById(req.session.adminId);
             if (adminData && adminData.isAdmin) {
-                // Total Sales Calculation
                 const totalSales = await Order.aggregate([
                     { 
                         $group: {
-                            _id: null, // No grouping, just get the total sum
+                            _id: null, 
                             totalSale: { $sum: "$totalAmount" }
                         }
                     }
                 ]);
     
-                // Total Products Calculation
-                const totalProducts = await Product.countDocuments({ softDelete: false }); // Exclude soft deleted products
+                const totalProducts = await Product.countDocuments({ softDelete: false }); 
     
-                // Total Users Calculation
                 const totalUsers = await User.countDocuments({ isAdmin: false }); 
     
-                // Top 10 Best-Selling Products
                 const topSellingProducts = await Order.aggregate([
                     { $unwind: "$products" },
                     {
@@ -88,7 +84,7 @@ module.exports = {
                     },
                     {
                         $lookup: {
-                            from: "products", // Collection name
+                            from: "products", 
                             localField: "_id",
                             foreignField: "_id",
                             as: "productDetails"
@@ -102,19 +98,19 @@ module.exports = {
                             productName: "$productDetails.name",
                             totalQuantity: 1,
                             price: "$productDetails.price",
-                            images: "$productDetails.images" // Include images field here
+                            images: "$productDetails.images" 
                         }
                     },
                     { $sort: { totalQuantity: -1 } },
                     { $limit: 10 }
                 ]);
     
-                // Top 10 Best-Selling Categories
+                
                 const topSellingCategories = await Order.aggregate([
                     { $unwind: "$products" },
                     {
                         $lookup: {
-                            from: "products", // Collection name
+                            from: "products", 
                             localField: "products.productId",
                             foreignField: "_id",
                             as: "productDetails"
@@ -129,7 +125,7 @@ module.exports = {
                     },
                     {
                         $lookup: {
-                            from: "categories", // Collection name
+                            from: "categories", 
                             localField: "_id",
                             foreignField: "_id",
                             as: "categoryDetails"
@@ -148,12 +144,12 @@ module.exports = {
                     { $limit: 10 }
                 ]);
     
-                // Top 10 Best-Selling Brands
+                
                 const topSellingBrands = await Order.aggregate([
                     { $unwind: "$products" },
                     {
                         $lookup: {
-                            from: "products", // Collection name
+                            from: "products", 
                             localField: "products.productId",
                             foreignField: "_id",
                             as: "productDetails"
@@ -176,8 +172,6 @@ module.exports = {
                     { $sort: { totalQuantity: -1 } },
                     { $limit: 10 }
                 ]);
-    
-                // Render the dashboard with collected data
                 res.render('admin/home', { 
                     title: 'Admin Home', 
                     layout: adminLayout, 
@@ -531,23 +525,19 @@ module.exports = {
           try {
               const format = req.query.format;
       
-              // Check for report generation format
               if (format === 'pdf') {
                   const doc = new PDFDocument();
                   res.setHeader('Content-disposition', 'attachment; filename=sales_report.pdf');
                   res.setHeader('Content-type', 'application/pdf');
       
-                  // Create the PDF content
                   doc.fontSize(20).text('Sales Report', { align: 'center' }).moveDown();
                   doc.fontSize(14).text(`Total Sales: ₹${totalSales}`);
                   doc.text(`Total Orders: ${totalOrders}`);
                   doc.text(`Total Discounts: ₹${totalDiscount}`);
                   doc.moveDown();
       
-                  // Add table headers
                   doc.fontSize(12).text('Buyer | Product Name | Quantity | Price | Total', { align: 'left', underline: true }).moveDown();
       
-                  // Add order details
                   orders.forEach(orderItem => {
                       orderItem.products.forEach(product => {
                           const buyer = orderItem.userId ? orderItem.userId.username : 'Unknown User';
@@ -558,20 +548,16 @@ module.exports = {
                       });
                   });
       
-                  // Finalize the PDF and send it to the client
                   doc.pipe(res);
                   doc.end();
-                  return; // End the function after sending the PDF
+                  return; 
               } else if (format === 'excel') {
-                  // Implement Excel report generation logic here
                   res.status(501).send('Excel report generation not implemented yet.');
                   return;
               } else if (format) {
                   res.status(400).send('Invalid format');
                   return;
               }
-      
-              // Logic for fetching sales report data
               const page = parseInt(req.query.page) || 1;
               const limit = parseInt(req.query.limit) || 10;
               const skip = (page - 1) * limit;
@@ -579,8 +565,6 @@ module.exports = {
       
               const { startDate, endDate, presetFilter } = req.query;
               let dateFilter = {};
-      
-              // Determine date filter based on the preset filter or custom dates
               if (presetFilter === 'today') {
                   const today = new Date();
                   dateFilter = { orderDate: { $gte: today.setHours(0, 0, 0, 0) } };
@@ -606,14 +590,12 @@ module.exports = {
                   }
                   : {};
       
-              // Fetch the orders with applied filters
               const orders = await Order.find({ ...searchFilter, ...dateFilter })
                   .populate('userId', 'username')
                   .populate('products.productId', 'name price')
                   .skip(skip)
                   .limit(limit);
       
-              // Calculate totals
               const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter });
               const totalPages = Math.ceil(totalOrders / limit);
               
@@ -627,9 +609,8 @@ module.exports = {
                   totalCouponDiscount += order.couponDiscount || 0;
               });
       
-              // Render the sales report view
               res.render('admin/salesReport', {
-                  orders, // Send the fetched orders to the view
+                  orders,
                   admin: req.admin,
                   layout: adminLayout,
                   currentPage: page,
@@ -661,7 +642,7 @@ module.exports = {
                 break;
             case 'weekly':
                 const weekStart = new Date(now);
-                weekStart.setDate(now.getDate() - now.getDay()); // Start of the week (Sunday)
+                weekStart.setDate(now.getDate() - now.getDay()); 
                 weekStart.setHours(0, 0, 0, 0);
                 dateRange = { $gte: weekStart, $lte: now };
                 break;
@@ -673,17 +654,16 @@ module.exports = {
         }
     
         try {
-            // Get total sales for the dashboard
+            
             const totalSales = await Order.aggregate([
                 { 
                     $group: {
-                        _id: null, // No grouping, just get the total sum
+                        _id: null, 
                         totalSale: { $sum: "$totalAmount" }
                     }
                 }
             ]);
     
-            // Get orders based on the date range filter
             const orders = await Order.aggregate([
                 { $match: { orderDate: dateRange } },
                 { 
@@ -702,14 +682,12 @@ module.exports = {
                 },
                 { $sort: { _id: 1 } }
             ]);
-    
-            // Map orders to include labels and values for the front-end chart
+
             const data = orders.map(order => ({
                 label: order._id,
                 value: order.totalSales
             }));
     
-            // Pass the total sales and order data to the view
             res.render('admin/home', { totalSale: totalSales, salesData: data });
         } catch (error) {
             console.error("Error fetching sales data:", error);
@@ -780,8 +758,7 @@ module.exports = {
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     },
-      
-      
+   
     
     updateStatus: async (req, res) => {
         try {

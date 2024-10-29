@@ -16,13 +16,13 @@
             background-color: #f4f7fa;
         }
         .body-wrapper {
-    overflow-y: auto; /* Allows scrolling if content exceeds the height */
-    min-height: 100vh; /* Full height of the viewport */
+    overflow-y: auto; 
+    min-height: 100vh; 
 }
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px; /* Adjust padding if necessary */
+    padding: 20px; 
 }
 
         .card {
@@ -56,8 +56,8 @@
         }
         .card-body {
     max-height: 200vh;
-    /* Adjust height as needed */
-    overflow-y: auto; /* Adds scroll if content exceeds max height */
+  
+    overflow-y: auto; 
 }
         .header {
             background-color: #007bff;
@@ -70,10 +70,10 @@
 
 <body>
 
-    <!-- Body Wrapper -->
+    
     <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
         data-sidebar-position="fixed" data-header-position="fixed">
-        <!-- Sidebar Start -->
+      
         <aside class="left-sidebar">
             <div>
                 <!-- Sidebar navigation-->
@@ -228,11 +228,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Chart.js initialization
+        
         let salesChart;
         const ctx = document.getElementById('salesChart').getContext('2d');
 
-        // Default data
+     
         const salesData = {
             monthly: [500, 700, 800, 600, 1200, 1500, 1700, 1600, 1400, 1200, 1000, 900],
             quarterly: [2000, 2500, 3000, 3200],
@@ -246,7 +246,7 @@
             yearly: ["2019", "2020", "2021", "2022", "2023", "2024"]
         };
 
-        // Create chart function
+      
         function createChart(data, labels) {
             if (salesChart) {
                 salesChart.destroy();
@@ -303,13 +303,13 @@
             });
         }
 
-        // Update chart based on the selected time period
+       
         document.getElementById('timePeriod').addEventListener('change', function() {
             const selectedPeriod = this.value;
             createChart(salesData[selectedPeriod], labels[selectedPeriod]);
         });
 
-        // Initial chart load
+       
         createChart(salesData.monthly, labels.monthly);
     </script>
 </body>

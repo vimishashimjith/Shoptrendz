@@ -48,14 +48,14 @@
         }
 
         .report-header form {
-            flex-grow: 1; /* Make the form take available space */
+            flex-grow: 1; 
             display: flex;
             gap: 10px;
         }
 
         .export-buttons {
             display: flex;
-            gap: 10px; /* Space between buttons */
+            gap: 10px; 
         }
 
         .btn {
@@ -138,8 +138,8 @@
                                                 <td><%= product.productId?.name %></td>
                                                 <td><%= product.quantity %></td>
                                                 <td>₹ <%= product.productId?.price.toFixed(2) %></td>
-                                                <td>₹ <%= orderItem.discount.toFixed(2) %></td> <!-- Display discount -->
-                                                <td>₹ <%= orderItem.couponDiscount.toFixed(2) %></td> <!-- Display coupon discount -->
+                                                <td>₹ <%= orderItem.discount.toFixed(2) %></td> 
+                                                <td>₹ <%= orderItem.couponDiscount.toFixed(2) %></td> 
                                                 <td>₹ <%= orderItem.totalAmount.toFixed(2) %></td>
                                             </tr>
                                         <% }); %>
@@ -155,7 +155,7 @@
                     
                 </div>
 
-                <!-- Pagination -->
+                
                 <ul class="pagination">
                     <% for (let i = 1; i <= totalPages; i++) { %>
                         <li class="page-item <%= i === currentPage ? 'active' : '' %>">
@@ -167,7 +167,7 @@
                 </ul>
             </div>
 
-            <!-- JavaScript for DataTable and report downloads -->
+            
             <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
             <script src="../Admin/assets/libs/datatables/datatables.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -179,7 +179,7 @@
             <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
             <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
             <script>
-                // Validate date inputs
+                
                 function validateDates() {
                     const startDate = new Date(document.getElementById('startDate').value);
                     const endDate = new Date(document.getElementById('endDate').value);
@@ -190,15 +190,14 @@
                     return true;
                 }
 
-                // Initialize DataTable
+                
                 $(document).ready(function() {
     var table = $('#example').DataTable({
-        dom: 'frtip'  // Removes the built-in buttons
+        dom: 'frtip' 
     });
 
-    // Custom Download PDF
     $('#downloadPdf').on('click', function() {
-        // Trigger DataTable export for PDF
+      
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {
@@ -210,9 +209,9 @@
         }).container().find('button').click();
     });
 
-    // Custom Download Excel
+    
     $('#downloadExcel').on('click', function() {
-        // Trigger DataTable export for Excel
+        
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {

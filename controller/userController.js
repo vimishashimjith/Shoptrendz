@@ -116,49 +116,43 @@ const loadProduct = async (req, res) => {
     try {
         const currentDate = new Date();
 
-        // Fetch products and populate their associated categories
         const products = await Product.find({ softDelete: false }).populate('category');
 
         const updatedProducts = products.map(product => {
-            let finalPrice = product.price; // Start with the original price
-            let isOnOffer = false; // Flag to indicate if the product is on offer
-            let bestOffer = 0; // Track the best offer percentage
-            let offerType = ''; // Track the type of offer applied
+            let finalPrice = product.price; 
+            let isOnOffer = false; 
+            let bestOffer = 0; 
+            let offerType = ''; 
 
-            // Get the category offer, default to 0 if none exists
             const categoryOffer = product.category?.offer || 0;
-
-            // Check if product offer is valid and active
+            
             if (
                 product.offer > 0 &&
                 currentDate >= product.offerStart &&
                 currentDate <= product.offerEnd
             ) {
                 const productDiscount = (product.price * product.offer) / 100;
-                finalPrice = product.price - productDiscount; // Calculate final price with product discount
-                bestOffer = product.offer; // Set best offer to product offer
-                offerType = 'Product Offer'; // Track that the product offer is applied
-                isOnOffer = true; // Mark as on offer
+                finalPrice = product.price - productDiscount; 
+                bestOffer = product.offer; 
+                offerType = 'Product Offer'; 
+                isOnOffer = true; 
             }
 
-            // Check if category offer is valid and better than the product offer
             if (
                 categoryOffer > 0 &&
                 currentDate >= product.category.offerStart &&
                 currentDate <= product.category.offerEnd &&
-                categoryOffer > bestOffer // Only apply if category offer is better
+                categoryOffer > bestOffer 
             ) {
                 const categoryDiscount = (product.price * categoryOffer) / 100;
-                finalPrice = product.price - categoryDiscount; // Calculate final price with category discount
-                bestOffer = categoryOffer; // Update best offer to category offer
-                offerType = 'Category Offer'; // Track that the category offer is applied
-                isOnOffer = true; // Mark as on offer
+                finalPrice = product.price - categoryDiscount; 
+                bestOffer = categoryOffer; 
+                offerType = 'Category Offer'; 
+                isOnOffer = true; 
             }
-
-            // Return updated product details including final price and offer info
             return {
                 ...product._doc,
-                finalPrice: finalPrice.toFixed(2), // Format final price to 2 decimal places
+                finalPrice: finalPrice.toFixed(2), 
                 isOnOffer,
                 bestOffer,
                 offerType
@@ -172,7 +166,6 @@ const loadProduct = async (req, res) => {
             { name: 'Product', url: '/product' }
         ];
 
-        // Render the product page with the updated product list and user info
         res.render('user/product', { 
             products: updatedProducts, 
             user, 
@@ -617,28 +610,20 @@ const loadHome = async (req, res) => {
     try {
         const today = new Date();
 
-        // Fetch products and populate their associated categories
         const products = await Product.find({ softDelete: false }).populate('category');
 
-        // Process each product to determine the best applicable offer
         const updatedProducts = products.map(product => {
             const { price, offer: productOffer, offerStart, offerEnd, category } = product;
             let finalPrice = price;
             let bestOffer = 0;
-            let offerType = ''; // To store which offer is applied
-
-            // Helper function to calculate the discount percentage
+            let offerType = ''; 
             const calculateDiscount = (price, discount) => (price * discount) / 100;
-
-            // Check if the product offer is valid
             if (productOffer > 0 && today >= offerStart && today <= offerEnd) {
                 const productDiscount = calculateDiscount(price, productOffer);
                 finalPrice = price - productDiscount;
                 bestOffer = productOffer;
                 offerType = 'Product Offer';
             }
-
-            // Check if the category offer is valid and better than product offer
             if (
                 category &&
                 category.offer > 0 &&
@@ -651,20 +636,17 @@ const loadHome = async (req, res) => {
                 bestOffer = category.offer;
                 offerType = 'Category Offer';
             }
-
-            // Return the updated product with the final offer details
             return {
                 ...product._doc,
-                finalPrice: finalPrice.toFixed(2), // Ensure 2 decimal places
+                finalPrice: finalPrice.toFixed(2), 
                 isOnOffer: bestOffer > 0,
                 bestOffer,
-                offerType, // Track the applied offer
+                offerType, 
             };
         });
 
         const user = await User.findById(req.session.user_id);
 
-        // Handle case where user is not found
         if (!user) {
             return res.status(404).render('user/index', {
                 product: updatedProducts,
@@ -672,7 +654,6 @@ const loadHome = async (req, res) => {
             });
         }
 
-        // Render the home page with the updated products and user details
         res.render('user/index', {
             product: updatedProducts,
             user,
@@ -704,20 +685,16 @@ const loadProductdetail = async (req, res) => {
         const today = new Date();
         let finalPrice = product.price;
         let bestOffer = 0;
-        let offerType = ''; // Track the offer type applied
+        let offerType = ''; 
 
-        // Helper function to calculate discount
         const calculateDiscount = (price, discount) => (price * discount) / 100;
 
-        // Check if product offer is valid
         if (product.offer > 0 && today >= product.offerStart && today <= product.offerEnd) {
             const productDiscount = calculateDiscount(product.price, product.offer);
             finalPrice = product.price - productDiscount;
             bestOffer = product.offer;
-            offerType = 'Product Offer'; // Store the applied offer type
+            offerType = 'Product Offer'; 
         }
-
-        // Check if category offer is valid and better than product offer
         const category = product.category;
         if (
             category &&
@@ -729,7 +706,7 @@ const loadProductdetail = async (req, res) => {
             const categoryDiscount = calculateDiscount(product.price, category.offer);
             finalPrice = product.price - categoryDiscount;
             bestOffer = category.offer;
-            offerType = 'Category Offer'; // Store the applied offer type
+            offerType = 'Category Offer'; 
         }
 
         const breadcrumbs = [
@@ -743,10 +720,10 @@ const loadProductdetail = async (req, res) => {
         res.render('user/productdetail', {
             product: {
                 ...product._doc,
-                finalPrice: finalPrice.toFixed(2), // Ensure 2 decimal places
+                finalPrice: finalPrice.toFixed(2), 
                 isOnOffer: bestOffer > 0,
-                bestOffer, // Best offer percentage
-                offerType, // Offer type applied
+                bestOffer, 
+                offerType, 
             },
             user,
             breadcrumbs,
@@ -780,20 +757,15 @@ const addToCart = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
-
-        // Get current date for offer comparison
         const today = new Date();
         let finalPrice = product.price;
 
-        // Calculate the offer price for product-based offers
         const productOfferValid = product.offer > 0 && today >= product.offerStart && today <= product.offerEnd;
         const productOfferPrice = productOfferValid ? product.price - (product.price * product.offer) / 100 : product.price;
 
-        // Calculate category-based offer if applicable
         const categoryOfferValid = product.category?.offer > 0;
         const categoryOfferPrice = categoryOfferValid ? product.price - (product.price * product.category.offer) / 100 : product.price;
 
-        // Use the best offer (lower price)
         finalPrice = Math.min(productOfferPrice, categoryOfferPrice);
 
         const selectedSize = product.sizes.find(s => s.size === size);
@@ -828,7 +800,7 @@ const addToCart = async (req, res) => {
 
         if (productIndex > -1) {
             cart.products[productIndex].quantity = totalQuantity;
-            cart.products[productIndex].price = finalPrice; // Update price to reflect best offer
+            cart.products[productIndex].price = finalPrice; 
         } else {
             const productImage = product.images.length > 0 ? product.images[0].url : '';
             cart.products.push({
@@ -836,17 +808,15 @@ const addToCart = async (req, res) => {
                 quantity,
                 size,
                 name: product.name,
-                price: finalPrice,  // Use the discounted price if available
+                price: finalPrice,  
                 images: productImage,
             });
         }
 
         await cart.save();
 
-        // Calculate total cart item count
         const cartItemCount = cart.products.reduce((total, product) => total + product.quantity, 0);
 
-        // Remove product from wishlist if it exists
         const wishList = await WishList.findOne({ userId });
         if (wishList) {
             const wishListIndex = wishList.products.findIndex(item => item.productId.toString() === productId);
@@ -1029,12 +999,11 @@ const checkoutLoad = async (req, res) => {
             });
         }
 
-        // Fetch active cart of the user, populating the products and their categories
         let userCart = await Cart.findOne({ userId, active: true })
             .populate({
                 path: 'products.productId',
                 populate: {
-                    path: 'category', // Populate the category details of each product
+                    path: 'category', 
                     model: 'Category'
                 }
             })
@@ -1049,28 +1018,21 @@ const checkoutLoad = async (req, res) => {
         }
 
         const today = new Date();
-
-        // Helper function to calculate discount amount
         const calculateDiscount = (price, discount) => (price * discount) / 100;
-
-        // Calculate subtotal with the best available offer
         const subtotal = userCart.products.reduce((total, product) => {
-            let productPrice = product.productId.price; // Base price of the product
-            let bestDiscountAmount = 0; // Best discount in terms of money saved
-            let bestOfferType = ''; // Track which offer is applied
-
-            // Product-specific offer validation
+            let productPrice = product.productId.price;
+            let bestDiscountAmount = 0; 
+            let bestOfferType = ''; 
             if (
                 product.productId.offer > 0 && 
                 today >= new Date(product.productId.offerStart) && 
                 today <= new Date(product.productId.offerEnd)
             ) {
                 const productDiscountAmount = calculateDiscount(productPrice, product.productId.offer);
-                bestDiscountAmount = productDiscountAmount; // Apply product offer
-                bestOfferType = 'Product Offer'; // Indicate offer type as product
+                bestDiscountAmount = productDiscountAmount; 
+                bestOfferType = 'Product Offer'; 
             }
 
-            // Category-specific offer validation and comparison
             const category = product.productId.category;
             if (
                 category &&
@@ -1080,30 +1042,24 @@ const checkoutLoad = async (req, res) => {
             ) {
                 const categoryDiscountAmount = calculateDiscount(productPrice, category.offer);
 
-                // Apply category offer only if it's better than product offer
                 if (categoryDiscountAmount > bestDiscountAmount) {
                     bestDiscountAmount = categoryDiscountAmount;
-                    bestOfferType = 'Category Offer'; // Indicate offer type as category
+                    bestOfferType = 'Category Offer'; 
                 }
             }
 
-            // Calculate the final price after applying the best discount
             const finalPrice = productPrice - bestDiscountAmount;
-
-            // Store final price and applied offer type in the product item for rendering in EJS
             product.finalPrice = finalPrice;
             product.offerType = bestOfferType;
-
-            // Calculate total price for this product (final price * quantity)
             const productTotal = finalPrice * product.quantity;
 
-            return total + productTotal; // Add product total to the cart subtotal
+            return total + productTotal; 
         }, 0);
 
-        const shippingCharge = 100; // Static shipping charge, you can make it dynamic if needed
-        const total = subtotal + shippingCharge; // Final total = subtotal + shipping
+        const shippingCharge = 100; 
+        const total = subtotal + shippingCharge; 
 
-        const addresses = await Address.find({ user: userId }); // Get user addresses
+        const addresses = await Address.find({ user: userId }); 
 
         const breadcrumbs = [
             { name: 'Home', url: '/' },
@@ -1112,7 +1068,6 @@ const checkoutLoad = async (req, res) => {
             { name: 'Checkout', url: '/checkout' }
         ];
 
-        // Render checkout page with all the required data
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
@@ -1154,7 +1109,7 @@ const forgetVerify = async (req, res) => {
         console.log(error.message);
     }
 };
-//Reset password//
+
 const sendResetPasswordMail = async (username, email,token) => {
     try {
         const transporter = nodemailer.createTransport({
@@ -1428,24 +1383,20 @@ const paymentProcess = async (req, res) => {
     try {
         const { paymentId, success, orderId } = req.body;
 
-        // Validate required fields (orderId is always required)
         if (!orderId) {
             return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
 
-        // Attempt to find the order by orderId
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Attempt to find the payment associated with the order
         const payment = await Payment.findOne({ orderId: order._id });
         if (!payment) {
             return res.status(404).json({ success: false, message: 'Payment record not found' });
         }
 
-        // Update payment and order statuses based on success
         if (success === true) {
             payment.status = 'paid';
             order.status = 'Ordered';
@@ -1454,15 +1405,12 @@ const paymentProcess = async (req, res) => {
             order.status = 'Failed';
         }
 
-        // Save the updated payment and order statuses
         await payment.save();
         await order.save();
 
-        // Send a success response
         return res.status(200).json({ success: true, message: 'Payment status updated' });
     } catch (error) {
         console.error('Error processing payment:', error);
-        // Return a 500 Internal Server Error for unexpected errors
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
@@ -1510,7 +1458,7 @@ const placeOrder = async (req, res) => {
                     price: productPrice,
                 });
 
-                totalDiscount += discount * item.quantity; // Multiply by quantity for total product discount
+                totalDiscount += discount * item.quantity; 
             }
         }
 
@@ -1676,11 +1624,11 @@ const orderLoad = async (req, res) => {
         let totalOrders = 0;
 
         if (req.params.id) {
-            // Fetch specific orders
+            
             orders = await Order.find({ userId })
                 .populate('products.productId', 'name')
                 .populate('addressId', 'street city pincode')
-                .sort({ createdAt: -1 })  // Sort by createdAt in descending order
+                .sort({ createdAt: -1 })  
                 .skip(skip)
                 .limit(limit)
                 .exec();
@@ -1695,14 +1643,14 @@ const orderLoad = async (req, res) => {
 
             totalOrders = orders.length;
         } else {
-            // Fetch all orders for the user
+            
             totalOrders = await Order.countDocuments({ userId });
 
             orders = await Order.find({ userId })
                 .populate('products.productId')
                 .populate('addressId')
                 .populate('paymentId', 'status')
-                .sort({ createdAt: -1 })  // Sort by createdAt in descending order
+                .sort({ createdAt: -1 })  
                 .skip(skip)
                 .limit(limit)
                 .exec();
@@ -1804,20 +1752,18 @@ const returnOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order cannot be returned' });
         }
 
-        // Update order status
         order.status = 'Returned';
         order.returnReason = reason;
         await order.save();
 
-        // Credit refund to user's wallet
         const wallet = await Wallet.findOneAndUpdate(
             { userId: order.userId },
             { 
-                $inc: { amount: order.totalAmount }, // Increase wallet amount by refunded amount
+                $inc: { amount: order.totalAmount }, 
                 $push: { transactions: { type: 'OrderRefund', amount: order.totalAmount } },
                 modifiedOn: Date.now()
             },
-            { upsert: true, new: true } // Create wallet if not exists
+            { upsert: true, new: true } 
         );
 
         console.log(`Order ${orderId} returned for reason: ${reason}, amount refunded to wallet.`);
@@ -2064,8 +2010,8 @@ const validateCoupon = async (req, res,next) => {
   const downloadInvoice = async (req, res, next) => {
     try {
         const order = await Order.findOne({ orderId: req.params.orderId })
-            .populate('products.productId') // Ensure productId is populated
-            .populate('addressId') // Populating the address
+            .populate('products.productId') 
+            .populate('addressId') 
             .exec();
 
         if (!order) {
@@ -2080,31 +2026,26 @@ const validateCoupon = async (req, res,next) => {
         // Invoice Header
         doc.fontSize(15).text('Shoptrendz', { align: 'center' });
         doc.text('Shoptrendz | +012 345 67890 | shoptrendz@example.com', { align: 'center' });
-        doc.moveDown().moveDown(); // Add some space after the header
+        doc.moveDown().moveDown(); 
 
-        // Define X positions for the left (Bill To) and right (Order Number) sections
-        const leftX = 50; // X position for left-aligned content (Bill To)
-        const rightX = 350; // X position for right-aligned content (Order Number)
+        const leftX = 50; 
+        const rightX = 350; 
+        const detailsY = 150; 
 
-        // Set Y position for both sections to be on the same row
-        const detailsY = 150; // Y position for both sections (same line)
-
-        // Bill To section on the left
-        doc.fontSize(12).text('Bill To:', leftX, detailsY, { underline: true }); // Adjusted font size
-        doc.fontSize(12).text(`${order.addressId.fullname}`, leftX, detailsY + 20); // Adjusted font size
+        doc.fontSize(12).text('Bill To:', leftX, detailsY, { underline: true }); 
+        doc.fontSize(12).text(`${order.addressId.fullname}`, leftX, detailsY + 20); 
         doc.fontSize(12).text(`${order.addressId.street}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.country}`, leftX, detailsY + 40); // Adjusted font size
-        doc.fontSize(12).text(`${order.addressId.mobile || 'N/A'}`, leftX, detailsY + 60); // Adjusted font size
+        doc.fontSize(12).text(`${order.addressId.mobile || 'N/A'}`, leftX, detailsY + 60); 
         doc.moveDown();
 
-        // Order Number and Payment Status on the right (same row)
-        doc.fontSize(12).text(`Order Number: ${order.orderId}`, rightX, detailsY, { align: 'right' }); // Adjusted font size
-        doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'right' }); // Adjusted font size
+        doc.fontSize(12).text(`Order Number: ${order.orderId}`, rightX, detailsY, { align: 'right' }); 
+        doc.fontSize(12).text('Payment Status: Paid', rightX, detailsY + 20, { align: 'right' }); 
 
         const tableTop = 260;
-        const itemX = 50; // Further shifted left
-        const quantityX = 180; // Further shifted left
-        const priceX = 340; // Further shifted left
-        const totalX = 490; // Further shifted left
+        const itemX = 50; 
+        const quantityX = 180;
+        const priceX = 340; 
+        const totalX = 490; 
         
         doc.font('Helvetica-Bold');
         doc.fontSize(12).text('Item', itemX, tableTop);
@@ -2113,17 +2054,14 @@ const validateCoupon = async (req, res,next) => {
         doc.text('Total (₹)', totalX, tableTop);
         doc.moveTo(itemX, tableTop + 15).lineTo(totalX + 50, tableTop + 15).stroke();
         
-        // Draw Products Table Rows
         let yPosition = tableTop + 20;
-        let subtotal = 0; // Subtotal will store the sum of products' total prices
+        let subtotal = 0; 
         
         order.products.forEach(item => {
-            const product = item.productId; // Get product details
+            const product = item.productId; 
             const quantity = item.quantity;
-            const price = product.price || 0; // Default to 0 if undefined
+            const price = product.price || 0; 
             const total = price * quantity;
-        
-            // Adding each product's total to the subtotal
             subtotal += total;
         
             doc.font('Helvetica');
@@ -2131,17 +2069,15 @@ const validateCoupon = async (req, res,next) => {
             doc.text(quantity.toString(), quantityX, yPosition);
             doc.text(price.toFixed(2), priceX, yPosition);
             doc.text(total.toFixed(2), totalX, yPosition);
-            yPosition += 30; // Move down for the next row
+            yPosition += 30; 
         });
         
-        // Pricing Summary
         doc.moveTo(itemX, yPosition + 10).lineTo(totalX + 50, yPosition + 10).stroke();
         yPosition += 30;
         
-        const discount = order.discount || 0; // Default discount to 0 if not present
-        const shippingCharge = 100; // Fixed shipping charge
+        const discount = order.discount || 0; 
+        const shippingCharge = 100;
         
-        // Summary Details
         doc.font('Helvetica-Bold').fontSize(12).text('Subtotal:', itemX, yPosition);
         doc.text(`${subtotal.toFixed(2)}`, totalX, yPosition);
         yPosition += 30;
@@ -2154,7 +2090,7 @@ const validateCoupon = async (req, res,next) => {
         doc.text(`${shippingCharge.toFixed(2)}`, totalX, yPosition);
         yPosition += 30;
         
-        const totalAmount = subtotal - discount + shippingCharge; // Total amount calculation
+        const totalAmount = subtotal - discount + shippingCharge; 
         
         doc.font('Helvetica-Bold').fontSize(12).text('Total Amount:', itemX, yPosition);
         doc.text(`${totalAmount.toFixed(2)}`, totalX, yPosition);

@@ -17,17 +17,12 @@ const { isAuthenticated } = require('./middleware/auth');
 const cartCount=require('./middleware/cartCount')
 const wishlistCount=require('./middleware/wishlistCount')
 
-
-
 const app = express();
-
 
 connectDB();
 
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
 
 app.use(logger('dev'));
 app.use(expressLayouts);
@@ -38,9 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
 app.use(nocache());
-
 
 app.use(
   session({
@@ -52,10 +45,8 @@ app.use(
 );
 
 
-
-
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || req.user; // Make user available in all views
+  res.locals.user = req.session.user || req.user; 
   next();
 });
 
@@ -70,8 +61,6 @@ app.use((req, res, next) => {
 app.use(isAuthenticated);
 app.use(cartCount)
 app.use(wishlistCount)
-
-
 
 app.use('/', usersRouter);
 app.use('/admin', adminsRouter);

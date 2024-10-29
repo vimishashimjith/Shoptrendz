@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css" />
   <style>
   .image-preview {
-        width: 679px; /* Adjust as needed */
-        height: 679px; /* Adjust as needed */
+        width: 679px; 
+        height: 679px; 
         margin-top: 10px;
         position: relative;
         z-index: 10;
@@ -219,11 +219,11 @@
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Add imageUrl to the hidden input for deletion
+                
                 const deletedImagesInput = document.getElementById('deletedImages');
                 deletedImagesInput.value += imageUrl + ',';
 
-                // Remove the image element from the DOM
+               
                 const existingImage = document.querySelector(`img[src="/uploads/${imageUrl}"]`).parentElement;
                 existingImage.remove();
             }
@@ -231,17 +231,17 @@
     }
 
     function removeExistingImage(imageUrl, id) {
-        // If there's a URL, use confirmRemoveImage, otherwise just hide the preview
+     
         if (imageUrl) {
             confirmRemoveImage(imageUrl);
         } else {
             document.getElementById(`image-preview-container${id}`).style.display = 'none';
-            document.getElementById(`product_image${id}`).value = ''; // Clear file input
+            document.getElementById(`product_image${id}`).value = ''; 
         }
     }
 
   
-    // Add event listener for adding new sizes/stocks
+  
     document.getElementById('add-size-stock').addEventListener('click', function() {
         const container = document.getElementById('size-stock-container');
         const sizeStockItem = document.createElement('div');
@@ -260,7 +260,7 @@
         container.appendChild(sizeStockItem);
     });
 
-    // Event delegation for removing sizes/stocks
+    
     document.getElementById('size-stock-container').addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-size-stock')) {
             e.target.closest('.size-stock-item').remove();

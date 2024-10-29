@@ -13,7 +13,6 @@
   </nav>
   
   <div class="container">
-      <!-- Order History Section -->
       <h4 style="color: blueviolet;">My orders</h4>
       <div class="tab-content profile-content">
           <div class="tab-pane fade show active" id="profile">
@@ -83,8 +82,6 @@
             </div>
         </div>
     </div>
-  
-  <!-- CSS for grid layout -->
   <style>
       .order-grid {
           display: grid;
@@ -140,7 +137,22 @@
           border-radius: 5px;
           cursor: pointer;
       }
-  
+      .return-button {
+          padding: 5px 10px;
+          background-color:#6735dc;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+      .download-button {
+          padding: 5px 10px;
+          background-color:#6735dc;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+      }
       .cancel-button:hover {
           background-color: #c82333;
       }
@@ -235,7 +247,7 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Send cancellation request to the server
+                       
                         fetch('/requestCancellation', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -245,7 +257,7 @@
                         .then(data => {
                             if (data.success) {
                                 Swal.fire('Requested!', 'Your cancellation request has been sent for admin approval.', 'success').then(() => {
-                                    window.location.reload(); // Refresh the page or show updated order status
+                                    window.location.reload();
                                 });
                             } else {
                                 Swal.fire('Error!', 'Error requesting cancellation: ' + data.message, 'error');
@@ -275,7 +287,7 @@
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Send the return request to the server
+           
             fetch('/returnOrder', {
                 method: 'POST',
                 headers: {
@@ -301,31 +313,30 @@
 }
 let selectedAddressId;
     let couponDiscountAmount = 0; 
-    let originalTotal; // Store the original total before applying the coupon
+    let originalTotal; 
 
-    // Function to select an address
+    
     function selectAddress(addressId) {
-        // Remove the 'selected' class from all address options
+       
         document.querySelectorAll('.address-option').forEach(option => {
             option.classList.remove('selected');
         });
 
-        // Add the 'selected' class to the currently selected address option
         const selectedOption = document.getElementById(`address-${addressId}`);
         selectedOption.classList.add('selected');
-        selectedAddressId = addressId; // Update the global selected address ID
+        selectedAddressId = addressId;
     }
     async function placeOrder() {
-        // Get the selected payment method
+       
         const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
 
-        // Get the final total amount
+       
         const finalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
 
-        // Get the product names
+       
         const productNames = Array.from(document.querySelectorAll('.product-name')).map(p => p.innerText.trim());
 
-        // Validate the selected address
+       
         if (!selectedAddressId) {
             Swal.fire({
                 icon: 'error',
@@ -335,7 +346,6 @@ let selectedAddressId;
             return;
         }
 
-        // Validate the selected payment method
         if (!paymentMethod) {
             Swal.fire({
                 icon: 'error',
@@ -346,7 +356,7 @@ let selectedAddressId;
         }
 
         try {
-            // Make the fetch request to the server
+            
             const response = await fetch('/checkout', {
                 method: 'POST',
                 headers: {
@@ -361,10 +371,9 @@ let selectedAddressId;
                 })
             });
 
-            // Parse the response
+    
             const res = await response.json();
 
-            // Check if the order was successful
             if (res.success) {
                 if (paymentMethod === 'COD') {
                     handleOrderSuccess("Your order has been successfully placed.", "/orders");
@@ -402,7 +411,7 @@ let selectedAddressId;
                     handleOrderSuccess("Your order has been successfully placed.", "/orders");
                 }
             } else {
-                // Handle the case where the response indicates failure
+                
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
@@ -486,18 +495,16 @@ let selectedAddressId;
     }
 }
 
-// Function to handle Razorpay success
 function handleRazorpaySuccess(response, orderId) {
-    console.log('Razorpay Payment Success:', response); // Debug log
+    console.log('Razorpay Payment Success:', response); 
     sendPaymentStatusToBackend(response.razorpay_payment_id, true, orderId);
     handleOrderSuccess("Payment successful, order placed.", "/orders");
 }
 
-// Function to handle Razorpay payment failure
 function handleRazorpayFailure(error, orderId) {
-        console.error('Razorpay Payment Failure:', error); // Debug log to check the error details
+        console.error('Razorpay Payment Failure:', error); 
         sendPaymentStatusToBackend(null, false, orderId);
-        handleOrderFailure("Payment failed. Please try again.", "/orders"); // Provide a relevant message and redirect URL
+        handleOrderFailure("Payment failed. Please try again.", "/orders"); 
     }
 
 function sendPaymentStatusToBackend(paymentId, success, orderId) {
@@ -525,26 +532,26 @@ function sendPaymentStatusToBackend(paymentId, success, orderId) {
         });
     }
     function handleOrderSuccess(message, redirectUrl) {
-        console.log('Order Success:', message); // Debug log
+        console.log('Order Success:', message); 
         Swal.fire({
             icon: 'success',
             title: 'Success',
             text: message,
         }).then(() => {
-            window.location.href = redirectUrl; // Redirect to the orders page
+            window.location.href = redirectUrl; 
         });
     }
 
     function handleOrderFailure(message, redirectUrl) {
-        console.log('Order Failure:', message); // Debug log for order failure message
+        console.log('Order Failure:', message); 
         Swal.fire({
             icon: 'error',
             title: 'Error',
             text: message,
-            confirmButtonText: 'Okay' // Optional: add a button text for better UX
+            confirmButtonText: 'Okay' 
         }).then(() => {
             if (redirectUrl) {
-                window.location.href = redirectUrl; // Redirect if a URL is provided
+                window.location.href = redirectUrl; 
             }
         });
     }

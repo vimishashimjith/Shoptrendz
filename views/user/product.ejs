@@ -65,25 +65,25 @@
         <div class="untree_co-section product-section before-footer-section">
             <div class="row pb-3">
                 <% products.forEach(product => { 
-                    // Determine the best offer: choose the higher discount between product and category offers
+                  
                     const categoryOffer = product.category?.offer || 0;
                     const productOffer = product.offer || 0;
         
-                    // Find the better offer and corresponding final price
+                 
                     const bestOffer = Math.max(categoryOffer, productOffer);
-                    const isCategoryOffer = bestOffer === categoryOffer; // true if category offer is better
-                    const discountAmount = (product.price * bestOffer) / 100; // Calculate discount amount
-                    const finalPrice = product.price - discountAmount; // Final price after applying the best offer
+                    const isCategoryOffer = bestOffer === categoryOffer; 
+                    const discountAmount = (product.price * bestOffer) / 100; 
+                    const finalPrice = product.price - discountAmount;
                 %>
                     <div class="col-12 col-md-4 col-lg-3 mb-5">
                         <div class="product-item bg-light mb-4">
                             <div class="product-img position-relative overflow-hidden">
-                                <!-- Product Image -->
+                                
                                 <img class="img-fluid w-100" 
                                      src="/uploads/<%= product?.images[0]?.url %>" 
                                      alt="<%= product.name %>">
                 
-                                <!-- Product Action Buttons -->
+                                
                                 <div class="product-action">
                                     <a class="btn btn-outline-dark btn-square" href="#">
                                         <i class="fa fa-shopping-cart"></i>
@@ -101,7 +101,7 @@
                                 </div>
                             </div>
         
-                            <!-- Product Details Section -->
+                           
                             <div class="text-center py-4">
                                 <a class="h6 text-decoration-none text-truncate" 
                                    href="/productdetail/<%= product._id %>">
@@ -109,13 +109,13 @@
                                 </a>
         
                                 <div class="d-flex align-items-center justify-content-center mt-2">
-                                    <!-- Final Price after Discount -->
+                                  
                                     <h5 class="text-danger fw-bold me-3">
                                         ₹<%= finalPrice.toFixed(2) %>
                                     </h5>
         
                                     <% if (bestOffer > 0) { %>
-                                        <!-- Original Price with Del Tag -->
+                                       
                                         <h6 class="text-muted">
                                             <del>₹<%= product.price.toFixed(2) %></del>
                                         </h6>
@@ -123,13 +123,13 @@
                                 </div>
         
                                 <% if (bestOffer > 0) { %>
-                                    <!-- Dynamic Offer Badge (Category or Product Offer) -->
+                                 
                                     <span class="badge bg-success text-white fw-bold p-1" style="font-size: 0.95rem;">
                                         <%= product.offerType %> - <%= product.bestOffer %>% OFF
                                     </span>
                                 <% } %>
         
-                                <!-- Product Rating Section -->
+                              
                                 <div class="d-flex align-items-center justify-content-center mb-1 mt-2">
                                     <% for (let i = 1; i <= 5; i++) { %>
                                         <% if (i <= Math.floor(product.rating)) { %>
@@ -160,8 +160,8 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
     $(document).on('click', '.addTowishlist', function() {
-        const productId = $(this).data('product-id'); // Get product ID from button
-        const userId = '<%= user ? user.id : "" %>'; // Ensure user ID is passed properly from the EJS context
+        const productId = $(this).data('product-id'); 
+        const userId = '<%= user ? user.id : "" %>'; 
  
         if (!userId) {
             Swal.fire({
@@ -181,9 +181,9 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: response.message, // Notify user on success
+                    text: response.message, 
                 }).then(() => {
-                    location.reload(); // Reload the page to reflect changes
+                    location.reload(); 
                 });
             },
             error: function(error) {
@@ -191,7 +191,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: error.responseJSON?.message || 'Failed to add product to wishlist.', // Handle the error response
+                    text: error.responseJSON?.message || 'Failed to add product to wishlist.', 
                 });
             }
         });
