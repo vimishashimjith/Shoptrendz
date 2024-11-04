@@ -1019,10 +1019,14 @@ const checkoutLoad = async (req, res) => {
 
         const today = new Date();
         const calculateDiscount = (price, discount) => (price * discount) / 100;
+        let offerDiscount = 0; // Initialize offerDiscount variable
+
         const subtotal = userCart.products.reduce((total, product) => {
             let productPrice = product.productId.price;
             let bestDiscountAmount = 0; 
             let bestOfferType = ''; 
+            
+            // Check for product-specific offer
             if (
                 product.productId.offer > 0 && 
                 today >= new Date(product.productId.offerStart) && 
@@ -1033,6 +1037,7 @@ const checkoutLoad = async (req, res) => {
                 bestOfferType = 'Product Offer'; 
             }
 
+            // Check for category-specific offer
             const category = product.productId.category;
             if (
                 category &&
@@ -1051,13 +1056,16 @@ const checkoutLoad = async (req, res) => {
             const finalPrice = productPrice - bestDiscountAmount;
             product.finalPrice = finalPrice;
             product.offerType = bestOfferType;
+
+            // Add the best discount amount for this product to the total offer discount
+            offerDiscount += bestDiscountAmount * product.quantity;
             const productTotal = finalPrice * product.quantity;
 
             return total + productTotal; 
         }, 0);
 
         const shippingCharge = 100; 
-        const total = subtotal + shippingCharge; 
+        const total = subtotal + shippingCharge ; 
 
         const addresses = await Address.find({ user: userId }); 
 
@@ -1068,11 +1076,13 @@ const checkoutLoad = async (req, res) => {
             { name: 'Checkout', url: '/checkout' }
         ];
 
+      
         res.render('user/checkout', {
             cart: userCart,
             subtotal,
             shippingCharge,
             total,
+            offerDiscount, // Pass offerDiscount to the template
             addresses,
             user,
             breadcrumbs
@@ -1084,6 +1094,7 @@ const checkoutLoad = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 

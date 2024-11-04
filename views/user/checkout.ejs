@@ -188,12 +188,19 @@
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="product-name"><%= item.productId.name %>(<%= item.quantity %>)</p>
-                                <p>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></p> 
+                                <p>₹<%= (item.productId.price * item.quantity).toFixed(2) %></p> 
                             </div>
+
                             <% if (item.offerType) { %> 
                                 <div class="text-muted">
                                     <small><%= item.offerType %></small> 
+                                   
                                 </div>
+                                <div class="d-flex justify-content-between mb-3" id="offerDiscountRow">
+                                    <h6>Offer Discount</h6>
+                                    <h6 class="text-success">-₹<%= offerDiscount.toFixed(2) %></h6> <!-- Display offerDiscount here -->
+                                </div>
+                              
                             <% } %>
                         <% }) %>
                     <% } else { %>
@@ -206,6 +213,7 @@
                         <h6>Subtotal</h6>
                         <h6>₹<%= subtotal.toFixed(2) %></h6> 
                     </div>
+                   
                     <div class="d-flex justify-content-between mb-3" id="shippingChargeRow">
                         <h6>Shipping Charge</h6>
                         <h6 class="text-black" id="shippingChargeAmount">₹<%= shippingCharge.toFixed(2) %></h6> 
@@ -213,6 +221,7 @@
                     <div id="couponDiscountRow" class="d-flex justify-content-between mb-3" style="display:none;">
                         <h6>Discount</h6>
                         <h6 id="discountAmount">0%</h6>
+                       
                     </div>
                     <div class="pt-2">
                         <div class="d-flex justify-content-between mt-2" id="finalTotal">
