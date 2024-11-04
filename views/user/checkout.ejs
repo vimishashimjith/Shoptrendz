@@ -187,7 +187,7 @@
                     <% if (cart && cart.products.length > 0) { %>
                         <% cart.products.forEach(item => { %>
                             <div class="d-flex justify-content-between mb-2">
-                                <p class="product-name"><%= item.productId.name %></p>
+                                <p class="product-name"><%= item.productId.name %>(<%= item.quantity %>)</p>
                                 <p>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></p> 
                             </div>
                             <% if (item.offerType) { %> 
@@ -458,7 +458,7 @@
                 document.getElementById('couponDiscountRow').style.display = 'flex';
                 updateTotal(result.discountAmount);
                 document.getElementById('removeCouponButton').style.display = 'inline-block';
-                document.getElementById('couponButton').style.display = 'none';
+                document.getElementById('couponButton').style.display = '';
             } else {
                 
                 Swal.fire({

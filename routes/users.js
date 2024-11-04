@@ -16,7 +16,8 @@ const {
     requestCancellation,
     downloadInvoice,
     paymentProcess,
-    payAgain
+    payAgain,
+    approveCancellation
    
  
 } = require('../controller/userController');
@@ -74,6 +75,7 @@ router.get('/orders', auth.isAuthenticated, orderLoad);
 
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
+
 
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 router.post('/process-payment',auth.isAuthenticated,paymentProcess)

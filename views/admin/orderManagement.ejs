@@ -191,9 +191,18 @@ function cancelOrders() {
                         <td>₹<%= order.totalAmount?.toFixed(2) || '0.00' %></td>
                         <td><%= order.paymentMethod %></td>
                         <td class="status">
-                          <% if (order.paymentId && order.paymentId.status === 'pending') { %> 
+                          <% if (order.status === 'Returned' || order.status === 'Cancelled') { %>
+                            <button class="btn btn-secondary" style="pointer-events: none;">
+                              <a class="text-light">Refunded</a>
+                            </button>
+                          <% } else if (order.paymentId && order.paymentId.status === 'pending') { %> 
                             <button class="btn btn-danger">
                               <a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Pending</a>
+                            </button>
+                          <% } 
+                          else if (order.paymentId && order.paymentId.status === 'failed') { %> 
+                            <button class="btn btn-danger">
+                              <a href="/admin/updatePaymentStatus?id=<%= order._id %>" class="text-light">Failed</a>
                             </button>
                           <% } else if (order.paymentId && order.paymentId.status === 'paid') { %>
                             <button class="btn btn-success" style="pointer-events: none;">
@@ -204,12 +213,12 @@ function cancelOrders() {
                               <a class="text-light">Unknown</a>
                             </button>
                           <% } %>
-                          
                         </td>
                         
                         
+                        
                         <td>
-                          <% if (order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Returned') { %>
+                          <% if (order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Returned' &&  order.status !== 'Failed') { %>
                             <%= order.status %>
                             <% if (order.status === 'Cancellation Requested') { %>
                               <select id="changeStatus-<%= order._id %>" onchange="updateCancellationStatus('<%= order._id %>')">
@@ -225,6 +234,7 @@ function cancelOrders() {
                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancel</option>
                                 <option value="Returned" <%= order.status === 'Returned' ? 'selected' : 'disabled' %>>Returned</option> <!-- Added Returned option -->
+                              
                               </select>
                             <% } %>
                           <% } else { %>

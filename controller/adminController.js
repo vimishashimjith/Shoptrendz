@@ -522,112 +522,125 @@ module.exports = {
         }
       },
      SalesReport : async (req, res) => {
-          try {
-              const format = req.query.format;
-      
-              if (format === 'pdf') {
-                  const doc = new PDFDocument();
-                  res.setHeader('Content-disposition', 'attachment; filename=sales_report.pdf');
-                  res.setHeader('Content-type', 'application/pdf');
-      
-                  doc.fontSize(20).text('Sales Report', { align: 'center' }).moveDown();
-                  doc.fontSize(14).text(`Total Sales: ₹${totalSales}`);
-                  doc.text(`Total Orders: ${totalOrders}`);
-                  doc.text(`Total Discounts: ₹${totalDiscount}`);
-                  doc.moveDown();
-      
-                  doc.fontSize(12).text('Buyer | Product Name | Quantity | Price | Total', { align: 'left', underline: true }).moveDown();
-      
-                  orders.forEach(orderItem => {
-                      orderItem.products.forEach(product => {
-                          const buyer = orderItem.userId ? orderItem.userId.username : 'Unknown User';
-                          const totalAmount = orderItem.totalAmount;
-                          const price = product.productId?.price || 0;
-                          const quantity = product.quantity || 0;
-                          doc.text(`${buyer} | ${product.productId?.name} | ${quantity} | ₹${price} | ₹${totalAmount}`);
-                      });
-                  });
-      
-                  doc.pipe(res);
-                  doc.end();
-                  return; 
-              } else if (format === 'excel') {
-                  res.status(501).send('Excel report generation not implemented yet.');
-                  return;
-              } else if (format) {
-                  res.status(400).send('Invalid format');
-                  return;
-              }
-              const page = parseInt(req.query.page) || 1;
-              const limit = parseInt(req.query.limit) || 10;
-              const skip = (page - 1) * limit;
-              const search = req.query.search || '';
-      
-              const { startDate, endDate, presetFilter } = req.query;
-              let dateFilter = {};
-              if (presetFilter === 'today') {
-                  const today = new Date();
-                  dateFilter = { orderDate: { $gte: today.setHours(0, 0, 0, 0) } };
-              } else if (presetFilter === 'week') {
-                  const today = new Date();
-                  const dayOfWeek = today.getDay();
-                  const startOfWeek = new Date(today);
-                  startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-                  dateFilter = { orderDate: { $gte: startOfWeek } };
-              } else if (presetFilter === 'month') {
-                  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-                  dateFilter = { orderDate: { $gte: startOfMonth } };
-              } else if (startDate && endDate) {
-                  dateFilter = { orderDate: { $gte: new Date(startDate), $lte: new Date(endDate) } };
-              }
-      
-              const searchFilter = search
-                  ? {
-                      $or: [
-                          { 'userId.username': { $regex: search, $options: 'i' } },
-                          { 'products.productId.name': { $regex: search, $options: 'i' } }
-                      ]
-                  }
-                  : {};
-      
-              const orders = await Order.find({ ...searchFilter, ...dateFilter })
-                  .populate('userId', 'username')
-                  .populate('products.productId', 'name price')
-                  .skip(skip)
-                  .limit(limit);
-      
-              const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter });
-              const totalPages = Math.ceil(totalOrders / limit);
-              
-              let totalSales = 0;
-              let totalDiscount = 0;
-              let totalCouponDiscount = 0;
-      
-              orders.forEach(order => {
-                  totalSales += order.totalAmount;
-                  totalDiscount += order.discount || 0;
-                  totalCouponDiscount += order.couponDiscount || 0;
-              });
-      
-              res.render('admin/salesReport', {
-                  orders,
-                  admin: req.admin,
-                  layout: adminLayout,
-                  currentPage: page,
-                  totalPages,
-                  totalSales,
-                  totalDiscount,
-                  totalCouponDiscount,
-                  totalOrders,
-                  search,
-                  limit
-              });
-          } catch (error) {
-              console.error('Error fetching sales report:', error);
-              res.status(500).send('Internal Server Error');
-          }
-      },
-      
+        try {
+            const format = req.query.format;
+    
+            if (format === 'pdf') {
+                const doc = new PDFDocument();
+                res.setHeader('Content-disposition', 'attachment; filename=sales_report.pdf');
+                res.setHeader('Content-type', 'application/pdf');
+    
+                // Title
+                doc.fontSize(20).text('Sales Report', { align: 'center' }).moveDown();
+    
+                // Summary
+                doc.fontSize(14).text(`Total Sales: ₹${totalSales.toFixed(2)}`);
+                doc.text(`Total Orders: ${totalOrders}`);
+                doc.text(`Total Discounts: ₹${totalDiscount.toFixed(2)}`);
+                doc.moveDown();
+    
+                // Table Header
+                doc.fontSize(12)
+                    .text('Buyer | Product Name | Quantity | Price | Total | Purchase Date', { align: 'left', underline: true })
+                    .moveDown();
+    
+                // Table Content
+                orders.forEach(orderItem => {
+                    orderItem.products.forEach(product => {
+                        const purchaseDate = orderItem.orderDate.toLocaleDateString('en-IN'); // Format the date
+                        const buyer = orderItem.userId ? orderItem.userId.username : 'Unknown User';
+                        const totalAmount = orderItem.totalAmount.toFixed(2);
+                        const price = product.productId?.price || 0;
+                        const quantity = product.quantity || 0;
+                       
+    
+                        doc.text(`${buyer} | ${product.productId?.name} | ${quantity} | ₹${price.toFixed(2)} | ₹${totalAmount} | ${purchaseDate}`);
+                    });
+                });
+    
+                // Footer
+                doc.moveDown().fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
+    
+                doc.pipe(res);
+                doc.end();
+                return;
+            } else if (format === 'excel') {
+                res.status(501).send('Excel report generation not implemented yet.');
+                return;
+            } else if (format) {
+                res.status(400).send('Invalid format');
+                return;
+            }
+    
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+            const search = req.query.search || '';
+    
+            const { startDate, endDate, presetFilter } = req.query;
+            let dateFilter = {};
+    
+            // Set date filter based on preset filters
+            if (presetFilter === 'today') {
+                const today = new Date();
+                dateFilter = { orderDate: { $gte: today.setHours(0, 0, 0, 0) } };
+            } else if (presetFilter === 'week') {
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+                dateFilter = { orderDate: { $gte: startOfWeek } };
+            } else if (presetFilter === 'month') {
+                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                dateFilter = { orderDate: { $gte: startOfMonth } };
+            } else if (startDate && endDate) {
+                dateFilter = { orderDate: { $gte: new Date(startDate), $lte: new Date(endDate) } };
+            }
+    
+            const searchFilter = search
+                ? {
+                    $or: [
+                        { 'userId.username': { $regex: search, $options: 'i' } },
+                        { 'products.productId.name': { $regex: search, $options: 'i' } }
+                    ]
+                }
+                : {};
+    
+            const orders = await Order.find({ ...searchFilter, ...dateFilter })
+                .populate('userId', 'username')
+                .populate('products.productId', 'name price')
+                .skip(skip)
+                .limit(limit);
+    
+            const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter });
+            const totalPages = Math.ceil(totalOrders / limit);
+    
+            let totalSales = 0;
+            let totalDiscount = 0;
+    
+            orders.forEach(order => {
+                totalSales += order.totalAmount;
+                totalDiscount += order.discount || 0;
+            });
+    
+            res.render('admin/salesReport', {
+                orders,
+                admin: req.admin,
+                layout: adminLayout,
+                currentPage: page,
+                totalPages,
+                totalSales,
+                totalDiscount,
+                totalOrders,
+                search,
+                limit
+            });
+        } catch (error) {
+            console.error('Error fetching sales report:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    },
+    
       salesData: async (req, res) => {
         const filter = req.query.filter || 'yearly';
         let dateRange = {};
@@ -758,7 +771,8 @@ module.exports = {
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     },
-   
+      
+      
     
     updateStatus: async (req, res) => {
         try {

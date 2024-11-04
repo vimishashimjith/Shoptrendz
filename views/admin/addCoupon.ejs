@@ -107,87 +107,82 @@
     </div>
   </div>
   <script>
-    document.getElementById('addCouponForm').addEventListener('submit', function (event) {
-      const code = document.getElementById('code').value.trim();
-      const type = document.getElementById('type').value.trim();
-      const maxDiscount = document.getElementById('maxDiscount').value;
-      const description = document.getElementById('description').value.trim();
-      const limit = document.getElementById('limit').value;
-      const expiryDate = document.getElementById('expiryDate').value;
-  
-    
-      const codeError = document.getElementById('codeError');
-      const typeError = document.getElementById('typeError');
-      const maxDiscountError = document.getElementById('maxDiscountError');
-      const descriptionError = document.getElementById('descriptionError');
-      const limitError = document.getElementById('limitError');
-      const expiryDateError = document.getElementById('expiryDateError');
-  
-      
-      codeError.innerHTML = '';
-      typeError.innerHTML = '';
-      maxDiscountError.innerHTML = '';
-      descriptionError.innerHTML = '';
-      limitError.innerHTML = '';
-      expiryDateError.innerHTML = '';
-  
-      let isValid = true;
-  
-      
-      if (!code) {
+  document.getElementById('addCouponForm').addEventListener('submit', function (event) {
+    const code = document.getElementById('code').value.trim();
+    const type = document.getElementById('type').value.trim();
+    const maxDiscount = document.getElementById('maxDiscount').value;
+    const description = document.getElementById('description').value.trim();
+    const limit = document.getElementById('limit').value;
+    const expiryDate = document.getElementById('expiryDate').value;
+
+    const codeError = document.getElementById('codeError');
+    const typeError = document.getElementById('typeError');
+    const maxDiscountError = document.getElementById('maxDiscountError');
+    const descriptionError = document.getElementById('descriptionError');
+    const limitError = document.getElementById('limitError');
+    const expiryDateError = document.getElementById('expiryDateError');
+
+    codeError.innerHTML = '';
+    typeError.innerHTML = '';
+    maxDiscountError.innerHTML = '';
+    descriptionError.innerHTML = '';
+    limitError.innerHTML = '';
+    expiryDateError.innerHTML = '';
+
+    let isValid = true;
+
+    if (!code) {
         codeError.innerHTML = 'Coupon code is required.';
         isValid = false;
-      } else if (code.length < 3 || code.length > 20) {
+    } else if (code.length < 3 || code.length > 20) {
         codeError.innerHTML = 'Coupon code must be between 3 and 20 characters.';
         isValid = false;
-      }
-  
-      
-      if (!type) {
+    }
+
+    if (!type) {
         typeError.innerHTML = 'Coupon type is required.';
         isValid = false;
-      } else if (!['percentage', 'fixed'].includes(type.toLowerCase())) {
-        typeError.innerHTML = 'Coupon type must be either "percentage" or "fixed".';
-        isValid = false;
-      }
-  
-     
-      if (maxDiscount === '' || maxDiscount <= 0) {
+    }
+    if (maxDiscount === '' || maxDiscount <= 0) {
         maxDiscountError.innerHTML = 'Max discount must be a positive number.';
         isValid = false;
-      }
-  
-      
-      if (!description) {
+    } else if (maxDiscount > 100) {
+        maxDiscountError.innerHTML = 'Max discount cannot exceed 100%.';
+        isValid = false;
+    }
+
+    if (!description) {
         descriptionError.innerHTML = 'Description is required.';
         isValid = false;
-      } else if (description.length < 5) {
+    } else if (description.length < 5) {
         descriptionError.innerHTML = 'Description must be at least 5 characters long.';
         isValid = false;
-      }
-  
-    
-      if (limit === '' || limit <= 0) {
+    }
+
+    if (limit === '' || limit <= 0) {
         limitError.innerHTML = 'Usage limit must be a positive number.';
         isValid = false;
-      }
-  
-      
-      if (!expiryDate) {
+    } else if (limit > 100) {
+        limitError.innerHTML = 'Usage limit cannot exceed 100.';
+        isValid = false;
+    }
+
+    if (!expiryDate) {
         expiryDateError.innerHTML = 'Expiry date is required.';
         isValid = false;
-      } else {
+    } else {
         const today = new Date().toISOString().split('T')[0];
         if (expiryDate < today) {
-          expiryDateError.innerHTML = 'Expiry date cannot be in the past.';
-          isValid = false;
+            expiryDateError.innerHTML = 'Expiry date cannot be in the past.';
+            isValid = false;
         }
-      }
-  
-      if (!isValid) {
+    }
+
+    if (!isValid) {
         event.preventDefault(); 
-      }
-    });
+    }
+});
+
   </script>
   <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
