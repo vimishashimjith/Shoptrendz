@@ -990,9 +990,9 @@ const checkoutLoad = async (req, res) => {
     try {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
-
+        
         if (!userId) {
-            return res.status(401).render('error', {
+            return res.status(404).render('user/404', {
                 url: req.originalUrl,
                 message: 'Please login to view the checkout page',
                 count: 0
@@ -1010,7 +1010,7 @@ const checkoutLoad = async (req, res) => {
             .lean();
 
         if (!userCart) {
-            return res.status(404).render('error', {
+            return res.status(404).render('user/404', {
                 url: req.originalUrl,
                 message: 'Cart not found',
                 count: 0
@@ -1019,14 +1019,13 @@ const checkoutLoad = async (req, res) => {
 
         const today = new Date();
         const calculateDiscount = (price, discount) => (price * discount) / 100;
-        let offerDiscount = 0; // Initialize offerDiscount variable
+        let offerDiscount = 0; 
 
         const subtotal = userCart.products.reduce((total, product) => {
             let productPrice = product.productId.price;
             let bestDiscountAmount = 0; 
             let bestOfferType = ''; 
             
-            // Check for product-specific offer
             if (
                 product.productId.offer > 0 && 
                 today >= new Date(product.productId.offerStart) && 
@@ -1037,7 +1036,6 @@ const checkoutLoad = async (req, res) => {
                 bestOfferType = 'Product Offer'; 
             }
 
-            // Check for category-specific offer
             const category = product.productId.category;
             if (
                 category &&
@@ -1056,8 +1054,6 @@ const checkoutLoad = async (req, res) => {
             const finalPrice = productPrice - bestDiscountAmount;
             product.finalPrice = finalPrice;
             product.offerType = bestOfferType;
-
-            // Add the best discount amount for this product to the total offer discount
             offerDiscount += bestDiscountAmount * product.quantity;
             const productTotal = finalPrice * product.quantity;
 
@@ -1071,7 +1067,7 @@ const checkoutLoad = async (req, res) => {
 
         const breadcrumbs = [
             { name: 'Home', url: '/' },
-            { name: 'Shop', url: '/shop' },
+            { name: 'Shop', url: '/product' },
             { name: 'Cart', url: '/cart' },
             { name: 'Checkout', url: '/checkout' }
         ];
@@ -1082,7 +1078,7 @@ const checkoutLoad = async (req, res) => {
             subtotal,
             shippingCharge,
             total,
-            offerDiscount, // Pass offerDiscount to the template
+            offerDiscount, 
             addresses,
             user,
             breadcrumbs
@@ -1091,7 +1087,7 @@ const checkoutLoad = async (req, res) => {
         console.log('Cart data:', userCart);
     } catch (error) {
         console.error('Error:', error.message);
-        res.status(500).send('Internal Server Error');
+        res.status(500).render('user/500');
     }
 };
 
@@ -1622,7 +1618,7 @@ const orderLoad = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!userId) {
-            return res.status(401).render('error', {
+            return res.status(404).render('user/404', {
                 url: req.originalUrl,
                 message: 'Please login to view your orders',
                 count: 0
@@ -1689,7 +1685,7 @@ const orderLoad = async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching orders:', error);
-        res.status(500).render('error', {
+        res.status(500).render('user/500', {
             url: req.originalUrl,
             message: 'Internal Server Error',
             count: 0
@@ -1877,8 +1873,6 @@ const searchProduct = async (req, res) => {
     try {
         const userId = req.session.user_id;
         const user = await User.findById(userId);
-
-        
         const categories = await Category.find();
 
         const searchQuery = req.query.search || '';
@@ -1893,20 +1887,18 @@ const searchProduct = async (req, res) => {
                         { color: { $regex: searchQuery, $options: 'i' } }
                     ]
                 },
-                { softDelete: false } 
+                { softDelete: false }
             ]
         };
 
-        
         if (category) {
             const categories = await Category.find({
-              name: { $in: category.split(",") },
+                name: { $in: category.split(",") },
             });
             const categoryIds = categories.map((cat) => cat._id);
             query.category = { $in: categoryIds };
-          }
+        }
 
-        
         let sort = {};
         switch (sortOption) {
             case 'popularity':
@@ -1937,17 +1929,14 @@ const searchProduct = async (req, res) => {
                 sort = { name: 1 };
         }
 
-       
-        const products = await Product.find(query).sort(sort).populate('category');
+        const products = await Product.find(query).sort(sort).collation({ locale: 'en', strength: 1 }).populate('category');
 
-       
         const breadcrumbs = [
             { name: 'Home', url: '/' },
             { name: 'Product', url: '/product' },
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
 
-        
         res.render('user/searchProduct', { products, breadcrumbs, user });
     } catch (err) {
         console.error("Error in searchProduct:", err);

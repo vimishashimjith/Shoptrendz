@@ -16,8 +16,8 @@ const {
     requestCancellation,
     downloadInvoice,
     paymentProcess,
-    payAgain,
-    approveCancellation
+    payAgain
+    
    
  
 } = require('../controller/userController');

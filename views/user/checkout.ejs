@@ -198,7 +198,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-3" id="offerDiscountRow">
                                     <h6>Offer Discount</h6>
-                                    <h6 class="text-success">-₹<%= offerDiscount.toFixed(2) %></h6> <!-- Display offerDiscount here -->
+                                    <h6 class="text-black">₹<%= offerDiscount.toFixed(2) %></h6> <!-- Display offerDiscount here -->
                                 </div>
                               
                             <% } %>
@@ -439,77 +439,83 @@
     }
 
     document.getElementById('couponButton').addEventListener('click', async () => {
-        const couponCode = document.getElementById('couponCode').value;
+    const couponCode = document.getElementById('couponCode').value;
 
-        if (!couponCode) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Please enter a coupon code!',
-            });
-            return;
-        }
-        originalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
-
-        try {
-            const response = await fetch('/validateCoupon', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ couponCode }),
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                document.getElementById('discountAmount').innerText = `${result.discountAmount}%`;
-                document.getElementById('couponDiscountRow').style.display = 'flex';
-                updateTotal(result.discountAmount);
-                document.getElementById('removeCouponButton').style.display = 'inline-block';
-                document.getElementById('couponButton').style.display = '';
-            } else {
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Coupon',
-                    text: result.error,
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong while validating the coupon.',
-            });
-        }
-    });
-
-    
-    function updateTotal(discountPercentage) {
-        const subtotal = originalTotal;
-        const discountAmount = (subtotal * discountPercentage) / 100;
-        const newTotal = subtotal - discountAmount;
-
-        document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
-        couponDiscountAmount = discountAmount;
+    if (!couponCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please enter a coupon code!',
+        });
+        return;
     }
-    document.getElementById('removeCouponButton').addEventListener('click', () => {
-        if (originalTotal !== undefined) {
-            document.querySelector('#finalTotal h5:last-child').innerText = `₹${originalTotal.toFixed(2)}`;
+
+    // Save the original total only once
+    if (typeof originalTotal === 'undefined') {
+        originalTotal = parseFloat(document.querySelector('#finalTotal h5:last-child').innerText.replace('₹', '').trim());
+    }
+
+    try {
+        const response = await fetch('/validateCoupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ couponCode }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            document.getElementById('discountAmount').innerText = `${result.discountAmount}%`;
+            document.getElementById('couponDiscountRow').style.display = 'flex';
+            updateTotal(result.discountAmount);
+            document.getElementById('removeCouponButton').style.display = 'inline-block';
+            document.getElementById('couponButton').style.display = 'none'; // Hide Apply button
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Coupon',
+                text: result.error,
+            });
         }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong while validating the coupon.',
+        });
+    }
+});
 
-        document.getElementById('discountAmount').innerText = 'none';
-        document.getElementById('couponDiscountRow').style.display = 'none';
+// Function to update the total with discount
+function updateTotal(discountPercentage) {
+    const subtotal = originalTotal;
+    const discountAmount = (subtotal * discountPercentage) / 100;
+    const newTotal = subtotal - discountAmount;
 
-        document.getElementById('removeCouponButton').style.display = 'none';
-        document.getElementById('couponButton').style.display = 'inline-block';
+    document.querySelector('#finalTotal h5:last-child').innerText = `₹${newTotal.toFixed(2)}`;
+    couponDiscountAmount = discountAmount;
+}
 
-     
-        document.getElementById('couponCode').value = '';
-        couponDiscountAmount = 0; 
-    });
+document.getElementById('removeCouponButton').addEventListener('click', () => {
+    // Reset total to original amount
+    if (typeof originalTotal !== 'undefined') {
+        document.querySelector('#finalTotal h5:last-child').innerText = `₹${originalTotal.toFixed(2)}`;
+    }
+
+    document.getElementById('discountAmount').innerText = '0%';
+    document.getElementById('couponDiscountRow').style.display = 'none';
+
+    // Toggle buttons
+    document.getElementById('removeCouponButton').style.display = 'none';
+    document.getElementById('couponButton').style.display = 'inline-block';
+
+    // Clear coupon input and reset discount variables
+    document.getElementById('couponCode').value = '';
+    couponDiscountAmount = 0;
+});
 </script>
 
 

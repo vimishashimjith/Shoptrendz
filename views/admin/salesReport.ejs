@@ -15,53 +15,134 @@
     <link rel="stylesheet" href="../Admin/assets/libs/datatables/datatables.min.css" />
 
     <style>
-        *, *:after, *:before {
-            box-sizing: border-box;
-        }
+    
+    * {
+        box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px;
-            margin: 0;
-            background: #f4f4f9;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+        margin: 0;
+        background: #f4f4f9;
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
 
-        .container {
-            max-width: 1100px;
-            width: 100%;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+    .container {
+        max-width: 1100px;
+        width: 100%;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        margin: 40px 0;
+    }
 
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+    h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #4a4a4a;
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-        .report-header form {
-            flex-grow: 1; 
-            display: flex;
-            gap: 10px;
-        }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
 
-        .export-buttons {
-            display: flex;
-            gap: 10px; 
-        }
+    .report-header form {
+        display: flex;
+        gap: 15px;
+    }
 
-        .btn {
-            padding: 10px 15px;
-        }
-    </style>
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 15px;
+        font-size: 15px;
+    }
+
+    .sales-summary {
+        display: flex;
+        justify-content: space-between;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .sales-summary h3 {
+        font-size: 20px;
+        color:#007bff;
+    }
+
+    .table-responsive {
+        margin-top: 20px;
+    }
+
+    #example {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 10px;
+    }
+
+    #example thead th {
+        background-color: #007bff;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        padding: 12px;
+    }
+
+    #example tbody tr {
+        border-bottom: 1px solid #ddd;
+    }
+
+    #example tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    #example tbody td {
+        padding: 10px;
+        text-align: center;
+    }
+
+    .pagination {
+        justify-content: center;
+        display: flex;
+        gap: 8px;
+        padding-top: 20px;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+    }
+
+    .pagination .page-link {
+        color: #007bff;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+</style>
+
+  
 </head>
 
 <body>
@@ -108,13 +189,13 @@
                         <button class="btn btn-success" id="downloadExcel" aria-label="Download Excel report">Download Excel</button>
                     </div>
                 </div>
+                
                 <div class="sales-summary">
                     <h3>Total Sales: ₹<%= totalSales %></h3>
                     <h3>Total Orders: <%= totalOrders %></h3>
                     <h3>Total Discounts: ₹<%= totalDiscount %></h3>
                 </div>
 
-                <!-- Orders Table -->
                 <div class="table-responsive">
                     <div class="table-responsive">
                         <table id="example" class="table table-striped table-bordered nowrap" style="width: 100%;">
@@ -206,54 +287,50 @@
             <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
             <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
             <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-            <script>
-                
-                function validateDates() {
-                    const startDate = new Date(document.getElementById('startDate').value);
-                    const endDate = new Date(document.getElementById('endDate').value);
-                    if (startDate > endDate) {
-                        alert('Start date cannot be after end date.');
-                        return false;
-                    }
-                    return true;
-                }
-
-                
-                $(document).ready(function() {
+           <script>
+$(document).ready(function() {
     var table = $('#example').DataTable({
         dom: 'frtip' ,
-           
     });
 
     $('#downloadPdf').on('click', function() {
-      
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {
                     extend: 'pdfHtml5',
                     text: 'Download PDF',
-                    title: 'Sales Report'
+                    title: 'Sales Report',
+                    exportOptions: {
+                        columns: ':visible', // Exports only visible columns
+                        modifier: {
+                            page: 'all' // Exports all data, not just the visible page
+                        }
+                    }
                 }
             ]
         }).container().find('button').click();
     });
 
-    
     $('#downloadExcel').on('click', function() {
-        
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {
                     extend: 'excelHtml5',
                     text: 'Download Excel',
-                    title: 'Sales Report'
+                    title: 'Sales Report',
+                    exportOptions: {
+                        columns: ':visible',
+                        modifier: {
+                            page: 'all' // Exports all data, not just the visible page
+                        }
+                    }
                 }
             ]
         }).container().find('button').click();
     });
 });
+</script>
 
-            </script>
         </div>
     </div>
     <!-- Content End -->

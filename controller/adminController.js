@@ -524,43 +524,33 @@ module.exports = {
      SalesReport : async (req, res) => {
         try {
             const format = req.query.format;
+
     
             if (format === 'pdf') {
                 const doc = new PDFDocument();
                 res.setHeader('Content-disposition', 'attachment; filename=sales_report.pdf');
                 res.setHeader('Content-type', 'application/pdf');
-    
-                // Title
                 doc.fontSize(20).text('Sales Report', { align: 'center' }).moveDown();
-    
-                // Summary
                 doc.fontSize(14).text(`Total Sales: ₹${totalSales.toFixed(2)}`);
                 doc.text(`Total Orders: ${totalOrders}`);
                 doc.text(`Total Discounts: ₹${totalDiscount.toFixed(2)}`);
                 doc.moveDown();
-    
-                // Table Header
                 doc.fontSize(12)
                     .text('Buyer | Product Name | Quantity | Price | Total | Purchase Date', { align: 'left', underline: true })
                     .moveDown();
-    
-                // Table Content
                 orders.forEach(orderItem => {
                     orderItem.products.forEach(product => {
-                        const purchaseDate = orderItem.orderDate.toLocaleDateString('en-IN'); // Format the date
                         const buyer = orderItem.userId ? orderItem.userId.username : 'Unknown User';
                         const totalAmount = orderItem.totalAmount.toFixed(2);
                         const price = product.productId?.price || 0;
                         const quantity = product.quantity || 0;
-                       
+                        const purchaseDate = orderItem.orderDate.toLocaleDateString('en-IN'); 
     
                         doc.text(`${buyer} | ${product.productId?.name} | ${quantity} | ₹${price.toFixed(2)} | ₹${totalAmount} | ${purchaseDate}`);
                     });
                 });
     
-                // Footer
                 doc.moveDown().fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
-    
                 doc.pipe(res);
                 doc.end();
                 return;
@@ -579,8 +569,6 @@ module.exports = {
     
             const { startDate, endDate, presetFilter } = req.query;
             let dateFilter = {};
-    
-            // Set date filter based on preset filters
             if (presetFilter === 'today') {
                 const today = new Date();
                 dateFilter = { orderDate: { $gte: today.setHours(0, 0, 0, 0) } };
