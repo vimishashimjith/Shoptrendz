@@ -61,8 +61,8 @@ router.get('/cart', auth.isAuthenticated, viewCart);
 router.post('/cart/:productId', auth.isAuthenticated, addToCart);
 router.post('/cart/update-quantity/:productId', auth.isAuthenticated, updateCartQuantity);
 router.post('/cart/remove/:productId', auth.isAuthenticated, removeFromCart);
-router.get('/checkout', auth.isAuthenticated, checkoutLoad);
-router.post('/checkout', auth.isAuthenticated, placeOrder);
+router.get('/checkout', auth.isAuthenticated,auth.isBlocked,checkoutLoad);
+router.post('/checkout', auth.isAuthenticated,auth.isBlocked,placeOrder);
 router.post('/addTowishlist', auth.isAuthenticated, addTowishlist);
 
 router.get('/wishlist',auth.isAuthenticated,wishlistLoad)

@@ -10,7 +10,7 @@ const PDFDocument = require('pdfkit');
 const stream = require('stream');
 const Payment=require('../model/paymentSchema')
 
-module.exports = {
+module.exports = {   
     getAdminLogin: async (req, res) => {
         if (req.session.adminId) {
             return res.redirect('/admin/home');

@@ -15,9 +15,10 @@
     <div class="row px-xl-5">
         <!-- Product Images Section -->
         <div class="col-lg-5 mb-30">
-            <div class="bg-light p-3 zoom-container">
-                <img id="main-image" class="img-fluid" src="/uploads/<%= product.images[0].url %>" alt="Product Image">
+            <div class="bg-light p-0 zoom-container" style="overflow: hidden;"> <!-- Removed padding -->
+                <img id="main-image" class="img-fluid w-100" src="/uploads/<%= product.images[0].url %>" alt="Product Image">
             </div>
+            
             <div class="row mt-3">
                 <% for (let i = 1; i < product.images.length; i++) { %>
                     <div class="col-4 zoom-container">

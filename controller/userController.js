@@ -1706,7 +1706,7 @@ const requestCancellation = async (req, res) => {
         order.status = 'Cancellation Requested';
         order.cancelReason = reason;
 
-        if (order.paymentMethod === 'Razorpay') {
+        if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
             const user = await User.findById(order.userId);
             if (!user) {
                 return res.status(404).json({ success: false, message: 'User not found.' });

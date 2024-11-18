@@ -17,6 +17,7 @@ const { isAuthenticated } = require('./middleware/auth');
 const cartCount=require('./middleware/cartCount')
 const wishlistCount=require('./middleware/wishlistCount')
 
+
 const app = express();
 
 connectDB();
