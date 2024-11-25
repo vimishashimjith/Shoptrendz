@@ -78,7 +78,8 @@
                               <td><%= coupons[i].maxDiscount %></td>
                               <td><%= coupons[i].description %></td>
                               <td><%= coupons[i].limit %></td>
-                              <td><%= coupons[i].expirityDate %></td>
+                            
+                              <td><%= new Date(coupons[i].expirityDate).toLocaleDateString() %></td>
                               <td>
                                 <form action="/admin/removeCoupon/<%= coupons[i]._id %>" method="POST" style="display: inline;" class="delete-form">
                                   <button type="submit" class="btn btn-danger">

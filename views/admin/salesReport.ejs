@@ -170,6 +170,8 @@
                         <input type="date" id="endDate" name="endDate" required>
                         <button type="submit" class="btn btn-primary">Filter</button>
                     </form>
+                    
+                   
 
                     <!-- Preset Filters -->
                     <form action="/admin/salesReport" method="GET" style="margin-left: 20px;">
@@ -329,7 +331,39 @@ $(document).ready(function() {
         }).container().find('button').click();
     });
 });
+
+function validateDates() {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const today = new Date().toISOString().split("T")[0];
+
+        // Check if the selected dates are in the future
+        if (startDate > today || endDate > today) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Dates cannot be in the future.',
+                confirmButtonText: 'OK'
+            });
+            return false; // Prevent form submission
+        }
+
+        // Check if start date is greater than end date
+        if (startDate && endDate && startDate > endDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Date Range',
+                text: 'Start date cannot be later than end date.',
+                confirmButtonText: 'OK'
+            });
+            return false; // Prevent form submission
+        }
+
+        return true; // Allow form submission if everything is valid
+    }
 </script>
+<!-- Include SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         </div>
     </div>

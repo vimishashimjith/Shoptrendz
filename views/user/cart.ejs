@@ -45,6 +45,7 @@
                                 <td class="align-middle">
                                     <% if (product.images) { %>
                                         <img src="/uploads/<%= product.images %>" alt="<%= product.name %>" style="width: 50px;">
+                                        <p><%= product.name %></p>
                                     <% } else { %>
                                         <p>No image available</p>
                                     <% } %>
