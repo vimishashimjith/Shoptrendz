@@ -49,6 +49,7 @@
                                 <p><strong>User:</strong> <%= order.userId ? order.userId.username : 'Unknown' %></p>
                                 <p><strong>Order Date:</strong> <%= order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A' %></p>
                                 <p><strong>Total Amount:</strong> ₹<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></p>
+
                                 <p><strong>Payment Method:</strong> <%= order.paymentMethod || 'N/A' %></p>
                                 <p><strong>Payment Status:</strong> 
                                     <%= order.paymentId ? (order.paymentId.status || 'N/A') : 'N/A' %>
@@ -72,6 +73,10 @@
                                             <th>Item</th>
                                             <th>Quantity</th>
                                             <th>Price</th>
+                                            
+                                            <th>Discount</th>
+                                            <th>Coupon Discount</th>
+                                            <th>Shipping Charge</th>
                                             <th>Total</th>
                                         </tr>
                                     </thead>
@@ -82,19 +87,21 @@
                                                     <td><%= product.productId.name || 'N/A' %></td>
                                                     <td><%= product.quantity || 'N/A' %></td>
                                                     <td>₹<%= product.productId.price ? product.productId.price.toFixed(2) : '0.00' %></td>
-                                                    <td>₹<%= (product.productId.price * product.quantity).toFixed(2) %></td>
+                                                    <td>₹<%= order.discount ? order.discount.toFixed(2) : '0.00' %></td>
+            
+                                                    <td>₹<%= order.couponDiscount ? order.couponDiscount.toFixed(2) : '0.00' %></td>
+                                                    <td>₹<%= product.productId.shippingCharge ? product.productId.shippingCharge.toFixed(2) : '100.00' %></td>
+                                                    <td> ₹<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></td>
                                                 </tr>
                                             <% }) %>
                                         <% } else { %>
                                             <tr>
-                                                <td colspan="4">No items available.</td>
+                                                <td colspan="6">No items available.</td>
                                             </tr>
                                         <% } %>
                                     </tbody>
-                                    
-                                    
-                                    
                                 </table>
+                                
                             </div>
 
                             <div class="order-actions mt-4">
