@@ -128,29 +128,29 @@
                                    href="/productdetail/<%= product._id %>">
                                     <%= product.name %>
                                 </a>
-        
+                            
                                 <div class="d-flex align-items-center justify-content-center mt-2">
-                                  
-                                    <h5 class="text-danger fw-bold me-3">
-                                        ₹<%= finalPrice.toFixed(2) %>
-                                    </h5>
-        
                                     <% if (bestOffer > 0) { %>
-                                       
+                                        <!-- Display discounted price and original price -->
+                                        <h5 class="text-danger fw-bold me-3">
+                                            ₹<%= finalPrice.toFixed(2) %>
+                                        </h5>
                                         <h6 class="text-muted">
                                             <del>₹<%= product.price.toFixed(2) %></del>
                                         </h6>
+                                    <% } else { %>
+                                        <!-- Display original price only -->
+                                        <h5 class="fw-bold">₹<%= product.price.toFixed(2) %></h5>
                                     <% } %>
                                 </div>
-        
+                            
                                 <% if (bestOffer > 0) { %>
-                                 
+                                    <!-- Show offer badge only if there is a valid discount -->
                                     <span class="badge bg-success text-white fw-bold p-1" style="font-size: 0.95rem;">
-                                        <%= product.offerType %> - <%= product.bestOffer %>% OFF
+                                        <%= isCategoryOffer ? 'Category Offer' : 'Product Offer' %> - <%= bestOffer %>% OFF
                                     </span>
                                 <% } %>
-        
-                                
+                            
                                 <div class="d-flex align-items-center justify-content-center mb-1 mt-2">
                                     <% for (let i = 1; i <= 5; i++) { %>
                                         <% if (i <= Math.floor(product.rating)) { %>
@@ -164,6 +164,7 @@
                                     <small>(<%= product.reviews %>)</small>
                                 </div>
                             </div>
+                            
                         </div>
                     </div>
                 <% }); %>

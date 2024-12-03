@@ -4,23 +4,31 @@ const {
     loginLoad, insertUser, verifyLogin, loadHome, loadRegister,
     verifyOtpLoad, resetPassword, forgetPasswordLoad, forgetVerify,
     userLogout, verifyOtp, loadProduct, loadProductdetail, forgetLoad,
-    viewCart, addToCart, checkoutLoad, addAddress, addAddressLoad, successGoogleLogin, errorlogin, updateCartQuantity, removeFromCart,
-    showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails, editProfileLoad, editProfile, getChangePasswordPage,
-    changePassword, placeOrder, orderLoad, resendOTP,
-    searchProduct, 
-    addTowishlist,
-    wishlistLoad,
-    removeFromWishlist,
-    validateCoupon,
-    returnOrder,
-    requestCancellation,
-    downloadInvoice,
-    paymentProcess,
-    payAgain
-    
-   
- 
+    addAddress, addAddressLoad, successGoogleLogin, errorlogin,
+    showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails,
+    editProfileLoad, editProfile, getChangePasswordPage,changePassword,resendOTP,
+    searchProduct, addTowishlist,wishlistLoad,removeFromWishlist, 
 } = require('../controller/userController');
+
+const {
+  viewCart,
+  addToCart,
+  updateCartQuantity,
+  removeFromCart
+} = require('../controller/cartController');
+
+const {
+  checkoutLoad,
+    placeOrder,
+    paymentProcess,
+    payAgain,
+    orderLoad,
+    requestCancellation,
+    returnOrder,
+    validateCoupon,
+    downloadInvoice
+} = require('../controller/orderController');
+
 const bodyparser = require('body-parser');
 const auth = require('../middleware/auth');
 const passport = require('passport');
@@ -67,15 +75,11 @@ router.post('/addTowishlist', auth.isAuthenticated, addTowishlist);
 
 router.get('/wishlist',auth.isAuthenticated,wishlistLoad)
 router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWishlist);
-
-
-
 router.get('/downloadInvoice/:orderId', downloadInvoice);
 router.get('/orders', auth.isAuthenticated, orderLoad);
 
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
-
 
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 router.post('/process-payment',auth.isAuthenticated,paymentProcess)
