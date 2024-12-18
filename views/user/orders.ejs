@@ -212,18 +212,18 @@
   <script>
     function cancelOrder(orderId) {
         Swal.fire({
-            title: 'Request Cancellation',
-            text: 'Are you sure you want to request cancellation for this order?',
+            title: 'Reason for Cancellation',
+            text: 'Are you sure you want to  cancell for this order?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, request cancellation!',
+            confirmButtonText: 'Yes, cancelled!',
             cancelButtonText: 'No, keep it'
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
-                    title: 'Request Cancellation',
+                    title: 'Cancellation',
                     html: `<select id="cancelReason" class="swal2-input">
                            
                             <option value="Delayed delivery">Delayed delivery</option>
@@ -248,7 +248,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                        
-                        fetch('/requestCancellation', {
+                        fetch('/cancelOrder', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(result.value),
@@ -256,7 +256,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire('Requested!', 'Your cancellation request has been sent for admin approval.', 'success').then(() => {
+                                Swal.fire( 'Your cancellation process proceeding.', 'success').then(() => {
                                     window.location.reload();
                                 });
                             } else {

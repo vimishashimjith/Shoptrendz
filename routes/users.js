@@ -7,7 +7,7 @@ const {
     addAddress, addAddressLoad, successGoogleLogin, errorlogin,
     showAddress, loadEditAddress, updateAddress, deleteAddress, getUserDetails,
     editProfileLoad, editProfile, getChangePasswordPage,changePassword,resendOTP,
-    searchProduct, addTowishlist,wishlistLoad,removeFromWishlist, 
+    searchProduct, addTowishlist,wishlistLoad,removeFromWishlist, wallet
 } = require('../controller/userController');
 
 const {
@@ -23,7 +23,7 @@ const {
     paymentProcess,
     payAgain,
     orderLoad,
-    requestCancellation,
+    cancelOrder,
     returnOrder,
     validateCoupon,
     downloadInvoice
@@ -57,7 +57,7 @@ router.get('/product', loadProduct);
 router.get('/productdetail/:id', loadProductdetail);
 router.get('/logout', auth.isAuthenticated, userLogout);
 
-
+router.get('/wallet',auth.isAuthenticated,wallet)
 router.get('/searchProduct',searchProduct)
 router.get('/add-address', auth.isAuthenticated, addAddressLoad);
 router.post('/add-address', auth.isAuthenticated, addAddress);
@@ -79,7 +79,7 @@ router.get('/downloadInvoice/:orderId', downloadInvoice);
 router.get('/orders', auth.isAuthenticated, orderLoad);
 
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
-router.post('/requestCancellation',auth.isAuthenticated,requestCancellation)
+router.post('/cancelOrder',auth.isAuthenticated,cancelOrder)
 
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 router.post('/process-payment',auth.isAuthenticated,paymentProcess)

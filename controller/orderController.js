@@ -468,33 +468,39 @@ const orderLoad = async (req, res) => {
 };
 
 
-const requestCancellation = async (req, res) => {
-    const { orderId, reason } = req.body;
+const cancelOrder = async (req, res) => {
+    const { orderId } = req.body;
 
     try {
+        // Find the order
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found.' });
         }
 
-        order.status = 'Cancellation Requested';
-        order.cancelReason = reason;
+        // Check if the order has already been canceled
+        if (order.status === 'Cancelled') {
+            return res.status(400).json({ success: false, message: 'This order has already been canceled.' });
+        }
 
+        // Set order status to 'Cancelled' immediately
+        order.status = 'Cancelled';
+
+        // Process refund if payment method is Razorpay or Wallet
         if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
             const user = await User.findById(order.userId);
             if (!user) {
                 return res.status(404).json({ success: false, message: 'User not found.' });
             }
 
-            
             const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
 
-            
+            // Refund the amount to user's wallet
             wallet.amount += order.totalAmount;
 
-           
+            // Log the refund transaction
             wallet.transactions.push({
-                type: 'OrderRefund', 
+                type: 'OrderRefund',
                 amount: order.totalAmount,
                 date: new Date(),
             });
@@ -503,14 +509,17 @@ const requestCancellation = async (req, res) => {
             console.log(`Credited ${order.totalAmount} to wallet of user ${user._id}`);
         }
 
+        // Save the order with updated status
         await order.save();
 
-        res.json({ success: true, message: 'Cancellation request has been sent for admin approval.' });
+        // Respond to the user indicating the order has been canceled
+        res.json({ success: true, message: 'Your order has been canceled and the refund processed.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'An error occurred while processing your request.' });
     }
 };
+
 
 const returnOrder = async (req, res) => {
     try {
@@ -654,7 +663,7 @@ module.exports = {
     paymentProcess,
     payAgain,
     orderLoad,
-    requestCancellation,
+    cancelOrder,
     returnOrder,
     validateCoupon,
     downloadInvoice

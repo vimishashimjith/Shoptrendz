@@ -941,6 +941,52 @@ const getUserDetails = async (req, res, next) => {
         res.status(500).redirect('/login'); 
     }
 };
+const wallet = async (req, res) => {
+    try {
+        const userId = req.session.user_id;
+
+        if (!userId) return res.redirect('/login');
+
+        const user = await User.findById(userId);
+        if (!user) return res.redirect('/login');
+
+        let wallet = await Wallet.findOne({ userId: user._id });
+        if (!wallet) {
+            wallet = new Wallet({
+                userId: user._id,
+                amount: 0,
+                transactions: [],
+            });
+            await wallet.save();
+        }
+
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+        const skip = (page - 1) * limit;
+
+        const paginatedTransactions = wallet.transactions.slice(skip, skip + limit);
+        const totalTransactions = wallet.transactions.length;
+        const totalPages = Math.ceil(totalTransactions / limit);
+
+        const breadcrumbs = [
+            { name: "Home", url: "/" },
+            { name: "Profile", url: "/userDetails" },
+            { name: "Wallet", url: "/wallet" },
+        ];
+
+        res.render('user/wallet', {
+            user,
+            breadcrumbs,
+            wallet,
+            transactions: paginatedTransactions,
+            currentPage: page,
+            totalPages,
+        });
+    } catch (error) {
+        console.error('Error fetching wallet details:', error);
+        res.status(500).redirect('/login');
+    }
+};
 
 
 
@@ -1382,5 +1428,6 @@ module.exports = {
     searchProduct,
     addTowishlist,
     wishlistLoad,
-    removeFromWishlist    
+    removeFromWishlist ,
+    wallet   
 };
