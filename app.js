@@ -66,17 +66,34 @@ app.use(wishlistCount)
 app.use('/', usersRouter);
 app.use('/admin', adminsRouter);
 
-
-app.use(function(req, res, next) {
-  next(createError(404));
+app.use(function (req, res, next) {
+  res.status(404).render('user/404', {
+      title: '404 - Page Not Found',
+      message: 'The page you are looking for does not exist.',
+      details: null 
+  });
 });
 
-
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
+  console.error(err.stack); 
+  const statusCode = err.status || 500;
+  const isDev = req.app.get('env') === 'development';
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-  res.status(err.status || 500);
-  res.render('error');
+  res.locals.error = isDev ? err : {}; 
+
+  if (statusCode === 500) {
+      res.status(500).render('user/500', {
+          title: '500 - Internal Server Error',
+          message: 'Something went wrong on our end.',
+      });
+  } else {
+      res.status(statusCode).render('user/error', {
+          title: `Error ${statusCode}`,
+          status: statusCode,
+          message: err.message,
+      });
+  }
 });
+
 
 module.exports = app;

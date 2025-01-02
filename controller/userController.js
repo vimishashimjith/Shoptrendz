@@ -192,7 +192,7 @@ const loadProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading products:', error.message);
-        res.status(500).send('Server Error');
+        res.status(500).render('user/500');
     }
 };
 
@@ -1227,7 +1227,6 @@ const wishlistLoad = async (req, res) => {
     }
 };
 
-
 const searchProduct = async (req, res) => {
     try {
         const userId = req.session.user_id;
@@ -1237,7 +1236,8 @@ const searchProduct = async (req, res) => {
         const searchQuery = req.query.search || '';
         const sortOption = req.query.sort || '';
         const category = req.query.category || '';
-
+        const currentPage = parseInt(req.query.page) || 1; 
+        const productsPerPage = 12; 
         const query = {
             $and: [
                 {
@@ -1288,7 +1288,14 @@ const searchProduct = async (req, res) => {
                 sort = { name: 1 };
         }
 
-        const products = await Product.find(query).sort(sort).collation({ locale: 'en', strength: 1 }).populate('category');
+        const totalProducts = await Product.countDocuments(query);
+        const totalPages = Math.ceil(totalProducts / productsPerPage);
+        const products = await Product.find(query)
+            .sort(sort)
+            .collation({ locale: 'en', strength: 1 })
+            .populate('category')
+            .skip((currentPage - 1) * productsPerPage)
+            .limit(productsPerPage);
 
         const breadcrumbs = [
             { name: 'Home', url: '/' },
@@ -1296,12 +1303,22 @@ const searchProduct = async (req, res) => {
             { name: 'ProductSearch', url: '/searchProduct' }
         ];
 
-        res.render('user/searchProduct', { products, breadcrumbs, user });
+        res.render('user/searchProduct', {
+            products,
+            breadcrumbs,
+            user,
+            currentPage,
+            totalPages,
+            searchQuery,
+            sortOption,
+            category
+        });
     } catch (err) {
         console.error("Error in searchProduct:", err);
         res.status(500).send('Server Error');
     }
 };
+
 
 
 

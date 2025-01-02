@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const couponSchema = new mongoose.Schema({
     code:{type:String,
         require:true,
+        unique: true
     },
     type:{
         type:String,

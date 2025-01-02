@@ -222,8 +222,6 @@ const validateCoupon = async (req, res,next) => {
         }
 
         const orderId = generateOrderId();
-
-       
         const order = new Order({
             orderId,
             userId,
@@ -238,6 +236,7 @@ const validateCoupon = async (req, res,next) => {
 
         await order.save();
 
+    
         const payment = new Payment({
             orderId: order._id,
             paymentMethod,
@@ -249,13 +248,16 @@ const validateCoupon = async (req, res,next) => {
         order.paymentId = payment._id;
         await order.save();
 
-        
+
+
         if (paymentMethod === "COD") {
+            
             await Cart.deleteOne({ userId });
             return res.json({ success: true, message: "Order placed successfully with COD" });
+
         } else if (paymentMethod === "Razorpay") {
             const options = {
-                amount: total * 100,  
+                amount: total * 100, 
                 currency: "INR",
                 receipt: payment._id.toString(),
                 notes: { orderId },
@@ -267,12 +269,14 @@ const validateCoupon = async (req, res,next) => {
                     return res.status(400).json({ success: false, message: "Failed to create Razorpay order" });
                 }
 
+    
                 await Cart.deleteOne({ userId });
-                res.status(200).json({
+
+                return res.status(200).json({
                     success: true,
                     message: "Razorpay order created successfully",
                     order_id: razorpayOrder.id,
-                    amount: options.amount / 100,  
+                    amount: options.amount / 100, 
                     key_id: RAZORPAY_ID_KEY,
                     contact: address.mobile,
                     name: address.fullname,
@@ -280,24 +284,53 @@ const validateCoupon = async (req, res,next) => {
                     db_order_id: order._id,
                 });
             });
+
         } else if (paymentMethod === "Wallet") {
-            const wallet = await Wallet.findOne({ userId });
-            wallet.amount -= total;  
-            await wallet.save();
+            try {
+                const wallet = await Wallet.findOne({ userId });
 
-            payment.status = 'paid';
-            await payment.save();
+                
+                if (wallet.amount < total) {
+                    return res.status(400).json({ success: false, message: "Insufficient wallet balance" });
+                }
 
-            await Cart.deleteOne({ userId });
-            return res.json({ success: true, message: "Order placed successfully with Wallet" });
+                
+                wallet.amount -= total;
+
+                
+                const walletTransaction = {
+                    type: 'WalletPayment',
+                    amount: total,
+                    date: new Date(),
+                };
+
+                wallet.transactions.push(walletTransaction);
+
+                await wallet.save();
+
+                payment.status = 'paid';
+                await payment.save();
+
+            
+                await Cart.deleteOne({ userId });
+
+                return res.json({ success: true, message: "Order placed successfully with Wallet" });
+
+            } catch (error) {
+                console.error("Error placing order with wallet payment:", error.message);
+                res.status(500).json({ success: false, message: "Internal server error" });
+            }
         } else {
-            return res.status(400).json({ success: false, message: "Invalid payment method selected" });
+            return res.status(400).json({ success: false, message: "Invalid payment method" });
         }
+
     } catch (error) {
         console.error("Error placing order:", error.message);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+        
 const paymentProcess = async (req, res) => {
     try {
         const { paymentId, success, orderId } = req.body;
@@ -472,21 +505,18 @@ const cancelOrder = async (req, res) => {
     const { orderId } = req.body;
 
     try {
-        // Find the order
+        
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found.' });
         }
 
-        // Check if the order has already been canceled
-        if (order.status === 'Cancelled') {
+                if (order.status === 'Cancelled') {
             return res.status(400).json({ success: false, message: 'This order has already been canceled.' });
         }
-
-        // Set order status to 'Cancelled' immediately
+       
         order.status = 'Cancelled';
 
-        // Process refund if payment method is Razorpay or Wallet
         if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') {
             const user = await User.findById(order.userId);
             if (!user) {
@@ -495,10 +525,8 @@ const cancelOrder = async (req, res) => {
 
             const wallet = await Wallet.findOne({ userId: user._id }) || new Wallet({ userId: user._id, amount: 0 });
 
-            // Refund the amount to user's wallet
             wallet.amount += order.totalAmount;
 
-            // Log the refund transaction
             wallet.transactions.push({
                 type: 'OrderRefund',
                 amount: order.totalAmount,
@@ -509,10 +537,8 @@ const cancelOrder = async (req, res) => {
             console.log(`Credited ${order.totalAmount} to wallet of user ${user._id}`);
         }
 
-        // Save the order with updated status
         await order.save();
 
-        // Respond to the user indicating the order has been canceled
         res.json({ success: true, message: 'Your order has been canceled and the refund processed.' });
     } catch (error) {
         console.error(error);
