@@ -26,6 +26,8 @@
                             <strong>Order ID:</strong> <%= order.orderId %> <br>
                             <strong>Date:</strong> <%= new Date(order.orderDate).toLocaleDateString() %> <br>
                             <strong>Total Amount:</strong> <%= order.totalAmount %> <br>
+                            <strong>Offer Discount:</strong> <%= order.discount %> <br>
+                            <strong>Coupon Discount:</strong> <%= order.couponDiscount %> <br>
                             <strong>Payment Method:</strong> <%= order.paymentMethod %> <br>
                             <p><strong>Payment Status:</strong> 
                                 <%= order.paymentId ? (order.paymentId.status || 'N/A') : 'N/A' %>
@@ -40,26 +42,19 @@
                                     <li class="product-item">
                                         <% if (product.productId.images && product.productId.images.length > 0) { %>
                                             <img src="/uploads/<%= product.productId.images[0].url %>" class="product-image" alt="<%= product.productId.name %>">
+                                
                                         <% } else { %>
                                             <img src="/uploads/default-placeholder.png" class="product-image" alt="Image not available">
                                         <% } %>
-                                        <span><%= product.productId.name %> - Quantity: <%= product.quantity %></span>
+                                        <span><%= product.productId.name %>-<%= product.productId.price %>   Quantity: <%= product.quantity %></span>
+                                    
                                     </li>
+                                  
                                 <% }) %>
                             </ul>
                         </div>
                         
                         <!-- Shipping Address -->
-                        <div class="order-address">
-                            <strong>Shipping Address:</strong> 
-                            <% if (order.addressId) { %>
-                                <p><%= order.addressId.street %>, <%= order.addressId.city %>, <%= order.addressId.pincode %></p>
-                            <% } else { %>
-                                <p>No shipping address provided</p>
-                            <% } %>
-                        </div>
-                        
-                        <!-- Order Status and Actions -->
                         <div class="order-status">
                             <strong>Status:</strong> <%= order.status %> <br>
                             <% if (order.status === 'Failed') { %>

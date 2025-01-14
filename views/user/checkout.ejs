@@ -169,6 +169,12 @@
             </h5>
             
             <div class="pt-2">
+                
+                <label for="couponDropdown">Available Coupons:</label>
+                <select id="couponDropdown">
+                  <option value="">--Available Coupons--</option>
+                
+                </select>
                 <form id="couponForm" class="mb-30" action="javascript:void(0);">
                     <div class="input-group">
                         <input type="text" id="couponCode" class="form-control border-0 p-4" placeholder="Coupon Code">
@@ -179,7 +185,7 @@
                     </div>
                     
                 </form>
-           
+                
             <div class="order-total">
              
                 <div class="border-bottom pb-3">
@@ -488,7 +494,36 @@
         });
     }
 });
+async function fetchCoupons() {
+      try {
+        const response = await fetch('/coupons');
+        const coupons = await response.json();
 
+        const couponDropdown = document.getElementById('couponDropdown');
+        
+        // Clear previous options
+        couponDropdown.innerHTML = '<option value="">--Coupons--</option>';
+
+        // Check if coupons are available
+        if (coupons.length > 0) {
+          coupons.forEach(coupon => {
+            const option = document.createElement('option');
+            option.value = coupon.code; 
+            option.text = `${coupon.code} `;  
+            couponDropdown.appendChild(option);
+          });
+        } else {
+          const option = document.createElement('option');
+          option.text = 'No available coupons';
+          couponDropdown.appendChild(option);
+        }
+      } catch (error) {
+        console.error('Error fetching coupons:', error);
+      }
+    }
+
+    // Call the function to fetch coupons when the page loads
+    window.onload = fetchCoupons;
 // Function to update the total with discount
 function updateTotal(discountPercentage) {
     const subtotal = originalTotal;

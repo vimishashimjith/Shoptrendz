@@ -216,26 +216,32 @@
                             <tbody>
                                 <% if (orders.length > 0) { %>
                                     <% orders.forEach(orderItem => { %>
-                                        <% orderItem.products.forEach(product => { %>
-                                            <tr>
-                                                <td><%= new Date(orderItem.orderDate).toLocaleDateString() %></td>
-                                            
-                                                <td><%= orderItem.userId ? orderItem.userId.username : 'Unknown User' %></td>
+                                        <tr>
+                                            <td rowspan="<%= orderItem.products.length %>"><%= new Date(orderItem.orderDate).toLocaleDateString() %></td>
+                                            <td rowspan="<%= orderItem.products.length %>"><%= orderItem.userId ? orderItem.userId.username : 'Unknown User' %></td>
+                                            <% orderItem.products.forEach((product, index) => { %>
+                                                <% if (index > 0) { %>
+                                                    <tr>
+                                                <% } %>
                                                 <td><%= product.productId?.name %></td>
                                                 <td><%= product.quantity %></td>
                                                 <td>₹ <%= product.productId?.price.toFixed(2) %></td>
-                                                <td>₹ <%= orderItem.discount.toFixed(2) %></td> 
-                                                <td>₹ <%= orderItem.couponDiscount.toFixed(2) %></td> 
-                                                <td>₹ <%= orderItem.totalAmount.toFixed(2) %></td>
-                                            </tr>
-                                        <% }); %>
+                                                <% if (index === 0) { %>
+                                                    <td rowspan="<%= orderItem.products.length %>">₹ <%= orderItem.discount.toFixed(2) %></td>
+                                                    <td rowspan="<%= orderItem.products.length %>">₹ <%= orderItem.couponDiscount.toFixed(2) %></td>
+                                                    <td rowspan="<%= orderItem.products.length %>">₹ <%= orderItem.totalAmount.toFixed(2) %></td>
+                                                <% } %>
+                                                </tr>
+                                            <% }); %>
+                                        </tr>
                                     <% }); %>
                                 <% } else { %>
                                     <tr>
-                                        <td colspan="7" class="text-center no-orders">No orders found</td>
+                                        <td colspan="8" class="text-center no-orders">No orders found</td>
                                     </tr>
                                 <% } %>
                             </tbody>
+                            
                         </table>
                     </div>
                     

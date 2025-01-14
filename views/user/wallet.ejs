@@ -37,6 +37,7 @@
                         <tr>
                             <th>Type</th>
                             <th>Amount</th>
+                            <th>Mode</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -50,6 +51,7 @@
                                 <tr>
                                     <td><%= transaction.type %></td>
                                     <td><i class="bi bi-currency-rupee"></i> <%= transaction.amount %></td>
+                                    <td><%= transaction.transactionMode %></td> <!-- Display Debit or Credit -->
                                     <td><%= new Date(transaction.date).toLocaleDateString() %></td>
                                 </tr>
                             <% }) %>

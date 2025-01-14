@@ -137,6 +137,7 @@ const checkoutLoad = async (req, res) => {
         res.status(500).render('user/500');
     }
 };
+
 const validateCoupon = async (req, res,next) => {
     try {
       const { couponCode } = req.body;
@@ -656,6 +657,7 @@ const returnOrder = async (req, res) => {
         yPosition += 30;
         
         const discount = order.discount || 0; 
+        const couponDiscount = order.couponDiscount || 0; 
         const shippingCharge = 100;
         
         doc.font('Helvetica-Bold').fontSize(12).text('Subtotal:', itemX, yPosition);
@@ -663,14 +665,18 @@ const returnOrder = async (req, res) => {
         yPosition += 30;
         
         doc.font('Helvetica').fontSize(12).text('Discount:', itemX, yPosition);
-        doc.text(` ${discount.toFixed(2)}`, totalX, yPosition);
+        doc.text(`- ${discount.toFixed(2)}`, totalX, yPosition);
+        yPosition += 30;
+        
+        doc.font('Helvetica').fontSize(12).text('Coupon Discount:', itemX, yPosition);
+        doc.text(`- ${couponDiscount.toFixed(2)}`, totalX, yPosition);
         yPosition += 30;
         
         doc.font('Helvetica').fontSize(12).text('Shipping Charge:', itemX, yPosition);
-        doc.text(`${shippingCharge.toFixed(2)}`, totalX, yPosition);
+        doc.text(`  ${shippingCharge.toFixed(2)}`, totalX, yPosition);
         yPosition += 30;
         
-        const totalAmount = subtotal - discount + shippingCharge; 
+        const totalAmount = subtotal - discount - couponDiscount + shippingCharge;
         
         doc.font('Helvetica-Bold').fontSize(12).text('Total Amount:', itemX, yPosition);
         doc.text(`${totalAmount.toFixed(2)}`, totalX, yPosition);
@@ -682,7 +688,17 @@ const returnOrder = async (req, res) => {
         next(error);
     }
 };
-
+const coupons= async (req, res) => {
+    try {
+      const coupons = await Coupon.find({
+        expirityDate: { $gt: new Date() }, // Only show unexpired coupons
+      }).select('code description'); // Selecting only the coupon code and description
+  
+      res.json(coupons); // Send coupons to the frontend
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching coupons' });
+    }
+  };
 module.exports = {
     checkoutLoad,
     placeOrder,
@@ -692,6 +708,8 @@ module.exports = {
     cancelOrder,
     returnOrder,
     validateCoupon,
-    downloadInvoice
+    downloadInvoice,
+    coupons
+    
     
 };

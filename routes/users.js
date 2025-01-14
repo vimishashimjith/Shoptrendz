@@ -26,7 +26,9 @@ const {
     cancelOrder,
     returnOrder,
     validateCoupon,
-    downloadInvoice
+    downloadInvoice,
+    coupons
+   
 } = require('../controller/orderController');
 
 const bodyparser = require('body-parser');
@@ -78,9 +80,10 @@ router.post('/removeFromwishlist/:productId',auth.isAuthenticated,removeFromWish
 router.get('/downloadInvoice/:orderId', downloadInvoice);
 router.get('/orders', auth.isAuthenticated, orderLoad);
 
+
 router.post('/returnOrder',auth.isAuthenticated,returnOrder)
 router.post('/cancelOrder',auth.isAuthenticated,cancelOrder)
-
+router.get('/coupons',auth.isAuthenticated,coupons)
 router.post('/validateCoupon', auth.isAuthenticated,validateCoupon);
 router.post('/process-payment',auth.isAuthenticated,paymentProcess)
 router.post('/payAgain/:id', auth.isAuthenticated,payAgain)

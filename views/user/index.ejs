@@ -108,18 +108,7 @@
                         
                     
                         <!-- Product Rating Section -->
-                        <div class="d-flex align-items-center justify-content-center mb-1">
-                            <% for (let i = 1; i <= 5; i++) { %>
-                                <% if (i <= Math.floor(product.rating)) { %>
-                                    <small class="fa fa-star text-primary mr-1"></small>
-                                <% } else if (i - product.rating < 1) { %>
-                                    <small class="fa fa-star-half-alt text-primary mr-1"></small>
-                                <% } else { %>
-                                    <small class="fa fa-star text-muted mr-1"></small>
-                                <% } %>
-                            <% } %>
-                            <small>(<%= product.reviews %>)</small>
-                        </div>
+                        
                     </div>
                     
                     
@@ -193,7 +182,7 @@
     font-size: 1.1rem; /* Set font size */
     font-weight: bold; /* Bold font for emphasis */
     border-radius: 20px; /* Round the edges of the badge */
-    box-shadow: 0 4px 8px rgba(187, 8, 8, 0.2); /* Add a subtle shadow for depth */
+    box-shadow: 0 4px 8px rgba(180, 16, 16, 0.2); /* Add a subtle shadow for depth */
     transition: transform 0.3s, background-color 0.3s; /* Add a transition for hover effect */
 }
 

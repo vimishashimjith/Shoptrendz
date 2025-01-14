@@ -62,6 +62,7 @@ module.exports = {
             const adminData = await User.findById(req.session.adminId);
             if (adminData && adminData.isAdmin) {
                 const totalSales = await Order.aggregate([
+                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
                     { 
                         $group: {
                             _id: null, 
@@ -70,11 +71,12 @@ module.exports = {
                     }
                 ]);
     
-                const totalProducts = await Product.countDocuments({ softDelete: false }); 
+                const totalProducts = await Product.countDocuments({ softDelete: false });
     
-                const totalUsers = await User.countDocuments({ isAdmin: false }); 
+                const totalUsers = await User.countDocuments({ isAdmin: false });
     
                 const topSellingProducts = await Order.aggregate([
+                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
                     { $unwind: "$products" },
                     {
                         $group: {
@@ -98,19 +100,19 @@ module.exports = {
                             productName: "$productDetails.name",
                             totalQuantity: 1,
                             price: "$productDetails.price",
-                            images: "$productDetails.images" 
+                            images: "$productDetails.images"
                         }
                     },
                     { $sort: { totalQuantity: -1 } },
                     { $limit: 10 }
                 ]);
     
-                
                 const topSellingCategories = await Order.aggregate([
+                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
                     { $unwind: "$products" },
                     {
                         $lookup: {
-                            from: "products", 
+                            from: "products",
                             localField: "products.productId",
                             foreignField: "_id",
                             as: "productDetails"
@@ -125,7 +127,7 @@ module.exports = {
                     },
                     {
                         $lookup: {
-                            from: "categories", 
+                            from: "categories",
                             localField: "_id",
                             foreignField: "_id",
                             as: "categoryDetails"
@@ -144,12 +146,12 @@ module.exports = {
                     { $limit: 10 }
                 ]);
     
-                
                 const topSellingBrands = await Order.aggregate([
+                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
                     { $unwind: "$products" },
                     {
                         $lookup: {
-                            from: "products", 
+                            from: "products",
                             localField: "products.productId",
                             foreignField: "_id",
                             as: "productDetails"
@@ -172,6 +174,7 @@ module.exports = {
                     { $sort: { totalQuantity: -1 } },
                     { $limit: 10 }
                 ]);
+    
                 res.render('admin/home', { 
                     title: 'Admin Home', 
                     layout: adminLayout, 
@@ -181,7 +184,8 @@ module.exports = {
                     totalUsers: totalUsers,
                     topSellingProducts,
                     topSellingCategories,
-                    topSellingBrands
+                    topSellingBrands,
+                    
                 });
             } else {
                 res.status(403).redirect('/admin/login');
@@ -560,14 +564,15 @@ module.exports = {
                     ]
                 }
                 : {};
-    
-            const orders = await Order.find({ ...searchFilter, ...dateFilter })
+                const statusFilter = { status: 'Delivered' };
+
+            const orders = await Order.find({ ...searchFilter, ...dateFilter, ...statusFilter })
                 .populate('userId', 'username')
                 .populate('products.productId', 'name price')
                 .skip(skip)
                 .limit(limit);
     
-            const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter });
+            const totalOrders = await Order.countDocuments({ ...searchFilter, ...dateFilter, ...statusFilter });
             const totalPages = Math.ceil(totalOrders / limit);
     
             let totalSales = 0;
