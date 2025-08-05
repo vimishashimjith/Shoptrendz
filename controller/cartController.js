@@ -21,11 +21,11 @@ const addToCart = async (req, res) => {
             return res.status(400).json({ message: 'Size and valid quantity are required' });
         }
 
-        const product = await Product.findById(productId).populate('category');
+        const product = await Product.findById(productId).populate('category') ;
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
-
+       
         const today = new Date();
         const productOfferValid = product.offer > 0 && today >= product.offerStart && today <= product.offerEnd;
         const productOfferPrice = productOfferValid

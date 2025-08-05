@@ -62,7 +62,7 @@ module.exports = {
             const adminData = await User.findById(req.session.adminId);
             if (adminData && adminData.isAdmin) {
                 const totalSales = await Order.aggregate([
-                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
+                    { $match: { status: 'Delivered' } }, 
                     { 
                         $group: {
                             _id: null, 
@@ -76,7 +76,7 @@ module.exports = {
                 const totalUsers = await User.countDocuments({ isAdmin: false });
     
                 const topSellingProducts = await Order.aggregate([
-                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
+                    { $match: { status: 'Delivered' } }, 
                     { $unwind: "$products" },
                     {
                         $group: {
@@ -108,7 +108,7 @@ module.exports = {
                 ]);
     
                 const topSellingCategories = await Order.aggregate([
-                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
+                    { $match: { status: 'Delivered' } }, 
                     { $unwind: "$products" },
                     {
                         $lookup: {
@@ -147,7 +147,7 @@ module.exports = {
                 ]);
     
                 const topSellingBrands = await Order.aggregate([
-                    { $match: { status: 'Delivered' } }, // Filter by "Delivered" status
+                    { $match: { status: 'Delivered' } }, 
                     { $unwind: "$products" },
                     {
                         $lookup: {
@@ -770,4 +770,56 @@ module.exports = {
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     },    
+   
+
+getSalesData: async (req, res) => {
+  try {
+    const period = req.query.period;
+    const now = new Date();
+    let startDate;
+
+    switch (period) {
+      case 'weekly':
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'monthly':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'yearly':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid period' });
+    }
+
+    const sales = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          status: 'Delivered' 
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: period === 'yearly' ? "%Y-%m" : "%Y-%m-%d",
+              date: "$createdAt"
+            }
+          },
+          totalSales: { $sum: "$totalAmount" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json(sales);
+
+  } catch (err) {
+    console.error('Error fetching sales data:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 }

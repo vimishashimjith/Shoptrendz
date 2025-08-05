@@ -13,7 +13,7 @@ const dotenv = require('dotenv').config();
 
 const usersRouter = require('./routes/users');
 const adminsRouter = require('./routes/admins');
-const { isAuthenticated } = require('./middleware/auth');
+const {isAuthenticated } = require('./middleware/auth');
 const cartCount=require('./middleware/cartCount')
 const wishlistCount=require('./middleware/wishlistCount')
 

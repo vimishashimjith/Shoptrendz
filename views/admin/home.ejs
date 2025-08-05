@@ -144,18 +144,22 @@
                       </div>
                   </div>
               </div>
+<!-- Sales Chart with Filters -->
+<div class="header mb-3 mt-5">
+  <h5>Sales Chart</h5>
+</div>
 
-              <div class="d-flex justify-content-end mb-3">
-                  <select id="timePeriod" class="form-select" style="width: 200px;">
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="yearly">Yearly</option>
-                  </select>
-              </div>
-              <div class="canvas" style="height: 290px;">
-                  <canvas id="salesChart"></canvas>
-              </div>
+<div class="filters mb-3">
+  <button class="btn btn-primary btn-sm me-2" onclick="fetchAndRenderSalesData('monthly')">Monthly</button>
+  <button class="btn btn-warning btn-sm me-2" onclick="fetchAndRenderSalesData('weekly')">Weekly</button>
+  <button class="btn btn-success btn-sm" onclick="fetchAndRenderSalesData('yearly')">Yearly</button>
+</div>
 
+<div class="card canvas">
+  <canvas id="saleChart" height="100"></canvas>
+</div>
+
+              
               <!-- Best Selling Products Section -->
               <div class="header mb-3 mt-5">
                   <h5>Best Selling Products</h5>
@@ -226,94 +230,54 @@
     <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
     <script src="../Admin/assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let saleChart;
 
-    <script>
-        
-        let salesChart;
-    
+async function fetchAndRenderSalesData(period) {
+  try {
+    const response = await fetch(`/admin/sales-data?period=${period}`);
+    const data = await response.json();
 
-        const ctx = document.getElementById('salesChart').getContext('2d');
+    const labels = data.map(item => item._id);
+    const values = data.map(item => item.totalSales);
 
-     
-        const salesData = {
-            monthly: [500, 700, 800, 600, 1200, 1500, 1700, 1600, 1400, 1200, 1000, 900],
-            quarterly: [2000, 2500, 3000, 3200],
-            yearly: [12000, 15000, 18000, 20000, 25000, 30000]
-        };
+    const chartData = {
+      labels: labels,
+      datasets: [{
+        label: `Sales (${period})`,
+        data: values,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    };
 
-        // Labels
-        const labels = {
-            monthly: ["Jan"],
-            quarterly: ["Q1"],
-            yearly: ["2025"]
-        };
-
-      
-        function createChart(data, labels) {
-            if (salesChart) {
-                salesChart.destroy();
-            }
-
-            salesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Sales Revenue',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return `&#8377; ${tooltipItem.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Sales Amount',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Time Period',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+    const chartConfig = {
+      type: 'bar',
+      data: chartData,
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
         }
+      }
+    };
 
-       
-        document.getElementById('timePeriod').addEventListener('change', function() {
-            const selectedPeriod = this.value;
-            createChart(salesData[selectedPeriod], labels[selectedPeriod]);
-        });
+    if (saleChart) saleChart.destroy();
+    const ctx = document.getElementById('saleChart').getContext('2d');
+    saleChart = new Chart(ctx, chartConfig);
 
-       
-        createChart(salesData.monthly, labels.monthly);
-    </script>
+  } catch (err) {
+    console.error('Error fetching sales data:', err);
+  }
+}
+
+
+fetchAndRenderSalesData('monthly');
+
+</script>
 </body>
 
 </html>

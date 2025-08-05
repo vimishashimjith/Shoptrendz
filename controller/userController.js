@@ -964,15 +964,14 @@ const wallet = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10; 
         const skip = (page - 1) * limit;
 
-        // Map transactions to add 'transactionMode' for each
         const paginatedTransactions = wallet.transactions.slice(skip, skip + limit).map(transaction => {
             const transactionMode = 
                 transaction.type === 'Referral' || transaction.type === 'OrderRefund' 
                     ? 'Credit' 
                     : 'Debit';
             return {
-                ...transaction._doc, // Spread all fields of the transaction document
-                transactionMode,     // Add transactionMode to indicate Credit or Debit
+                ...transaction._doc, 
+                transactionMode,     
             };
         });
 

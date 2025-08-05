@@ -691,10 +691,10 @@ const returnOrder = async (req, res) => {
 const coupons= async (req, res) => {
     try {
       const coupons = await Coupon.find({
-        expirityDate: { $gt: new Date() }, // Only show unexpired coupons
-      }).select('code description'); // Selecting only the coupon code and description
+        expirityDate: { $gt: new Date() }, 
+      }).select('code description'); 
   
-      res.json(coupons); // Send coupons to the frontend
+      res.json(coupons); 
     } catch (error) {
       res.status(500).json({ message: 'Error fetching coupons' });
     }

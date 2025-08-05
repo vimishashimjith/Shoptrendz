@@ -35,6 +35,10 @@ router.post('/login', adminController.verifyLogin);
 router.get('/home', adminAuth.isLogin, adminController.loadDashboard);
 router.get('/admin-users', adminAuth.isLogin, adminController.adminDashboard);
 
+router.get('/sales-data', adminAuth.isLogin, adminController.getSalesData);
+
+
+
 router.get('/categories', adminAuth.isLogin, categoryController.listCategories);
 router.get('/category-add', adminAuth.isLogin, categoryController.adminCategory);
 router.post('/category-add', adminAuth.isLogin, categoryController.addCategory);
