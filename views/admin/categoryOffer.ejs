@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Product List</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SweetAlert CDN -->
+</head>
+
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <%- include('../partials/admin/sidebar.ejs')%>
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs')%>
+      <br>
+      <br>
+      <div class="page-wrapper">
+        <div class="container-fluid">
+          <div class="card">
+            <div class="card-body">
+              <div class="col-12">
+                <h2>Category Offer List</h2>
+                <button type="button" class="btn btn-primary" style="margin: 8px;" onclick="showOfferModal('<%= category._id %>')">Add Offer</button>
+
+                <div class="bg-light rounded h-100 p-4">
+                  <div class="table-responsive">
+                    <% if (category.offer) { %>
+                    <table class="table table-bordered table-striped">
+                      <thead class="thead-dark">
+                        <tr>
+                          <th scope="col">Offer Percentage</th>
+                          <th scope="col">Offer Start Date</th>
+                          <th scope="col">Offer End Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><%= category.offer %>%</td>
+                          <td><%= new Date(category.offerStart).toLocaleDateString() %></td>
+                          <td><%= new Date(category.offerEnd).toLocaleDateString() %></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <% } else { %>
+                    <p>No offers available for this product</p>
+                    <% } %>
+                  </div>
+
+                  <div id="offerModal" class="modal"
+                    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); border-radius: 10px;">
+                    <form id="offerForm" onsubmit="submitOffer(event)"
+                      style="display: flex; flex-direction: column; gap: 10px;">
+                      <input type="hidden" id="category" name="categoryId" value="<%= category._id %>" />
+
+                      <label for="offer">Offer Percentage:</label>
+                      <input type="number" id="offer" name="offer" min="0" max="100" required class="form-control" />
+
+                      <label for="offerStart">Offer Start Date:</label>
+                      <input type="date" id="offerStart" name="offerStart" required class="form-control" />
+
+                      <label for="offerEnd">Offer End Date:</label>
+                      <input type="date" id="offerEnd" name="offerEnd" required class="form-control" />
+
+                      <div class="text-right">
+                        <button type="submit" class="btn btn-success">Submit</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideOfferModal()">Cancel</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <style>
+                /* Modal Styles */
+                .modal {
+                  z-index: 999;
+                  height: 400px;
+                  width: 400px;
+                }
+
+                /* Table Styles */
+                .table th,
+                .table td {
+                  vertical-align: middle;
+                  text-align: center;
+                }
+
+                .thead-dark th {
+                  background-color: #343a40;
+                  color: white;
+                }
+
+                /* Button Hover Effects */
+                .btn-primary {
+                  transition: background-color 0.3s ease;
+                }
+
+                .btn-primary:hover {
+                  background-color: #0056b3;
+                }
+
+                /* Form Inputs */
+                .form-control {
+                  padding: 8px;
+                  border-radius: 4px;
+                  border: 1px solid #ccc;
+                }
+
+                /* Responsive Table */
+                @media screen and (max-width: 768px) {
+                  .table-responsive {
+                    overflow-x: auto;
+                  }
+                }
+              </style>
+
+              <!-- JavaScript for Modal Toggle -->
+              <script>
+                function showOfferModal(categoryId) {
+                  document.getElementById('category').value = categoryId;
+                  document.getElementById('offerModal').style.display = 'block';
+                }
+
+                function hideOfferModal() {
+                  document.getElementById('offerModal').style.display = 'none';
+                }
+
+                async function submitOffer(event) {
+                  event.preventDefault();
+                  const form = document.getElementById('offerForm');
+                  const formData = new FormData(form);
+                  const categoryId = formData.get('categoryId');
+                  const offer = formData.get('offer');
+                  const offerStart = formData.get('offerStart');
+                  const offerEnd = formData.get('offerEnd');
+
+                  try {
+                    const response = await fetch(`/admin/${categoryId}/categoryOffer`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ offer, offerStart, offerEnd })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                      Swal.fire({
+                        title: 'Success!',
+                        text: 'Offer added successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                      }).then(() => {
+                        location.reload();
+                      });
+                    } else {
+                      Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to add offer',
+                        icon: 'error',
+                        confirmButtonText: 'Try Again'
+                      });
+                    }
+                  } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                      title: 'Error!',
+                      text: 'Error adding offer',
+                      icon: 'error',
+                      confirmButtonText: 'OK'
+                    });
+                  }
+                }
+              </script>
+
+</body>
+
+</html>

@@ -1,0 +1,262 @@
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <!-- Breadcrumb Navigation Start -->
+        <div class="col-12 pb-1">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <% breadcrumbs.forEach((crumb, index) => { %>
+                            <% if (index < breadcrumbs.length - 1) { %>
+                                <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                            <% } else { %>
+                                <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                            <% } %>
+                        <% }) %>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <!-- Breadcrumb Navigation End -->
+        
+        <!-- Cart Start -->
+        <div class="col-lg-8 table-responsive mb-5">
+            <table class="table table-light table-borderless table-hover text-center mb-0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Products</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody class="align-middle">
+                    <% if (cart && cart.products.length > 0) { %>
+                        <% cart.products.forEach(product => { 
+                            // Calculate the best offer
+                            const categoryOffer = product.category?.offer || 0;
+                            const productOffer = product.offer || 0;
+                            const bestOffer = Math.max(categoryOffer, productOffer); // Choose the higher offer
+                            const discountAmount = (product.price * bestOffer) / 100;
+                            const finalPrice = product.price - discountAmount; // Calculate the final price after applying the best offer
+                        %>
+                            <tr data-product-id="<%= product.productId._id %>" data-stock="<%= product.stock %>" data-size="<%= product.size %>">
+                                <td class="align-middle">
+                                    <% if (product.images) { %>
+                                        <img src="/uploads/<%= product.images %>" alt="<%= product.name %>" style="width: 50px;">
+                                        <p><%= product.name %></p>
+                                    <% } else { %>
+                                        <p>No image available</p>
+                                    <% } %>
+                                </td>
+                                
+                                <!-- Price Section -->
+                                <td class="align-middle">
+                                    <% if (bestOffer > 0) { %>
+                                        <span style="text-decoration: line-through;">₹<%= product.price.toFixed(2) %></span> <br />
+                                        <strong>₹<%= finalPrice.toFixed(2) %></strong>
+                                    <% } else { %>
+                                        ₹<%= product.price.toFixed(2) %>
+                                    <% } %>
+                                </td>
+                
+                                <!-- Quantity Section -->
+                                <td class="align-middle">
+                                    <div class="input-group quantity mx-auto" style="width: 100px;">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-sm btn-primary btn-minus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', -1)">
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm bg-secondary border-0 text-center" value="<%= product.quantity %>" readonly>
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-sm btn-primary btn-plus" onclick="updateQuantity('<%= product.productId._id %>', '<%= product.size %>', 1)">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                
+                                <!-- Total Price -->
+                                <td class="align-middle">
+                                    ₹<%= (finalPrice * product.quantity).toFixed(2) %>
+                                </td>
+                
+                                <!-- Remove Button -->
+                                <td class="align-middle">
+                                    <button class="btn btn-sm btn-danger" onclick="removeFromCart('<%= product.productId._id %>')">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">Your cart is empty.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+                
+            </table>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Cart Summary</span></h5>
+            <div class="bg-light p-30 mb-5">
+                <div class="border-bottom pb-2">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6>Subtotal</h6>
+                        <h6>₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => total + (product.offer > 0 ? (product.price - (product.price * product.offer) / 100) * product.quantity : product.price * product.quantity), 0) : 0 %></h6>
+                    </div>
+
+                </div>
+                <div class="pt-2">
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5>Total</h5>
+                        <h5>
+                            ₹<%= cart && cart.products.length > 0 ? cart.products.reduce((total, product) => {
+                                const categoryOffer = product.category?.offer || 0;
+                                const productOffer = product.offer || 0;
+                                const bestOffer = Math.max(categoryOffer, productOffer);
+                                const finalPrice = product.price - (product.price * bestOffer) / 100;
+                                return total + (finalPrice * product.quantity);
+                            }, 0).toFixed(2) : 0 %>
+                        </h5>
+                    </div>
+                    <button class="btn btn-block btn-primary font-weight-bold my-3 py-3" onclick="proceedToCheckout()">Proceed To Checkout</button>
+                </div>
+                
+            </div>
+        </div>
+        <!-- Cart End -->
+    </div>
+</div>
+
+<script>
+  const MAX_QUANTITY = 10;
+
+function updateQuantity(productId, size, change) {
+    const row = document.querySelector(`tr[data-product-id="${productId}"][data-size="${size}"]`);
+    const quantityInput = row.querySelector('input.form-control');
+    const currentQuantity = parseInt(quantityInput.value, 10);
+    const stock = parseInt(row.getAttribute('data-stock'), 10);
+ 
+    const newQuantity = currentQuantity + change;
+
+    if (newQuantity > stock) {
+        Swal.fire({
+            title: 'Error!',
+            text: `Only ${stock} units available in stock.`,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    if (newQuantity > MAX_QUANTITY) {
+        Swal.fire({
+            title: 'Error!',
+            text: `You can only add up to ${MAX_QUANTITY} units of this product.`,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    if (newQuantity < 1) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Quantity cannot be less than 1.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    fetch(`/cart/update-quantity/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ size, change })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Quantity updated successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                location.reload();  
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Error updating quantity',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error updating cart:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while updating the cart.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+function removeFromCart(productId) {
+    fetch(`/cart/remove/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Deleted!',
+                text: 'Product removed from cart.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                location.reload();  
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Error removing product',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error removing product:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while removing the product.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+function proceedToCheckout() {
+    window.location.href = '/checkout'; 
+}
+</script>
+
+<!-- SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+

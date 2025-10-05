@@ -1,0 +1,112 @@
+
+    <style>
+        #submit-button {
+            width: 20%;
+            background-color: #6f42c1;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #submit-button:hover {
+            background-color: #5a2a8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <% if (typeof breadcrumbs !== 'undefined') { %>
+              <% breadcrumbs.forEach((crumb, index) => { %>
+                <% if (index < breadcrumbs.length - 1) { %>
+                  <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                <% } else { %>
+                  <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                <% } %>
+              <% }) %>
+            <% } %>
+          </ol>
+        </nav>
+      </div>
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-lg-8">
+            
+            <h5 class="section-title position-relative text-uppercase mb-3">
+                <span class="bg-secondary pr-3">Edit Address</span>
+            </h5>
+            <div class="bg-light p-30 mb-5">
+                <form action="/edit-address/<%=  address._id  %>" method="POST">
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="firstname">First Name</label>
+                            <input class="form-control" type="text" placeholder="John" name="firstname" value="<%= address.fullname.split(' ')[0] %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="lastname">Last Name</label>
+                            <input class="form-control" type="text" placeholder="Doe" name="lastname" value="<%= address.fullname.split(' ')[1] %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="mobile">Mobile No</label>
+                            <input class="form-control" type="tel" placeholder="+123 456 789" name="mobile" value="<%= address.mobile %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="pincode">ZIP Code</label>
+                            <input class="form-control" type="text" placeholder="123456" name="pincode" value="<%= address.pincode %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="street">Street</label>
+                            <input class="form-control" type="text" placeholder="Street" name="street" value="<%= address.street %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="city">City</label>
+                            <input class="form-control" type="text" placeholder="City" name="city" value="<%= address.city %>" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="state">State</label>
+                            <select class="form-control" name="state" id="address-sta" required>
+                                <option value="Kerala" <%= address.state === 'Kerala' ? 'selected' : '' %>>Kerala</option>
+                                <option value="Tamil Nadu" <%= address.state === 'Tamil Nadu' ? 'selected' : '' %>>Tamil Nadu</option>
+                                <option value="Karnataka" <%= address.state === 'Karnataka' ? 'selected' : '' %>>Karnataka</option>
+                                <option value="Maharashtra" <%= address.state === 'Maharashtra' ? 'selected' : '' %>>Maharashtra</option>
+                                <option value="Chhattisgarh" <%= address.state === 'Chhattisgarh' ? 'selected' : '' %>>Chhattisgarh</option>
+                                <option value="Bihar" <%= address.state === 'Bihar' ? 'selected' : '' %>>Bihar</option>
+                                <option value="Goa" <%= address.state === 'Goa' ? 'selected' : '' %>>Goa</option>
+                                <option value="Punjab" <%= address.state === 'Punjab' ? 'selected' : '' %>>Punjab</option>
+                                <option value="Mizoram" <%= address.state === 'Mizoram' ? 'selected' : '' %>>Mizoram</option>
+                                <option value="Andhra Pradesh" <%= address.state === 'Andhra Pradesh' ? 'selected' : '' %>>Andhra Pradesh</option>
+                                <option value="West Bengal" <%= address.state === 'West Bengal' ? 'selected' : '' %>>West Bengal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="country">Country</label>
+                            <select class="form-control" name="country" id="address-cou" required>
+                                <option value="India" <%= address.country === 'India' ? 'selected' : '' %>>India</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 text-center mt-4">
+                            <button type="submit" id="submit-button">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>

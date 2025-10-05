@@ -1,0 +1,81 @@
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <% breadcrumbs.forEach((crumb, index) => { %>
+                        <% if (index < breadcrumbs.length - 1) { %>
+                            <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                        <% } else { %>
+                            <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                        <% } %>
+                    <% }) %>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+<div class="container">
+    <div class="card">
+        <div class="card-header text-center bg-light">
+            <h4>My Wallet</h4>
+        </div>
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h5>Wallet Balance</h5>
+                <h3><i class="bi bi-currency-rupee"></i> <%= wallet.amount %></h3>
+            </div>
+
+           
+            <div class="transaction-history">
+                <h5>Transaction History</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (transactions.length === 0) { %>
+                            <tr>
+                                <td colspan="3" class="text-center">No transactions available.</td>
+                            </tr>
+                        <% } else { %>
+                            <% transactions.forEach(transaction => { %>
+                                <tr>
+                                    <td><%= transaction.type %></td>
+                                    <td><i class="bi bi-currency-rupee"></i> <%= transaction.amount %></td>
+                                    <td><%= transaction.transactionMode %></td> <!-- Display Debit or Credit -->
+                                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+
+           
+                <div class="pagination-controls text-center">
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>&limit=10" class="btn btn-primary">Previous</a>
+                    <% } %>
+
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <a href="?page=<%= i %>&limit=10" class="btn <%= i === currentPage ? 'btn-secondary' : 'btn-primary' %>">
+                            <%= i %>
+                        </a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>&limit=10" class="btn btn-primary">Next</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

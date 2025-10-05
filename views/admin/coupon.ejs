@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard</title>
+  <link rel="shortcut icon" type="image/png" href="../Admin/assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="../Admin/assets/css/styles.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      background-color: #f8f9fa; 
+    }
+    .card {
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    }
+    .table th, .table td {
+      vertical-align: middle; 
+    }
+    .btn-primary {
+      background-color: #007bff; 
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .bg-light {
+      background-color: #ffffff; 
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+
+    <%- include('../partials/admin/sidebar.ejs') %>
+
+    <div class="body-wrapper">
+      <%- include('../partials/admin/header.ejs') %>
+
+      <div class="container-fluid mt-4">
+        <div class="row">
+          <div class="col-lg">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="card-title">Coupons Management</h5>
+                  <button type="button" class="btn btn-primary">
+                    <a href="/admin/addCoupon" class="text-light" style="text-decoration: none;">Add New Coupon</a>
+                  </button>
+                </div>
+
+                <div class="pt-4">
+                  <h6 class="mb-4">Coupons List</h6>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Coupon Code</th>
+                          <th scope="col">Coupon Type</th>
+                          <th scope="col">Max Discount</th>
+                          <th scope="col">Description</th>
+                          <th scope="col">Limit</th>
+                          <th scope="col">Expiry Date</th>
+                          <th scope="col">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% if (coupons.length > 0) { %>
+                          <% for (let i = 0; i < coupons.length; i++) { %>
+                            <tr>
+                              <td><%= i + 1 %></td>
+                              <td><%= coupons[i].code %></td>
+                              <td><%= coupons[i].type %></td>
+                              <td><%= coupons[i].maxDiscount %></td>
+                              <td><%= coupons[i].description %></td>
+                              <td><%= coupons[i].limit %></td>
+                            
+                              <td><%= new Date(coupons[i].expirityDate).toLocaleDateString() %></td>
+                              <td>
+                                <form action="/admin/removeCoupon/<%= coupons[i]._id %>" method="POST" style="display: inline;" class="delete-form">
+                                  <button type="submit" class="btn btn-danger">
+                                    Remove
+                                  </button>
+                                </form>
+                              </td>
+                            </tr>
+                          <% } %>
+                        <% } else { %>
+                          <tr>
+                            <td colspan="8" class="text-center">No Coupons Available</td>
+                          </tr>
+                        <% } %>
+                      </tbody>
+                    </table>
+                    <div class="d-flex justify-content-between mt-4">
+                      <nav>
+                        <ul class="pagination">
+                          <% for (let page = 1; page <= totalPages; page++) { %>
+                            <li class="page-item <%= currentPage === page ? 'active' : '' %>">
+                              <a class="page-link" href="/admin/coupon?page=<%= page %>"><%= page %></a>
+                            </li>
+                          <% } %>
+                        </ul>
+                      </nav>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="../Admin/assets/libs/jquery/dist/jquery.min.js"></script>
+      <script src="../Admin/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+      <script src="../Admin/assets/js/sidebarmenu.js"></script>
+      <script src="../Admin/assets/js/app.min.js"></script>
+      <script src="../Admin/assets/libs/simplebar/dist/simplebar.js"></script>
+
+      <script>
+        document.querySelectorAll('.delete-form').forEach(form => {
+          form.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
+            Swal.fire({
+              title: 'Are you sure?',
+              text: 'You will not be able to recover this coupon!',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, delete it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.submit(); 
+              }
+            });
+          });
+        });
+      </script>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<div class="col-12">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <% breadcrumbs.forEach((crumb, index) => { %>
+                <% if (index < breadcrumbs.length - 1) { %>
+                    <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+                <% } else { %>
+                    <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+                <% } %>
+            <% }) %>
+        </ol>
+    </nav>
+</div>
+<div class="container">
+    <h2>Your Addresses</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Mobile No</th>
+                <th>Street</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>ZIP Code</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (addresses.length > 0) { %>
+                <% addresses.forEach(function(address) { %>
+                    <tr>
+                        <td><%= address.fullname %></td>
+                        <td><%= address.mobile %></td>
+                        <td><%= address.street %></td>
+                        <td><%= address.city %></td>
+                        <td><%= address.state %></td>
+                        <td><%= address.country %></td>
+                        <td><%= address.pincode %></td>
+                        <td>
+                            
+                            <a href="/edit-address/<%= address._id %>" class="btn btn-warning btn-sm">Edit</a>
+                           
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= address._id%>')">Delete</button>
+                            <form id="delete-form-<%= address._id %>" action="/delete-address/<%=address._id %>" method="POST" style="display:none;"></form>
+                        </td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="8" class="text-center">No addresses found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+    <a href="/add-address" class="btn btn-primary">Add New Address</a>
+</div>
+<br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br>
+<!-- SweetAlert confirmation script -->
+<script>
+    function confirmDelete(addressId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to delete this address?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + addressId).submit();
+            }
+        })
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
