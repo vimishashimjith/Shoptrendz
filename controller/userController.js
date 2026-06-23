@@ -420,11 +420,17 @@ const insertUser = async (req, res) => {
             }
         }
 
-        if (!password) {
-            errors.password = "Password is required";
-        } else if (password.length < 5 || password.length > 8) {
-            errors.password = "Password must be between 5 to 8 characters";
-        }
+       if (!password) {
+    errors.password = "Password is required";
+} else {
+    const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+        errors.password =
+            "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
+    }
+}
 
         if (!passwordRe) {
             errors.passwordRe = "Please confirm your password";
